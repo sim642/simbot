@@ -1,7 +1,8 @@
 function VotePlugin(bot) {
 	var self = this;
-	self.name = 'vote';
-	self.help = 'Vote plugin';
+	self.name = "vote";
+	self.help = "Vote plugin";
+	self.depend = ["cmd"];
 
 	self.votes = {};
 	self.regex = /^\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)[\s,:]*(\+\+||--)\s*$/i
@@ -25,7 +26,7 @@ function VotePlugin(bot) {
 	};
 
 	self.events = {
-		'cmd#votestart': function(nick, to, args) {
+		"cmd#votestart": function(nick, to, args) {
 			if (!(to in self.votes)) {
 				if (args[0] === undefined || args[0].trim() == "") {
 					bot.notice(nick, "Vote must have a question");
@@ -48,7 +49,7 @@ function VotePlugin(bot) {
 			}
 		},
 
-		'cmd#voteend': function(nick, to, args) {
+		"cmd#voteend": function(nick, to, args) {
 			if ((to in self.votes) && (nick == self.votes[to].by)) {
 				self.voteend(to);
 			}
@@ -57,7 +58,7 @@ function VotePlugin(bot) {
 			}
 		},
 
-		'cmd#vote': function(nick, to) {
+		"cmd#vote": function(nick, to) {
 			if (to in self.votes) {
 				var vote = self.votes[to];
 				bot.say(to, "Vote by " + vote.by + ": " + vote.question);
@@ -65,7 +66,7 @@ function VotePlugin(bot) {
 			}
 		},
 
-		'message#': function(nick, to, text) {
+		"message#": function(nick, to, text) {
 			if (to in self.votes) {
 				var vote = self.votes[to];
 				var m = text.match(self.regex);

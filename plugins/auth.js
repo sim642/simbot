@@ -1,15 +1,20 @@
-function auth() {
+function AuthPlugin(bot) {
 	var self = this;
-	
-	self.accounts = {
-		'sim642': {
-			level: 100,
-			masks: ['sim642!*@*']
-		}
+	self.name = "auth";
+	self.help = "Authentication/admin plugin";
+
+	self.accounts = {};
+
+	self.load = function(data) {
+		self.accounts = data;
+	};
+
+	self.unload = function() {
+		return self.accounts;
 	};
 
 	self.match = function(cur, mask) {
-		var re = new RegExp("^" + mask.replace('.', '\.').replace('?', '.').replace('*', '.*') + "$");
+		var re = new RegExp("^" + mask.replace(".", "\.").replace("?", ".").replace("*", ".*") + "$");
 		return re.test(cur);
 	};
 
@@ -26,7 +31,6 @@ function auth() {
 					}
 				}
 			}
-			console.log(nick, level, reqLevel);
 			if (level >= reqLevel) {
 				var args = Array.prototype.slice.call(arguments);
 				listener.apply(listener, args);
@@ -34,5 +38,7 @@ function auth() {
 		};
 	};
 
+	self.events = {};
+
 };
-module.exports = new auth();
+module.exports = AuthPlugin;

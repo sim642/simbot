@@ -8,7 +8,8 @@ function UnitsPlugin(bot) {
 
 	self.events = {
 		"cmd#units" : function(nick, to, args, message) {
-			var cmd = "units -t '" + args[1] + "'";
+			var cmd = "./plugins/units/units -f ./plugins/units/definitions.units -t '" + args[1] + "'";
+			//var cmd = "units -t '" + args[1] + "'";
 			if (args[2])
 				cmd += " '" + args[2] + "'";
 

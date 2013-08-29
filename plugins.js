@@ -46,7 +46,6 @@ plugins._unload = function(p) {
 	this._disable(p);
 	var data = (p.unload || function(){})();
 	if (data) {
-		console.log(data);
 		fs.writeFileSync("./data/" + p.name + ".json", JSON.stringify(data, null, 4));
 	}
 	delete this[p.name];

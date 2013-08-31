@@ -24,9 +24,14 @@ plugins._load = function(p) {
 
 plugins.load = function(name) {
 	if (!(name in this)) {
-		var r = require.uncached("./plugins/" + name);
-		var p = new r(bot);
-		this._load(p);
+		try {
+			var r = require.uncached("./plugins/" + name);
+			var p = new r(bot);
+			this._load(p);
+		}
+		catch (e) {
+			console.log("ERROR loading: " + e);
+		}
 	}
 };
 

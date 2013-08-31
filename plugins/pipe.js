@@ -2,41 +2,49 @@ function PipePlugin(bot) {
 	var self = this;
 	self.name = "pipe";
 	self.help = "Pipe plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "auth"];
 
 	self.pipes = {};
 	self.backpipes = {};
 
 	self.events = {
-		"cmd#pipe": function(nick, to, args) {
+		"cmd#pipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
+			to = to.toLowerCase();
+			args[1] = args[1].toLowerCase();
 			if (to in self.pipes)
 				delete self.backpipes[self.pipes[to]];
 			self.pipes[to] = args[1];
-			self.backpipes[bot.nick] = to;
+			self.backpipes[args[1]] = to;
 			bot.notice(to, "Now piping to " + args[1]);
-		},
+		}),
 
-		"cmd#unpipe": function(nick, to, args) {
+		"cmd#unpipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
+			to = to.toLowerCase();
 			delete self.backpipes[self.pipes[to]];
 			delete self.pipes[to];
 			bot.notice(to, "Not piping");
-		},
+		}),
 
 		"nocmd": function(nick, to, text) {
+			to = to.toLowerCase();
 			if (to in self.pipes)
 				bot.say(self.pipes[to], text);
 		},
 
 		"message": function(nick, to, text) {
-			if (to in self.backpipes && nick != self.backpipes[to])
+			to = to.toLowerCase();
+			if (to in self.backpipes)
 				bot.say(self.backpipes[to], text);
 		},
 
 		"notice": function(nick, to, text) {
+			if (to == bot.nick)
+				to = nick;
+			to = to.toLowerCase();
 			if (to in self.pipes)
 				bot.notice(self.pipes[to], text);
 
-			if (to in self.backpipes && nick != self.backpipes[to])
+			if (to in self.backpipes)
 				bot.notice(self.backpipes[to], text);
 		}
 	}

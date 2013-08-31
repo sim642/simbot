@@ -2,7 +2,7 @@ function VotePlugin(bot) {
 	var self = this;
 	self.name = "vote";
 	self.help = "Vote plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "auth"];
 
 	self.votes = {};
 	self.regex = /^\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)[\s,:]*(\+\+||--)\s*$/i
@@ -49,8 +49,8 @@ function VotePlugin(bot) {
 			}
 		},
 
-		"cmd#voteend": function(nick, to, args) {
-			if ((to in self.votes) && (nick == self.votes[to].by)) {
+		"cmd#voteend": function(nick, to, args, message) {
+			if ((to in self.votes) && (nick == self.votes[to].by || bot.plugins.auth.check(5, message))) {
 				self.voteend(to);
 			}
 			else {

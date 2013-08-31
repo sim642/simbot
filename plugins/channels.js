@@ -13,11 +13,17 @@ function ChannelsPlugin(bot) {
 		},
 
 		"cmd#join": function(nick, to, args) {
-			bot.join(args[1]);
+			for (var i = 1; i < args.length; i++)
+				bot.join(args[i]);
 		},
 
 		"cmd#part": function(nick, to, args) {
-			bot.part(args[1] || to);
+			if (args.length > 1) {
+				for (var i = 1; i < args.length; i++)
+					bot.part(args[i]);
+			}
+			else
+				bot.part(to);
 		},
 
 		"cmd#autojoin": function(nick, to, args) {

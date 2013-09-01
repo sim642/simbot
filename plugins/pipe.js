@@ -40,6 +40,8 @@ function PipePlugin(bot) {
 		"notice": function(nick, to, text) {
 			if (to == bot.nick)
 				to = nick;
+			if (to === undefined)
+				return;
 			to = to.toLowerCase();
 			if (to in self.pipes)
 				bot.notice(self.pipes[to], text);

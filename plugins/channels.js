@@ -26,6 +26,19 @@ function ChannelsPlugin(bot) {
 				bot.part(to);
 		},
 
+		"cmd#cycle": function(nick, to, args) {
+			if (args.length > 1) {
+				for (var i = 1; i < args.length; i++) {
+					bot.part(args[i]);
+					bot.join(args[i]);
+				}
+			}
+			else {
+				bot.part(to);
+				bot.join(to);
+			}
+		},
+
 		"cmd#autojoin": function(nick, to, args) {
 			var chan = args[1] || to;
 			var i = self.autojoins.indexOf(chan);

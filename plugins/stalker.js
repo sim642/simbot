@@ -2,7 +2,7 @@ function StalkerPlugin(bot) {
 	var self = this;
 	self.name = "stalker";
 	self.help = "Stalker plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "auth"];
 	
 	self.nick2host = {};
 	self.host2nick = {};
@@ -82,15 +82,17 @@ function StalkerPlugin(bot) {
 			self.seen(newNick.toLowerCase(), message.host);
 		},
 
-		"cmd#stalk": function(nick, to, args) {
-			var nicks = self.search(args[1].toLowerCase(), undefined, {}, {}, 0);
-			nicks.sort();
-			nicks = nicks.reduce(function(p, c) {
-				if (p.indexOf(c) < 0) p.push(c);
-				return p;
-			}, []);
-			bot.say(to, nick + ": " + nicks.join(", "));
-		}
+		"cmd#stalk": bot.plugins.auth.proxy(10, function(nick, to, args) {
+			if (args[1]) {
+				var nicks = self.search(args[1].toLowerCase(), undefined, {}, {}, 0);
+				nicks.sort();
+				nicks = nicks.reduce(function(p, c) {
+					if (p.indexOf(c) < 0) p.push(c);
+					return p;
+				}, []);
+				bot.say(to, nick + ": " + nicks.join(", "));
+			}
+		})
 	};
 
 	self.tolow = function() {
@@ -104,6 +106,29 @@ function StalkerPlugin(bot) {
 			for (var i = 0; i < nicks.length; i++)
 				nicks[i] = nicks[i].toLowerCase();
 			newhost2nick[host] = nicks;
+		}
+
+		self.nick2host = newnick2host;
+		self.host2nick = newhost2nick;
+	};
+
+	self.stripuser = function(host) {
+		return host.substr(host.indexOf("@") + 1);
+	};
+
+	self.stripusers = function() {
+		var newnick2host = {}, newhost2nick = {};
+		for (var nick in self.nick2host) {
+			var hosts = [];// = self.nick2host[nick];
+			for (var i = 0; i <	self.nick2host[nick].length; i++) {
+				if (self.nick2host[nick][i] != null)
+					hosts.push(self.stripuser(self.nick2host[nick][i]));
+			}
+			newnick2host[nick] = hosts;
+		}
+
+		for (var host in self.host2nick) {
+			newhost2nick[self.stripuser(host)] = self.host2nick[host];
 		}
 
 		self.nick2host = newnick2host;

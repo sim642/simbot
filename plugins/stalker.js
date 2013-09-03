@@ -22,6 +22,9 @@ function StalkerPlugin(bot) {
 	};
 
 	self.seen = function(nick, host) {
+		if (nick == null || host == null)
+			return;
+
 		if (!(nick in self.nick2host))
 			self.nick2host[nick] = [];
 

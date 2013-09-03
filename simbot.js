@@ -11,7 +11,7 @@ var bot = new irc.Client("irc.awfulnet.org", "simbot", {
 bot.conn.setTimeout(180 * 1000);
 bot.conn.on("timeout", function() {
 	bot.conn.destroy();
-	bot.connect();
+	//bot.connect();
 });
 
 bot.on("error", function(message) {

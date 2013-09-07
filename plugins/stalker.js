@@ -85,7 +85,7 @@ function StalkerPlugin(bot) {
 			self.seen(newNick.toLowerCase(), message.host);
 		},
 
-		"cmd#stalk": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#stalk": function(nick, to, args) {
 			if (args[1]) {
 				var nicks = self.search(args[1].toLowerCase(), undefined, {}, {}, 0);
 				nicks.sort();
@@ -95,7 +95,7 @@ function StalkerPlugin(bot) {
 				}, []);
 				bot.say(to, nick + ": " + nicks.join(", "));
 			}
-		})
+		}
 	};
 
 	self.tolow = function() {

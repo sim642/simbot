@@ -85,7 +85,7 @@ function Stalker2Plugin(bot) {
 			}
 		}
 
-		if (sid !== null && spid !== null) {
+		if (sid !== null) {
 			for (var id in self.db) {
 				var row = self.db[id];
 				if (id == sid || id == spid || (spid !== null && (row.pid == spid || row.pid == spid))) {
@@ -139,14 +139,20 @@ function Stalker2Plugin(bot) {
 		"cmd#seen": function(nick, to, args) {
 			var nick2 = args[1];
 			if (nick2) {
-				for (var id in self.db) {
-					var row = self.db[id];
-					if (row.nick.toLowerCase() == nick2.toLowerCase()) {
-						bot.say(to, nick2 + " last seen: " + row.seen.toUTCString() + " UTC");
-						break;
-					}
+				var ids = self.stalk(nick2);
+				console.log(ids);
+				var recent = null;
+
+				for (var i = 0; i < ids.length; i++) {
+					var row = self.db[ids[i]];
+					if (recent === null || row.seen > recent.seen)
+						recent = row;
 				}
 
+				if (recent !== null)
+					bot.say(to, nick2 + " seen as " + recent.nick + ": " + recent.seen.toUTCString() + " UTC");
+				else
+					bot.say(to, nick2 + " has been never seen");
 			}
 		}
 	};

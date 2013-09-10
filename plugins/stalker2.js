@@ -140,7 +140,6 @@ function Stalker2Plugin(bot) {
 			var nick2 = args[1];
 			if (nick2) {
 				var ids = self.stalk(nick2);
-				console.log(ids);
 				var recent = null;
 
 				for (var i = 0; i < ids.length; i++) {

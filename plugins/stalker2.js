@@ -98,7 +98,7 @@ function Stalker2Plugin(bot) {
 			var nick2 = args[1];
 			if (nick2) {
 				var nicks = [];
-				var sid, spid;
+				var sid = null, spid = null;
 				for (var id in self.db) {
 					var row = self.db[id];
 					if (row.nick.toLowerCase() == nick2.toLowerCase()) {
@@ -108,14 +108,32 @@ function Stalker2Plugin(bot) {
 					}
 				}
 
-				for (var id in self.db) {
-					var row = self.db[id];
-					if (id == sid || id == spid || (spid !== null && (row.pid == spid || row.pid == spid))) {
-						if (nicks.indexOf(row.nick) == -1)
-							nicks.push(row.nick);
+				if (sid !== null && spid !== null) {
+					for (var id in self.db) {
+						var row = self.db[id];
+						if (id == sid || id == spid || (spid !== null && (row.pid == spid || row.pid == spid))) {
+							if (nicks.indexOf(row.nick) == -1)
+								nicks.push(row.nick);
+						}
 					}
 				}
+				else
+					nicks.push("no such nick found");
 				bot.say(to, nick + ": " + nicks.join(", "));
+			}
+		},
+
+		"cmd#seen": function(nick, to, args) {
+			var nick2 = args[1];
+			if (nick2) {
+				for (var id in self.db) {
+					var row = self.db[id];
+					if (row.nick.toLowerCase() == nick2.toLowerCase()) {
+						bot.say(to, nick2 + " last seen: " + row.seen.toUTCString() + " UTC");
+						break;
+					}
+				}
+
 			}
 		}
 	};

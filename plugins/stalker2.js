@@ -73,6 +73,30 @@ function Stalker2Plugin(bot) {
 		}
 	};
 
+	self.stalk = function(nick) {
+		var ids = [];
+		var sid = null, spid = null;
+		for (var id in self.db) {
+			var row = self.db[id];
+			if (row.nick.toLowerCase() == nick.toLowerCase()) {
+				sid = id;
+				spid = row.pid;
+				break;
+			}
+		}
+
+		if (sid !== null && spid !== null) {
+			for (var id in self.db) {
+				var row = self.db[id];
+				if (id == sid || id == spid || (spid !== null && (row.pid == spid || row.pid == spid))) {
+					if (ids.indexOf(id) == -1)
+						ids.push(id);
+				}
+			}
+		}
+		return ids;
+	};
+
 	self.events = {
 		"raw": function(message) {
 			if (message.nick !== undefined && message.host !== undefined) {
@@ -97,27 +121,16 @@ function Stalker2Plugin(bot) {
 		"cmd#stalk2": function(nick, to, args) {
 			var nick2 = args[1];
 			if (nick2) {
+				var ids = self.stalk(nick2);
 				var nicks = [];
-				var sid = null, spid = null;
-				for (var id in self.db) {
-					var row = self.db[id];
-					if (row.nick.toLowerCase() == nick2.toLowerCase()) {
-						sid = id;
-						spid = row.pid;
-						break;
-					}
+
+				for (var i = 0; i < ids.length; i++) {
+					var row = self.db[ids[i]];
+					if (nicks.indexOf(row.nick) == -1)
+						nicks.push(row.nick);
 				}
 
-				if (sid !== null && spid !== null) {
-					for (var id in self.db) {
-						var row = self.db[id];
-						if (id == sid || id == spid || (spid !== null && (row.pid == spid || row.pid == spid))) {
-							if (nicks.indexOf(row.nick) == -1)
-								nicks.push(row.nick);
-						}
-					}
-				}
-				else
+				if (nicks.length == 0)
 					nicks.push("no such nick found");
 				bot.say(to, nick + ": " + nicks.join(", "));
 			}

@@ -7,6 +7,7 @@ var bot = new irc.Client("irc.awfulnet.org", "simbot", {
 	realName: "sim642",
 	autoRejoin: false,
 	channels: [],
+	messageSplit: 300,
 });
 bot.conn.setTimeout(180 * 1000);
 bot.conn.on("timeout", function() {

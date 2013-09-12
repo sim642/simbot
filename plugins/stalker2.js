@@ -63,7 +63,7 @@ function Stalker2Plugin(bot) {
 
 			for (var id in self.db) {
 				var row = self.db[id];
-				if (row.nick.toLowerCase() == nick.toLowerCase() || row.user.toLowerCase() == user.toLowerCase() || row.host.toLowerCase() == host.toLowerCase()) {
+				if (row.nick.toLowerCase() == nick.toLowerCase() || row.host.toLowerCase() == host.toLowerCase()) {
 					newrow.pid = row.pid !== null ? row.pid : id;
 					break;
 				}
@@ -71,6 +71,24 @@ function Stalker2Plugin(bot) {
 
 			self.db[newrow.id] = newrow;
 		}
+	};
+
+	self.reindex = function() {
+		var newdb = {};
+		for (var id in self.db) {
+			var newrow = self.db[id];
+
+			for (var id in self.db) {
+				var row = self.db[id];
+				if (row.nick.toLowerCase() == newrow.nick.toLowerCase() || row.host.toLowerCase() == newrow.host.toLowerCase()) {
+					newrow.pid = row.pid !== null ? row.pid : id;
+					break;
+				}
+			}
+
+			newdb[newrow.id] = newrow;
+		}
+		self.db = newdb;
 	};
 
 	self.stalk = function(nick) {

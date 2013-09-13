@@ -15,7 +15,7 @@ function AuthPlugin(bot) {
 	};
 
 	self.match = function(cur, mask) {
-		var re = new RegExp("^" + mask.replace(".", "\.").replace("?", ".").replace("*", ".*") + "$");
+		var re = new RegExp("^" + mask.replace(".", "\.").replace("?", ".").replace("*", ".*") + "$", "i");
 		return re.test(cur);
 	};
 

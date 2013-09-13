@@ -17,11 +17,13 @@ function Stalker2Plugin(bot) {
 			seen:
 		}
 	*/
+	self.ignores = [];
 
 	self.load = function(data) {
 		if (data) {
 			self.db = data.db;
 			self.autoid = data.autoid;
+			self.ignores = data.ignores;
 			for (var id in self.db) {
 				var row = self.db[id];
 				row.added = new Date(row.added);
@@ -33,7 +35,8 @@ function Stalker2Plugin(bot) {
 	self.unload = function() {
 		return {
 			"db": self.db,
-			"autoid": self.autoid
+			"autoid": self.autoid,
+			"ignores": self.ignores
 		};
 	};
 
@@ -60,12 +63,16 @@ function Stalker2Plugin(bot) {
 				"seen": new Date(),
 				"pid": null
 			};
-
-			for (var id in self.db) {
-				var row = self.db[id];
-				if (row.nick.toLowerCase() == nick.toLowerCase() || row.host.toLowerCase() == host.toLowerCase()) {
-					newrow.pid = row.pid !== null ? row.pid : id;
-					break;
+			
+			if (!self.ignores.some(function (elem, i, arr) {
+				return bot.plugins.auth.match(newrow.nick + "!" + newrow.user + "@" + newrow.host, elem);
+			})) {
+				for (var id in self.db) {
+					var row = self.db[id];
+					if (row.nick.toLowerCase() == nick.toLowerCase() || row.host.toLowerCase() == host.toLowerCase()) {
+						newrow.pid = row.pid !== null ? row.pid : id;
+						break;
+					}
 				}
 			}
 
@@ -78,11 +85,15 @@ function Stalker2Plugin(bot) {
 		for (var id in self.db) {
 			var newrow = self.db[id];
 
-			for (var id in self.db) {
-				var row = self.db[id];
-				if (row.nick.toLowerCase() == newrow.nick.toLowerCase() || row.host.toLowerCase() == newrow.host.toLowerCase()) {
-					newrow.pid = row.pid !== null ? row.pid : id;
-					break;
+			if (!self.ignores.some(function (elem, i, arr) {
+				return bot.plugins.auth.match(newrow.nick + "!" + newrow.user + "@" + newrow.host, elem);
+			})) {
+				for (var id in self.db) {
+					var row = self.db[id];
+					if (row.nick.toLowerCase() == newrow.nick.toLowerCase() || row.host.toLowerCase() == newrow.host.toLowerCase()) {
+						newrow.pid = row.pid !== null ? row.pid : id;
+						break;
+					}
 				}
 			}
 

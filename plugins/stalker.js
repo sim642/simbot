@@ -165,6 +165,18 @@ function StalkerPlugin(bot) {
 			}
 		},
 
+		"cmd#ustalk": function(nick, to, args) {
+			var nick2 = args[1];
+			if (nick2) {
+				var ids = self.stalk(nick2);
+
+				for (var i = 0; i < ids.length; i++) {
+					var row = self.db[ids[i]];
+					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + row.seen.toUTCString());
+				}
+			}
+		},
+
 		"cmd#seen": function(nick, to, args) {
 			var nick2 = args[1];
 			if (nick2) {
@@ -178,7 +190,7 @@ function StalkerPlugin(bot) {
 				}
 
 				if (recent !== null)
-					bot.say(to, nick2 + " seen as " + recent.nick + ": " + recent.seen.toUTCString() + " UTC");
+					bot.say(to, nick2 + " seen as " + recent.nick + ": " + recent.seen.toUTCString());
 				else
 					bot.say(to, nick2 + " has been never seen");
 			}

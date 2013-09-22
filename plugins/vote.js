@@ -41,7 +41,7 @@ function VotePlugin(bot) {
 					timeout: null
 				};
 				bot.say(to, "Vote by " + vote.by + " started: " + vote.question);
-				bot.say(to, "Write `" + bot.nick + ": ++` to agree, `" + bot.nick + ": --` to disagree");
+				bot.say(to, "Write '" + bot.nick + ": ++' to agree, '" + bot.nick + ": --' to disagree");
 				self.activity(to);
 			}
 			else {

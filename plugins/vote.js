@@ -75,15 +75,19 @@ function VotePlugin(bot) {
 						var i = vote.disagree.indexOf(nick);
 						if (i != -1)
 							vote.disagree.splice(i, 1);
-						if (vote.agree.indexOf(nick) == -1)
+						if (vote.agree.indexOf(nick) == -1) {
 							vote.agree.push(nick);
+							bot.notice(nick, "vote for '" + vote.question + "' in " + to + " counted");
+						}
 					}
 					else if (m[2] == "--") {
 						var i = vote.agree.indexOf(nick);
 						if (i != -1)
 							vote.agree.splice(i, 1);
-						if (vote.disagree.indexOf(nick) == -1)
+						if (vote.disagree.indexOf(nick) == -1) {
 							vote.disagree.push(nick);
+							bot.notice(nick, "vote against '" + vote.question + "' in " + to + " counted");
+						}
 					}
 					self.activity(to);
 				}

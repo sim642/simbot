@@ -188,7 +188,8 @@ function StalkerPlugin(bot) {
 
 				for (var i = 0; i < ids.length; i++) {
 					var row = self.db[ids[i]];
-					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + row.seen.toUTCString());
+					var ago = self.ago(row.seen);
+					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + row.seen.toUTCString() + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
 				}
 			}
 		},

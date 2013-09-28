@@ -167,10 +167,20 @@ function StalkerPlugin(bot) {
 			var nick2 = args[1];
 			if (nick2) {
 				var ids = self.stalk(nick2);
-				var nicks = [];
+				var tosort = [];
 
 				for (var i = 0; i < ids.length; i++) {
 					var row = self.db[ids[i]];
+					tosort.push(row);
+				}
+
+				tosort.sort(function(a, b) {
+					return b.seen - a.seen;
+				});
+
+				var nicks = [];
+				for (var i = 0; i < tosort.length && nicks.length < 15; i++) {
+					var row = tosort[i];
 					if (nicks.indexOf(row.nick) == -1)
 						nicks.push(row.nick);
 				}
@@ -185,9 +195,19 @@ function StalkerPlugin(bot) {
 			var nick2 = args[1];
 			if (nick2) {
 				var ids = self.stalk(nick2);
+				var tosort = [];
 
 				for (var i = 0; i < ids.length; i++) {
 					var row = self.db[ids[i]];
+					tosort.push(row);
+				}
+
+				tosort.sort(function(a, b) {
+					return b.seen - a.seen;
+				});
+
+				for (var i = 0; i < tosort.length && i < 10; i++) {
+					var row = tosort[i];
 					var ago = self.ago(row.seen);
 					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + row.seen.toUTCString() + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
 				}

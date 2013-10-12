@@ -15,9 +15,6 @@ function UnitsPlugin(bot) {
 
 			exec(cmd, function (error, stdout, stderr) {
 				bot.say(to, nick + ": " + stdout.replace(/\t/g, "").replace(/\n/g, "; "));
-				console.log(stderr);
-				if (error !== null)
-					console.log(error);
 			});
 		}
 	}

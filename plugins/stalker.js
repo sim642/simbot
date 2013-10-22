@@ -96,6 +96,8 @@ function StalkerPlugin(bot) {
 					}
 				}
 			}
+			else
+				newrow.pid = null;
 
 			newdb[newrow.id] = newrow;
 		}

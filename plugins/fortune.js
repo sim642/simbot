@@ -10,7 +10,8 @@ function FortunePlugin(bot) {
 		"cmd#fortune" : function(nick, to, args, message) {
 			exec("fortune -s", function (error, stdout, stderr) {
 				stdout.split("\n").forEach(function (line) {
-					bot.say(to, line);
+					if (line != "")
+						bot.say(to, "  " + line);
 				});
 			});
 		}

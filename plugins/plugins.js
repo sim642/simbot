@@ -33,7 +33,8 @@ function PluginsPlugin(bot) {
 		"cmd#plist": bot.plugins.auth.proxy(10, function(nick, to, args) {
 			var list = "";
 			for (var plugin in bot.plugins) {
-				list += plugin + " ";
+				if (bot.plugins[plugin].name)
+					list += plugin + " ";
 			}
 			bot.say(to, "Plugins loaded: " + list);
 		})

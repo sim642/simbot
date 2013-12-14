@@ -37,10 +37,7 @@ function AgePlugin(bot) {
 	self.events = {
 		"cmd#age": function(nick, to, args) {
 			var birth = self.DateUTC(new Date(args[0]));
-			//var birth = new Date(args[0]);
-			console.log(args[0]);
 			var ago = self.ago(birth);
-			console.log(birth, ago);
 			bot.say(to, nick + " is " + ago.years + " years, " + ago.months + " months, " + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds old in UTC");
 		}
 	};

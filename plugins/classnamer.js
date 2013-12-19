@@ -15,7 +15,7 @@ Character Command Client Server Socket Thread Notification Keystroke \
 Timestamp Raster String Hash Integer Cache Scrollbar Grid Jar Connection \
 Database Graph Row Column Record Metadata Transaction Message Request \
 Response Query Statement Result Upload Download User Directory Button \
-Device Search Lolcat Girlfriend Robot",
+Device Search Lolcat Girlfriend Robot Flugzeug",
 "Sorter Allocator Tokenizer Writer Reader Randomizer Initializer Factory \
 FactoryFactory Panel Frame Container Compressor Expander Counter \
 Collector Collection Wrapper Accumulator Table Marshaller Demarshaller \
@@ -34,8 +34,14 @@ Process"];
 		"cmd#classname": function(nick, to, args, message) {
 			var name = "";
 			for (var i = 0; i < self.parts.length; i++) {
-				var a = self.parts[i].split(" ");
-				name += a[Math.floor(Math.random() * a.length)];
+				var cnt = 1;
+				if (args[i + 1] && parseInt(args[i + 1], 10) !== NaN)
+					cnt = parseInt(args[i + 1], 10);
+
+				for (var j = 0; j < cnt; j++) {
+					var a = self.parts[i].split(" ");
+					name += a[Math.floor(Math.random() * a.length)];
+				}
 			}
 			bot.say(to, nick + ": " + name);
 		}

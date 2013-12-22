@@ -14,7 +14,7 @@ function REPLPlugin(bot) {
 		"cmd#>": function(nick, to, args) {
 			if (!(to in self.contexts)) {
 				self.contexts[to] = vm.createContext();
-				bot.notice(to, "VM context in " + to + " created");
+				//bot.say(to, "VM context in " + to + " created");
 			}
 			try {
 				var ret = vm.runInContext(args[0].trim(), self.contexts[to]);
@@ -28,7 +28,7 @@ function REPLPlugin(bot) {
 		"cmd#clear>": function(nick, to, args) {
 			if (to in self.contexts) {
 				delete self.contexts[to];
-				bot.notice(to, "VM context in " + to + " cleared");
+				bot.say(to, "VM context in " + to + " cleared");
 			}
 		},
 		

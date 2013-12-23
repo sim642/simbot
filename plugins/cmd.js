@@ -31,7 +31,7 @@ function CmdPlugin(bot) {
 		},
 
 		"cmd#": function(nick, to, cmd, args, message) {
-			bot.notice(nick, "no such command: " + cmd);
+			//bot.notice(nick, "no such command: " + cmd);
 		},
 
 		"cmd#help": function(nick, to, args, message) {

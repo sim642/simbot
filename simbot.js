@@ -2,13 +2,16 @@ var irc = require("irc");
 var repl = require("repl");
 var fs = require("fs");
 
-var bot = new irc.Client("irc.awfulnet.org", "simbot", {
-	userName: "simbot",
-	realName: "sim642",
+var config = JSON.parse(fs.readFileSync("config.json"));
+var defcfg = {
 	autoRejoin: false,
 	channels: [],
 	messageSplit: 300,
-});
+};
+config.__proto__ = defcfg;
+
+var bot = new irc.Client(config.server, config.nick, config);
+
 bot.conn.setTimeout(180 * 1000);
 bot.conn.on("timeout", function() {
 	bot.conn.destroy();

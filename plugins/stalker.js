@@ -128,6 +128,14 @@ function StalkerPlugin(bot) {
 		return ids;
 	};
 
+	self.vstalk = function(nick) {
+		var stalk = self.stalk(nick);
+		for (var i = 0; i < stalk.length; i++) {
+			var row = self.db[stalk[i]];
+			console.log(row.id, row.nick, row.user, row.host);
+		}
+	};
+
 	self.ago = function(date) {
 		var dt = Date.now() - date.getTime();
 		var ret = {};

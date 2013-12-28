@@ -48,7 +48,23 @@ function PipePlugin(bot) {
 
 			if (to in self.backpipes)
 				bot.notice(self.backpipes[to], text);
-		}
+		},
+
+		"cmd#msg": bot.plugins.auth.proxy(8, function(nick, to, args) {
+			var parts = args[0].split(":", 2);
+			if (parts.length == 2)
+				bot.say(parts[0].trim(), parts[1].trim());
+			else
+				bot.say(to, parts[0].trim());
+		}),
+
+		"cmd#notice": bot.plugins.auth.proxy(8, function(nick, to, args) {
+			var parts = args[0].split(":", 2);
+			if (parts.length == 2)
+				bot.notice(parts[0].trim(), parts[1].trim());
+			else
+				bot.notice(to, parts[0].trim());
+		}),
 	}
 }
 

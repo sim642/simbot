@@ -17,7 +17,7 @@ function REPLPlugin(bot) {
 				//bot.say(to, "VM context in " + to + " created");
 			}
 			try {
-				var ret = vm.runInContext(args[0].trim(), self.contexts[to]);
+				var ret = vm.runInContext(args[0], self.contexts[to]);
 				self.contexts[to]._ = ret;
 				bot.say(to, nick + " => " + util.inspect(ret, {depth: 0}));
 			} catch (err) {
@@ -34,7 +34,7 @@ function REPLPlugin(bot) {
 		
 		"cmd#>>": bot.plugins.auth.proxy(10, function(nick, to, args) {
 			try {
-				var ret = vm.runInContext(args[0].trim(), self.globalContext);
+				var ret = vm.runInContext(args[0], self.globalContext);
 				self.globalContext._ = ret;
 				bot.say(to, nick + " =>> " + util.inspect(ret, {depth: 0}));
 			} catch (err) {

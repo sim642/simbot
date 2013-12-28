@@ -28,14 +28,14 @@ function VotePlugin(bot) {
 	self.events = {
 		"cmd#votestart": function(nick, to, args) {
 			if (!(to in self.votes)) {
-				if (args[0] === undefined || args[0].trim() == "") {
+				if (args[0] == "") {
 					bot.notice(nick, "Vote must have a question");
 					return;
 				}
 
 				var vote = self.votes[to] = {
 					by: nick,
-					question: args[0].trim(),
+					question: args[0],
 					agree: [],
 					disagree: [],
 					timeout: null

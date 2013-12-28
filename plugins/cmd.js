@@ -10,7 +10,7 @@ function CmdPlugin(bot) {
 		"message": function(nick, to, text, message) {
 			var m = text.match(self.chanRe);
 			if (m) {
-				var args2 = [m[2]];
+				var args2 = [m[2] === undefined ? "" : m[2].trim()];
 				for (var res; (res = self.argsRe.exec(m[2])) !== null;) {
 					var i;
 					for (i = 1; res[i] === undefined; i++);

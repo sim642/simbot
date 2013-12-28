@@ -25,7 +25,7 @@ function XkcdPlugin(bot) {
 						qs: {
 							key: "AIzaSyCrnaYtsUBVjQrMJiuOXRwOgQDhcULePFQ",
 							cx: "012652707207066138651:zudjtuwe28q",
-							q: args[0].trim()
+							q: args[0]
 						}
 					}, function(err, res, body) {
 					if (!err && res.statusCode == 200) {

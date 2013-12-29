@@ -45,6 +45,10 @@ process.on("SIGINT", function() {
 	process.exit(0);
 });
 
+process.on("uncaughtException", function(e) {
+	console.trace("ERROR process uncaught: " + e);
+});
+
 repl.start({
 	useGlobal: true
 }).context.bot = bot;

@@ -111,7 +111,6 @@ function StalkerPlugin(bot) {
 			if (row.nick.toLowerCase() == nick.toLowerCase()) {
 				sid = row.id;
 				spid = row.pid;
-				break;
 			}
 		}
 

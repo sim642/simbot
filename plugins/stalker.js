@@ -84,6 +84,7 @@ function StalkerPlugin(bot) {
 		var newdb = {};
 		for (var id in self.db) {
 			var newrow = self.db[id];
+			newrow.pid = null;
 
 			if (!self.ignores.some(function (elem, i, arr) {
 				return bot.plugins.auth.match(newrow.nick + "!" + newrow.user + "@" + newrow.host, elem);
@@ -91,13 +92,11 @@ function StalkerPlugin(bot) {
 				for (var id in self.db) {
 					var row = self.db[id];
 					if (row.nick.toLowerCase() == newrow.nick.toLowerCase() || row.host.toLowerCase() == newrow.host.toLowerCase()) {
-						newrow.pid = row.pid !== null ? row.pid : id;
+						newrow.pid = ((row.pid !== null) ? row.pid : row.id);
 						break;
 					}
 				}
 			}
-			else
-				newrow.pid = null;
 
 			newdb[newrow.id] = newrow;
 		}
@@ -110,7 +109,7 @@ function StalkerPlugin(bot) {
 		for (var id in self.db) {
 			var row = self.db[id];
 			if (row.nick.toLowerCase() == nick.toLowerCase()) {
-				sid = id;
+				sid = row.id;
 				spid = row.pid;
 				break;
 			}
@@ -119,9 +118,9 @@ function StalkerPlugin(bot) {
 		if (sid !== null) {
 			for (var id in self.db) {
 				var row = self.db[id];
-				if (id == sid || id == spid || (spid !== null && (row.pid == spid || row.pid == spid))) {
-					if (ids.indexOf(id) == -1)
-						ids.push(id);
+				if (row.id == sid || row.pid == sid || (spid !== null && (row.id == spid || row.pid == spid))) {
+					if (ids.indexOf(row.id) == -1)
+						ids.push(row.id);
 				}
 			}
 		}

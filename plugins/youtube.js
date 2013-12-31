@@ -37,6 +37,18 @@ function YoutubePlugin(bot) {
 				}
 			}
 		},
+
+		"pm": function(nick, text, message) {
+			var match = text.match(self.vidre);
+			if (match) {
+				request("https://gdata.youtube.com/feeds/api/videos/" + match[1] + "?v=2&alt=json", function(err, res, body) {
+					if (!err && res.statusCode == 200) {
+						var data = JSON.parse(body).entry;
+						bot.say(nick, "\x1Fhttp://youtu.be/" + match[1] + "\x1F : \x02" + data.title["$t"] + "\x02 by " + data.author[0].name["$t"] + ", " + data["yt$statistics"].viewCount.toString() + " views, " + data["yt$rating"].numLikes.toString() + " likes, " + data["yt$rating"].numDislikes.toString() + " dislikes");
+					}
+				});
+			}
+		},
 	}
 }
 

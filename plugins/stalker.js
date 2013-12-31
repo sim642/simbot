@@ -126,6 +126,36 @@ function StalkerPlugin(bot) {
 		return ids;
 	};
 
+	self.deepstalk = function(nick, callback) {
+		bot.whois(nick, function(info) {
+			var ids = [];
+			var sid = null, spid = null;
+			for (var id in self.db) {
+				var row = self.db[id];
+				if ((row.nick.toLowerCase() == info.nick.toLowerCase() || 
+					(info.host !== undefined && row.host.toLowerCase() == info.host.toLowerCase())) &&
+					!self.ignores.some(function (elem, i, arr) {
+						return bot.plugins.auth.match(row.nick + "!" + row.user + "@" + row.host, elem);
+					})) {
+					sid = row.id;
+					spid = row.pid;
+				}
+			}
+
+			if (sid !== null) {
+				for (var id in self.db) {
+					var row = self.db[id];
+					if (row.id == sid || row.pid == sid || (spid !== null && (row.id == spid || row.pid == spid))) {
+						if (ids.indexOf(row.id) == -1)
+							ids.push(row.id);
+					}
+				}
+			}
+			
+			(callback || function(){})(ids);
+		});
+	};
+
 	self.vstalk = function(nick) {
 		var stalk = self.stalk(nick);
 		for (var i = 0; i < stalk.length; i++) {
@@ -196,6 +226,35 @@ function StalkerPlugin(bot) {
 				if (nicks.length == 0)
 					nicks.push("no such nick found");
 				bot.say(to, nick + ": " + nicks.join(", "));
+			}
+		},
+
+		"cmd#dstalk": function(nick, to, args) {
+			var nick2 = args[1];
+			if (nick2) {
+				self.deepstalk(nick2, function(ids) {
+					var tosort = [];
+
+					for (var i = 0; i < ids.length; i++) {
+						var row = self.db[ids[i]];
+						tosort.push(row);
+					}
+
+					tosort.sort(function(a, b) {
+						return b.seen - a.seen;
+					});
+
+					var nicks = [];
+					for (var i = 0; i < tosort.length && nicks.length < 15; i++) {
+						var row = tosort[i];
+						if (nicks.indexOf(row.nick) == -1)
+							nicks.push(row.nick);
+					}
+
+					if (nicks.length == 0)
+						nicks.push("no such nick found");
+					bot.say(to, nick + ": " + nicks.join(", "));
+				});
 			}
 		},
 

@@ -15,6 +15,10 @@ function AuthPlugin(bot) {
 	};
 
 	self.match = function(cur, mask) {
+		var esc = "\\[]{}^|";
+		for (var i = 0; i < esc.length; i++) {
+			mask = mask.replace(esc[i], "\\" + esc[i], "g");
+		}
 		var re = new RegExp("^" + mask.replace(/\./g, "\.").replace(/\?/g, ".").replace(/\*/g, ".*") + "$", "i");
 		return re.test(cur);
 	};

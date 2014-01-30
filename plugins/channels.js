@@ -2,10 +2,30 @@ function ChannelsPlugin(bot) {
 	var self = this;
 	self.name = "channels";
 	self.help = "Channel management and autojoining";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "auth"];
 	
 	self.autojoins = [];
 	self.autojoinTime = 5000;
+
+	self.load = function(data) {
+		if (data !== undefined) {
+			self.autojoins = data.autojoins;
+			self.autojoinTime = data.autojoinTime;
+		}
+	};
+
+	self.unload = function() {
+		var data = {};
+		data.autojoins = self.autojoins;
+		data.autojoinTime = self.autojoinTime;
+		return data;
+	};
+
+	self.enable = function() {
+		for (var i = 0; i < self.autojoins.length; i++) {
+			bot.join(self.autojoins[i]);
+		}
+	};
 
 	self.events = {
 		"invite": function(channel, from) {
@@ -39,7 +59,7 @@ function ChannelsPlugin(bot) {
 			}
 		},
 
-		"cmd#autojoin": function(nick, to, args) {
+		"cmd#autojoin": bot.plugins.auth.proxy(6, function(nick, to, args) {
 			var chan = args[1] || to;
 			var i = self.autojoins.indexOf(chan);
 			if (i != -1) {
@@ -52,7 +72,11 @@ function ChannelsPlugin(bot) {
 				if (!(chan in bot.chans))
 					bot.join(chan);
 			}
-		},
+		}),
+
+		"cmd#autojoins": bot.plugins.auth.proxy(6, function(nick, to, args) {
+			bot.say(to, "autojoins: " + self.autojoins.join(", "));
+		}),
 
 		"part": function(channel, nick) {
 			if ((nick == bot.nick) && (self.autojoins.indexOf(channel) != -1))

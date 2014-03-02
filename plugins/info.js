@@ -11,10 +11,14 @@ function InfoPlugin(bot) {
 		self.callbacks.push({"nick": nick, "callback": callback});
 	};
 
+	self.invalidRe = /^Invalid target\. Was (.+) identified with NickServ when it was \!added\?$/;
+
 	self.events = {
 		"notice": function(nick, to, text, message) {
 			if (nick == "infobot" && to == bot.nick && self.callbacks.length > 0) {
 				var callback = self.callbacks.shift();
+				if (text.match(self.invalidRe))
+					text = undefined;
 				callback.callback(text, callback.nick);
 			}
 		},

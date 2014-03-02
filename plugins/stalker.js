@@ -2,7 +2,7 @@ function StalkerPlugin(bot) {
 	var self = this;
 	self.name = "stalker";
 	self.help = "Stalker plugin";
-	self.depend = ["cmd", "auth"];
+	self.depend = ["cmd", "auth", "info"];
 	
 	self.db = {};
 	self.autoid = 1;
@@ -300,7 +300,39 @@ function StalkerPlugin(bot) {
 				else
 					bot.say(to, nick2 + " has been never seen");
 			}
-		}
+		},
+
+		"cmd#istalk": function(nick, to, args) {
+			var nick2 = args[1];
+			if (nick2) {
+				var ids = self.stalk(nick2);
+				var tosort = [];
+
+				for (var i = 0; i < ids.length; i++) {
+					var row = self.db[ids[i]];
+					tosort.push(row);
+				}
+
+				tosort.sort(function(a, b) {
+					return b.seen - a.seen;
+				});
+
+				var nicks = [];
+				for (var i = 0; i < tosort.length && nicks.length < 5; i++) {
+					var row = tosort[i];
+					if (nicks.indexOf(row.nick) == -1)
+						nicks.push(row.nick);
+				}
+
+				for (var i = 0; i < nicks.length; i++) {
+					var curnick = nicks[i];
+					bot.plugins.info.info(curnick, function(info, inick) {
+						if (info !== undefined)
+							bot.notice(nick, nick2 + " as " + inick + ": " + info);
+					});
+				}
+			}
+		},
 	};
 
 }

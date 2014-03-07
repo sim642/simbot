@@ -36,13 +36,15 @@ fs.readFile("autoload.json", function(err, data) {
 	}
 });
 
-bot.saver = setInterval(function() {
-	for (var name in bot.plugins) {
-		if (bot.plugins[name].name) {
-			bot.plugins.save(name);
+if (config.saveinterval) {
+	bot.saver = setInterval(function() {
+		for (var name in bot.plugins) {
+			if (bot.plugins[name].name) {
+				bot.plugins.save(name);
+			}
 		}
-	}
-}, 10 * 60 * 1000);
+	}, config.saveinterval * 60 * 1000);
+}
 
 process.on("SIGINT", function() {
 	for (var name in bot.plugins) {

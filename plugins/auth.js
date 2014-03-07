@@ -10,7 +10,7 @@ function AuthPlugin(bot) {
 		self.accounts = data;
 	};
 
-	self.unload = function() {
+	self.save = function() {
 		return self.accounts;
 	};
 

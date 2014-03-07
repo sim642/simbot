@@ -16,7 +16,7 @@ function YoutubePlugin(bot) {
 		self.ignores = data.ignores;
 	};
 
-	self.unload = function() {
+	self.save = function() {
 		return {channels: self.channels, ignores: self.ignores};
 	};
 

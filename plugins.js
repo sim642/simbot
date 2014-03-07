@@ -47,12 +47,20 @@ plugins.enable = function(name) {
 	this._enable(this[name]);
 };
 
-plugins._unload = function(p) {
-	this._disable(p);
-	var data = (p.unload || function(){})();
+plugins._save = function(p) {
+	var data = (p.save || function(){})();
 	if (data) {
 		fs.writeFileSync("./data/" + p.name + ".json", JSON.stringify(data, null, 4));
 	}
+};
+
+plugins.save = function(name) {
+	this._save(this[name]);
+};
+
+plugins._unload = function(p) {
+	this._disable(p);
+	this._save(p);
 	delete this[p.name];
 };
 

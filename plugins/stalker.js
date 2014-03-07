@@ -32,7 +32,7 @@ function StalkerPlugin(bot) {
 		}
 	};
 
-	self.unload = function() {
+	self.save = function() {
 		return {
 			"db": self.db,
 			"autoid": self.autoid,

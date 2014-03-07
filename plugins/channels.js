@@ -14,7 +14,7 @@ function ChannelsPlugin(bot) {
 		}
 	};
 
-	self.unload = function() {
+	self.save = function() {
 		var data = {};
 		data.autojoins = self.autojoins;
 		data.autojoinTime = self.autojoinTime;

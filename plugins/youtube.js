@@ -20,6 +20,32 @@ function YoutubePlugin(bot) {
 		return {channels: self.channels, ignores: self.ignores};
 	};
 
+	// http://www.mredkj.com/javascript/numberFormat.html#addcommas
+	self.thseps = function(nStr) {
+		nStr += '';
+		x = nStr.split('.');
+		x1 = x[0];
+		x2 = x.length > 1 ? '.' + x[1] : '';
+		var rgx = /(\d+)(\d{3})/;
+		while (rgx.test(x1)) {
+			x1 = x1.replace(rgx, '$1' + ',' + '$2');
+		}
+		return x1 + x2;
+	};
+
+	self.lookup = function(id, callback) {
+		request("https://gdata.youtube.com/feeds/api/videos/" + id + "?v=2&alt=json", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var data = JSON.parse(body).entry;
+				var likes = parseFloat(data["yt$rating"].numLikes);
+				var dislikes = parseFloat(data["yt$rating"].numDislikes);
+				var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03"; 
+				var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 by " + data.author[0].name["$t"] + "; " + self.thseps(data["yt$statistics"].viewCount.toString()) + " views; " + bar;
+				(callback || function(){})(str);
+			}
+		});
+	};
+
 	self.events = {
 		"message": function(nick, to, text, message) {
 			if ((self.channels.indexOf(to) != -1) &&
@@ -28,11 +54,8 @@ function YoutubePlugin(bot) {
 				})) {
 				var match = text.match(self.vidre);
 				if (match) {
-					request("https://gdata.youtube.com/feeds/api/videos/" + match[1] + "?v=2&alt=json", function(err, res, body) {
-						if (!err && res.statusCode == 200) {
-							var data = JSON.parse(body).entry;
-							bot.say(to, "\x1Fhttp://youtu.be/" + match[1] + "\x1F : \x02" + data.title["$t"] + "\x02 by " + data.author[0].name["$t"] + ", " + data["yt$statistics"].viewCount.toString() + " views, " + data["yt$rating"].numLikes.toString() + " likes, " + data["yt$rating"].numDislikes.toString() + " dislikes");
-						}
+					self.lookup(match[1], function(str) {
+						bot.say(to, str);
 					});
 				}
 			}
@@ -41,11 +64,8 @@ function YoutubePlugin(bot) {
 		"pm": function(nick, text, message) {
 			var match = text.match(self.vidre);
 			if (match) {
-				request("https://gdata.youtube.com/feeds/api/videos/" + match[1] + "?v=2&alt=json", function(err, res, body) {
-					if (!err && res.statusCode == 200) {
-						var data = JSON.parse(body).entry;
-						bot.say(nick, "\x1Fhttp://youtu.be/" + match[1] + "\x1F : \x02" + data.title["$t"] + "\x02 by " + data.author[0].name["$t"] + ", " + data["yt$statistics"].viewCount.toString() + " views, " + data["yt$rating"].numLikes.toString() + " likes, " + data["yt$rating"].numDislikes.toString() + " dislikes");
-					}
+				self.lookup(match[1], function(str) {
+					bot.say(nick, str);
 				});
 			}
 		},

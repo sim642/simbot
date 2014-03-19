@@ -8,11 +8,29 @@ function FortunePlugin(bot) {
 
 	self.events = {
 		"cmd#fortune" : function(nick, to, args, message) {
-			exec("fortune -s", function (error, stdout, stderr) {
+			var cmd = "fortune -s";
+			if (args[1] && args[1].match(/^\w+$/))
+				cmd += " " + args[1];
+			exec(cmd, function (error, stdout, stderr) {
 				stdout.split("\n").forEach(function (line) {
 					if (line != "")
 						bot.say(to, "  " + line);
 				});
+				stderr.split("\n").forEach(function (line) {
+					if (line != "")
+						bot.say(to, "  " + line);
+				});
+			});
+		},
+
+		"cmd#fortunes": function (nick, to, args) {
+			exec("fortune -f", function (error, stdout, stderr) {
+				var arr = stderr.split("\n").map(function (line) {
+					return line.trim().split(" ")[1];
+				}).slice(1, -1);
+				console.log(arr);
+
+				bot.say(to, "All available =fortune categories: " + arr.join(", "));
 			});
 		}
 	}

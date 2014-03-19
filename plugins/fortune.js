@@ -30,7 +30,7 @@ function FortunePlugin(bot) {
 				}).slice(1, -1);
 				console.log(arr);
 
-				bot.say(to, "All available =fortune categories: " + arr.join(", "));
+				bot.notice(nick, "All available =fortune categories: " + arr.join(", "));
 			});
 		}
 	}

@@ -52,7 +52,6 @@ plugins._save = function(p) {
 	var data = (p.save || function(){})();
 	if (data) {
 		fs.writeFileSync("./data/" + p.name + ".json", JSON.stringify(data, null, 4));
-		bot.out.ok("plugins", "saved " + p.name);
 	}
 };
 

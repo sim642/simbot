@@ -4,7 +4,7 @@ function CmdPlugin(bot) {
 	self.help = "Commands plugin";
 
 	self.chanRe = /^=(\S+)(?:(\s+.*))?$/;
-	self.argsRe = /^\s*(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;
+	self.argsRe = /\s*(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;
 
 	self.events = {
 		"message": function(nick, to, text, message) {
@@ -24,8 +24,10 @@ function CmdPlugin(bot) {
 		},
 
 		"cmd": function(nick, to, cmd, args, message) {
-			if (bot.listeners("cmd#" + cmd)[0] !== undefined)
+			if (bot.listeners("cmd#" + cmd)[0] !== undefined) {
+				bot.out.log("cmd", nick + " in " + to + " called =" + cmd + " with args: [" + args.join(", ") + "]");
 				bot.emit("cmd#" + cmd, nick, to, args, message);
+			}
 			else
 				bot.emit("cmd#", nick, to, cmd, args, message);
 		},

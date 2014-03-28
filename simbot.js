@@ -15,34 +15,38 @@ var bot = new irc.Client(config.server, config.nick, config);
 bot.out = {};
 
 bot.conn.setTimeout(180 * 1000);
+bot.out.time = function() {
+	return clc.blackBright(new Date().toISOString());
+};
+
 bot.out.log = function(module, message) {
 	var c = clc.cyan;
-	console.log(c("[LOG:") + c.bold(module) + c("] ") + message);
+	console.log(bot.out.time() + " " + c("[LOG:") + c.bold(module) + c("] ") + message);
 };
 
 bot.out.doing = function(module, message) {
 	var c = clc.cyanBright;
-	console.log(c("[DOING:") + c.bold(module) + c("] ") + message);
+	console.log(bot.out.time() + " " + c("[DOING:") + c.bold(module) + c("] ") + message);
 };
 
 bot.out.ok = function(module, message) {
 	var c = clc.greenBright;
-	console.log(c("[OK:") + c.bold(module) + c("] ") + message);
+	console.log(bot.out.time() + " " + c("[OK:") + c.bold(module) + c("] ") + message);
 };
 
 bot.out.debug = function(module, message) {
 	var c = clc.magentaBright;
-	console.log(c("[DEBUG:") + c.bold(module) + c("] ") + message);
+	console.log(bot.out.time() + " " + c("[DEBUG:") + c.bold(module) + c("] ") + message);
 };
 
 bot.out.warn = function(module, message) {
 	var c = clc.yellowBright;
-	console.log(c("[WARN:") + c.bold(module) + c("] ") + message);
+	console.log(bot.out.time() + " " + c("[WARN:") + c.bold(module) + c("] ") + message);
 };
 
 bot.out.error = function(module, message) {
 	var c = clc.redBright;
-	console.log(c("[ERROR:") + c.bold(module) + c("] ") + message);
+	console.log(bot.out.time() + " " + c("[ERROR:") + c.bold(module) + c("] ") + message);
 };
 
 bot.conn.on("timeout", function() {

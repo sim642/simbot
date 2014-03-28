@@ -1,6 +1,7 @@
 var irc = require("irc");
 var repl = require("repl");
 var fs = require("fs");
+var clc = require("cli-color");
 
 var config = JSON.parse(fs.readFileSync("config.json"));
 var defcfg = {
@@ -11,8 +12,34 @@ var defcfg = {
 config.__proto__ = defcfg;
 
 var bot = new irc.Client(config.server, config.nick, config);
+bot.out = {};
 
 bot.conn.setTimeout(180 * 1000);
+bot.out.log = function(module, message) {
+	var c = clc.cyan;
+	console.log(c("[LOG:") + c.bold(module) + c("] ") + message);
+};
+
+bot.out.ok = function(module, message) {
+	var c = clc.greenBright;
+	console.log(c("[OK:") + c.bold(module) + c("] ") + message);
+};
+
+bot.out.debug = function(module, message) {
+	var c = clc.magentaBright;
+	console.log(c("[DEBUG:") + c.bold(module) + c("] ") + message);
+};
+
+bot.out.warn = function(module, message) {
+	var c = clc.yellowBright;
+	console.log(c("[WARN:") + c.bold(module) + c("] ") + message);
+};
+
+bot.out.error = function(module, message) {
+	var c = clc.redBright;
+	console.log(c("[ERROR:") + c.bold(module) + c("] ") + message);
+};
+
 bot.conn.on("timeout", function() {
 	bot.conn.destroy();
 	//bot.connect();

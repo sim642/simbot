@@ -10,7 +10,7 @@ function FortunePlugin(bot) {
 		"cmd#fortune" : function(nick, to, args, message) {
 			var cmd = "fortune -s";
 			if (args[1] && args[1].match(/^\w+$/))
-				cmd += " " + args[1];
+				cmd += " '" + args[1] + "'";
 			exec(cmd, function (error, stdout, stderr) {
 				stdout.split("\n").forEach(function (line) {
 					if (line != "")
@@ -26,7 +26,7 @@ function FortunePlugin(bot) {
 		"cmd#fortuneo" : function(nick, to, args, message) {
 			var cmd = "fortune -s /usr/share/games/fortunes/off/";
 			if (args[1] && args[1].match(/^\w+$/))
-				cmd += args[1];
+				cmd += "'" + args[1] + "'";
 			exec(cmd, function (error, stdout, stderr) {
 				stdout.split("\n").forEach(function (line) {
 					if (line != "")

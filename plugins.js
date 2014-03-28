@@ -18,6 +18,7 @@ plugins._load = function(p) {
 	var self = this;
 	fs.readFile("./data/" + p.name + ".json", function(err, data) {
 		(p.load || function(){})(data ? JSON.parse(data) : undefined);
+		bot.out.ok("plugins", "loaded " + p.name);
 		self._enable(p);
 	});
 };
@@ -51,6 +52,7 @@ plugins._save = function(p) {
 	var data = (p.save || function(){})();
 	if (data) {
 		fs.writeFileSync("./data/" + p.name + ".json", JSON.stringify(data, null, 4));
+		bot.out.ok("plugins", "saved " + p.name);
 	}
 };
 
@@ -62,6 +64,7 @@ plugins._unload = function(p) {
 	this._disable(p);
 	this._save(p);
 	delete this[p.name];
+	bot.out.ok("plugins", "unloaded " + p.name);
 };
 
 plugins.unload = function(name) {

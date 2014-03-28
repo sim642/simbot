@@ -20,6 +20,11 @@ bot.out.log = function(module, message) {
 	console.log(c("[LOG:") + c.bold(module) + c("] ") + message);
 };
 
+bot.out.doing = function(module, message) {
+	var c = clc.cyanBright;
+	console.log(c("[DOING:") + c.bold(module) + c("] ") + message);
+};
+
 bot.out.ok = function(module, message) {
 	var c = clc.greenBright;
 	console.log(c("[OK:") + c.bold(module) + c("] ") + message);
@@ -46,25 +51,27 @@ bot.conn.on("timeout", function() {
 });
 
 bot.on("error", function(message) {
-	console.log(message);
+	bot.out.error("irc", message);
 });
 
 bot.on("registered", function(message) {
 	bot.send("UMODE2", "+B");
+	bot.out.ok("irc", "registered on server");
 });
 
 bot.plugins = require("./plugins");
 
 fs.readFile("autoload.json", function(err, data) {
+	bot.out.doing("bot", "autoloading plugins...");
 	var autoload = JSON.parse(data).autoload;
 	for (var i = 0; i < autoload.length; i++) {
-		console.log(autoload[i]);
 		bot.plugins.load(autoload[i]);
 	}
 });
 
 if (config.saveinterval) {
 	bot.saver = setInterval(function() {
+		bot.out.doing("bot", "autosaving plugins...");
 		for (var name in bot.plugins) {
 			if (bot.plugins[name].name) {
 				bot.plugins.save(name);
@@ -74,6 +81,7 @@ if (config.saveinterval) {
 }
 
 process.on("SIGINT", function() {
+	bot.out.doing("bot", "unloading plugins...");
 	for (var name in bot.plugins) {
 		if (bot.plugins[name].name) {
 			bot.plugins.unload(name);
@@ -83,6 +91,7 @@ process.on("SIGINT", function() {
 });
 
 process.on("uncaughtException", function(e) {
+	bot.out.error("bot", "uncaught exception");
 	console.trace("ERROR process uncaught: " + e);
 });
 

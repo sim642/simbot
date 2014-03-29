@@ -2,6 +2,7 @@ var irc = require("irc");
 var repl = require("repl");
 var fs = require("fs");
 var clc = require("cli-color");
+var util = require("util");
 
 var config = JSON.parse(fs.readFileSync("config.json"));
 var defcfg = {
@@ -55,7 +56,7 @@ bot.conn.on("timeout", function() {
 });
 
 bot.on("error", function(message) {
-	bot.out.error("irc", message);
+	bot.out.error("irc", util.inspect(message, {colors: true}));
 });
 
 bot.on("registered", function(message) {

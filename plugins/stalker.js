@@ -160,7 +160,7 @@ function StalkerPlugin(bot) {
 		var stalk = self.stalk(nick);
 		for (var i = 0; i < stalk.length; i++) {
 			var row = self.db[stalk[i]];
-			console.log(row.id, row.nick, row.user, row.host);
+			bot.out.debug("stalker", row.id + "\t" + row.nick + "\t" + row.user + "\t" + row.host);
 		}
 	};
 

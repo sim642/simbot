@@ -44,7 +44,6 @@ function FortunePlugin(bot) {
 				var arr = stderr.split("\n").map(function (line) {
 					return line.trim().split(" ")[1];
 				}).slice(1, -1);
-				console.log(arr);
 
 				bot.notice(nick, "All available =fortune categories: " + arr.join(", "));
 			});
@@ -55,7 +54,6 @@ function FortunePlugin(bot) {
 				var arr = stderr.split("\n").map(function (line) {
 					return line.trim().split(" ")[1];
 				}).slice(1, -1);
-				console.log(arr);
 
 				bot.notice(nick, "All available =fortuneo categories: " + arr.join(", "));
 			});

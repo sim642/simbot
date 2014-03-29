@@ -14,41 +14,43 @@ config.__proto__ = defcfg;
 
 var bot = new irc.Client(config.server, config.nick, config);
 bot.out = {};
+bot.out.file = fs.createWriteStream("./data/simbot.log", {flags: 'a'});
 
 bot.conn.setTimeout(180 * 1000);
 bot.out.time = function() {
-	return clc.blackBright(new Date().toISOString());
+	return new Date().toISOString();
+};
+
+bot.out.wrapper = function(type, color, module, message) {
+	console.log(clc.blackBright(bot.out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
+	bot.out.file.write(bot.out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
 };
 
 bot.out.log = function(module, message) {
-	var c = clc.cyan;
-	console.log(bot.out.time() + " " + c("[LOG:") + c.bold(module) + c("] ") + message);
+	bot.out.wrapper("LOG", clc.cyan, module, message);
 };
 
 bot.out.doing = function(module, message) {
-	var c = clc.cyanBright;
-	console.log(bot.out.time() + " " + c("[DOING:") + c.bold(module) + c("] ") + message);
+	bot.out.wrapper("DOING", clc.cyanBright, module, message);
 };
 
 bot.out.ok = function(module, message) {
-	var c = clc.greenBright;
-	console.log(bot.out.time() + " " + c("[OK:") + c.bold(module) + c("] ") + message);
+	bot.out.wrapper("OK", clc.greenBright, module, message);
 };
 
 bot.out.debug = function(module, message) {
-	var c = clc.magentaBright;
-	console.log(bot.out.time() + " " + c("[DEBUG:") + c.bold(module) + c("] ") + message);
+	bot.out.wrapper("DEBUG", clc.magentaBright, module, message);
 };
 
 bot.out.warn = function(module, message) {
-	var c = clc.yellowBright;
-	console.log(bot.out.time() + " " + c("[WARN:") + c.bold(module) + c("] ") + message);
+	bot.out.wrapper("WARN", clc.yellowBright, module, message);
 };
 
 bot.out.error = function(module, message) {
-	var c = clc.redBright;
-	console.log(bot.out.time() + " " + c("[ERROR:") + c.bold(module) + c("] ") + message);
+	bot.out.wrapper("ERROR", clc.redBright, module, message);
 };
+
+bot.out.ok("bot", "bot started");
 
 bot.conn.on("timeout", function() {
 	bot.conn.destroy();
@@ -92,6 +94,7 @@ process.on("SIGINT", function() {
 			bot.plugins.unload(name);
 		}
 	}
+	bot.out.ok("bot", "bot stopped");
 	process.exit(0);
 });
 

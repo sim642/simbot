@@ -4,7 +4,7 @@ function CmdPlugin(bot) {
 	self.help = "Commands plugin";
 
 	self.chanRe = /^=(\S+)(?:(\s+.*))?$/;
-	self.argsRe = /\s*(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;
+	self.argsRe = /\s+(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;
 
 	self.events = {
 		"message": function(nick, to, text, message) {

@@ -26,7 +26,7 @@ function VotePlugin(bot) {
 	};
 
 	self.disable = function() {
-		for (var to in votes) {
+		for (var to in self.votes) {
 			self.voteend(to);
 		}
 	};

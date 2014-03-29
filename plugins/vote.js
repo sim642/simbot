@@ -25,6 +25,12 @@ function VotePlugin(bot) {
 		}, 5 * 60 * 1000);
 	};
 
+	self.disable = function() {
+		for (var to in votes) {
+			self.voteend(to);
+		}
+	};
+
 	self.events = {
 		"cmd#votestart": function(nick, to, args) {
 			if (!(to in self.votes)) {

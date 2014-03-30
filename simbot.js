@@ -103,6 +103,7 @@ process.on("uncaughtException", function(e) {
 });
 
 repl.start({
-	useGlobal: true
+	useGlobal: true,
+	ignoreUndefined: true
 }).context.bot = bot;
 

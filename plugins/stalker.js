@@ -318,7 +318,7 @@ function StalkerPlugin(bot) {
 				});
 
 				var nicks = [];
-				for (var i = 0; i < tosort.length && nicks.length < 5; i++) {
+				for (var i = 0; i < tosort.length && nicks.length < 10; i++) {
 					var row = tosort[i];
 					if (nicks.indexOf(row.nick) == -1)
 						nicks.push(row.nick);

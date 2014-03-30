@@ -37,10 +37,13 @@ function YoutubePlugin(bot) {
 		request("https://gdata.youtube.com/feeds/api/videos/" + id + "?v=2&alt=json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).entry;
-				var likes = parseFloat(data["yt$rating"].numLikes);
-				var dislikes = parseFloat(data["yt$rating"].numDislikes);
-				var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03"; 
-				var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 by " + data.author[0].name["$t"] + "; " + self.thseps(data["yt$statistics"].viewCount.toString()) + " views; " + bar;
+				var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 by " + data.author[0].name["$t"] + "; " + self.thseps(data["yt$statistics"].viewCount.toString()) + " views";
+				if (data["yt$rating"] !== undefined) {
+					var likes = parseFloat(data["yt$rating"].numLikes);
+					var dislikes = parseFloat(data["yt$rating"].numDislikes);
+					var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03"; 
+					str += "; " + bar;
+				}
 				(callback || function(){})(str);
 			}
 		});

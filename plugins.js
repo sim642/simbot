@@ -24,6 +24,7 @@ plugins._load = function(p) {
 };
 
 plugins.load = function(name) {
+	debugger;
 	if (!(name in this)) {
 		try {
 			var r = require.uncached("./plugins/" + name);
@@ -31,7 +32,7 @@ plugins.load = function(name) {
 			this._load(p);
 		}
 		catch (e) {
-			console.log("ERROR loading: " + e);
+			bot.out.error("plugins", "couldn't load " + name + ": " + e.stack);
 		}
 	}
 };

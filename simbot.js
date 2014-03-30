@@ -99,8 +99,7 @@ process.on("SIGINT", function() {
 });
 
 process.on("uncaughtException", function(e) {
-	bot.out.error("bot", "uncaught exception");
-	console.trace("ERROR process uncaught: " + e);
+	bot.out.error("bot", "uncaught exception: " + e.stack);
 });
 
 repl.start({

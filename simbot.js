@@ -78,7 +78,7 @@ fs.readFile("autoload.json", function(err, data) {
 
 if (config.saveinterval) {
 	bot.saver = setInterval(function() {
-		bot.out.doing("bot", "autosaving plugins...");
+		//bot.out.doing("bot", "autosaving plugins...");
 		for (var name in bot.plugins) {
 			if (bot.plugins[name].name) {
 				bot.plugins.save(name);

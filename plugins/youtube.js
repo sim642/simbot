@@ -57,6 +57,7 @@ function YoutubePlugin(bot) {
 				})) {
 				var match = text.match(self.vidre);
 				if (match) {
+					bot.out.log("youtube", nick + " in " + to + ": " + match[0]);
 					self.lookup(match[1], function(str) {
 						bot.say(to, str);
 					});
@@ -67,6 +68,7 @@ function YoutubePlugin(bot) {
 		"pm": function(nick, text, message) {
 			var match = text.match(self.vidre);
 			if (match) {
+				bot.out.log("youtube", nick + " in PM: " + match[0]);
 				self.lookup(match[1], function(str) {
 					bot.say(nick, str);
 				});

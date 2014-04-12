@@ -15,6 +15,7 @@ function StalkerPlugin(bot) {
 			pid:
 			added:
 			seen:
+			ignore: 
 		}
 	*/
 	self.ignores = [];
@@ -63,15 +64,19 @@ function StalkerPlugin(bot) {
 				"seen": new Date(),
 				"pid": null
 			};
-			
-			if (!self.ignores.some(function (elem, i, arr) {
+
+			newrow.ignore = self.ignores.some(function (elem, i, arr) {
 				return bot.plugins.auth.match(newrow.nick + "!" + newrow.user + "@" + newrow.host, elem);
-			})) {
+			});
+			
+			if (!newrow.ignore) {
 				for (var id in self.db) {
 					var row = self.db[id];
-					if (row.nick.toLowerCase() == nick.toLowerCase() || row.host.toLowerCase() == host.toLowerCase()) {
-						newrow.pid = row.pid !== null ? row.pid : id;
-						break;
+					if (!row.ignore) {
+						if (row.nick.toLowerCase() == nick.toLowerCase() || row.host.toLowerCase() == host.toLowerCase()) {
+							newrow.pid = row.pid !== null ? row.pid : id;
+							break;
+						}
 					}
 				}
 			}
@@ -86,14 +91,18 @@ function StalkerPlugin(bot) {
 			var newrow = self.db[id];
 			newrow.pid = null;
 
-			if (!self.ignores.some(function (elem, i, arr) {
+			newrow.ignore = self.ignores.some(function (elem, i, arr) {
 				return bot.plugins.auth.match(newrow.nick + "!" + newrow.user + "@" + newrow.host, elem);
-			})) {
+			});
+
+			if (!newrow.ignore) {
 				for (var id in self.db) {
 					var row = self.db[id];
-					if (row.nick.toLowerCase() == newrow.nick.toLowerCase() || row.host.toLowerCase() == newrow.host.toLowerCase()) {
-						newrow.pid = ((row.pid !== null) ? row.pid : row.id);
-						break;
+					if (!row.ignore) {
+						if (row.nick.toLowerCase() == newrow.nick.toLowerCase() || row.host.toLowerCase() == newrow.host.toLowerCase()) {
+							newrow.pid = ((row.pid !== null) ? row.pid : row.id);
+							break;
+						}
 					}
 				}
 			}
@@ -134,9 +143,7 @@ function StalkerPlugin(bot) {
 				var row = self.db[id];
 				if ((row.nick.toLowerCase() == info.nick.toLowerCase() || 
 					(info.host !== undefined && row.host.toLowerCase() == info.host.toLowerCase())) &&
-					!self.ignores.some(function (elem, i, arr) {
-						return bot.plugins.auth.match(row.nick + "!" + row.user + "@" + row.host, elem);
-					})) {
+					!row.ignore) {
 					sid = row.id;
 					spid = row.pid;
 				}

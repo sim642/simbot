@@ -340,6 +340,17 @@ function StalkerPlugin(bot) {
 				}
 			}
 		},
+
+		"cmd#is": function(nick, to, args) {
+			var nick1 = args[1], nick2 = args[2];
+			var stalk1 = self.stalk(nick1), stalk2 = self.stalk(nick2);
+
+			var diff = stalk1.filter(function(elem) {
+				return stalk2.indexOf(elem) >= 0;
+			});
+
+			bot.say(to, nick + ": " + nick1 + " is " + (diff.length > 0 ? "" : "not ") + nick2);
+		},
 	};
 
 }

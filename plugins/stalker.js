@@ -331,13 +331,12 @@ function StalkerPlugin(bot) {
 						nicks.push(row.nick);
 				}
 
-				for (var i = 0; i < nicks.length; i++) {
-					var curnick = nicks[i];
-					bot.plugins.info.info(curnick, function(info, inick) {
-						if (info !== undefined)
-							bot.notice(nick, nick2 + " as " + inick + ": " + info);
-					});
-				}
+				var callback = function(info, inick) {
+					if (info !== undefined)
+						bot.notice(nick, nick2 + " as " + inick + ": " + info);
+				};
+
+				bot.plugins.info.info(nicks, callback);
 			}
 		},
 

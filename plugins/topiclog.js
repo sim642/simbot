@@ -61,6 +61,18 @@ function TopicLogPlugin(bot) {
 				bot.send("TOPIC", channel);
 		},
 
+		"cmd#topics": function(nick, to, args) {
+			var chanlog = self.topiclog[to];
+
+			for (var i = -3; i < 0; i++) {
+				var entry = chanlog[chanlog.length + i];
+				if (entry)
+				{
+					bot.notice(nick, "Topic in " + to + " by " + entry.nick + " at " + entry.time.toUTCString() + ": " + entry.topic);
+				}
+			}
+		},
+
 		"cmd#topicdiff": function(nick, to, args) {
 			var chanlog = self.topiclog[to];
 			if (chanlog.length >= 2)

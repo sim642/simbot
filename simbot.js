@@ -22,6 +22,8 @@ bot.out.time = function() {
 };
 
 bot.out.wrapper = function(type, color, module, message) {
+	if (!(typeof(message) === "string" || message instanceof String))
+		message = util.inspect(message, {colors: true});
 	console.log(clc.blackBright(bot.out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
 	bot.out.file.write(bot.out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
 };

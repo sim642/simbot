@@ -33,12 +33,25 @@ function YoutubePlugin(bot) {
 		return x1 + x2;
 	};
 
+	self.duration = function(secs) {
+		var str = "";
+		str = (secs % 60).toString();
+		secs = Math.floor(secs / 60);
+		if (secs > 0) {
+			str = (secs % 60).toString() + ":" + str;
+			secs = Math.floor(secs / 60);
+			if (secs > 0)
+				str = secs.toString() + ":" + str;
+		}
+		return str;
+	};
+
 	self.lookup = function(id, callback) {
 		request("https://gdata.youtube.com/feeds/api/videos/" + id + "?v=2&alt=json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).entry;
 				var views = data["yt$statistics"] ? data["yt$statistics"].viewCount : 0;
-				var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 by " + data.author[0].name["$t"] + "; " + self.thseps(views.toString()) + " views";
+				var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 [" + self.duration(data["media$group"]["yt$duration"].seconds) + "] by " + data.author[0].name["$t"] + "; " + self.thseps(views.toString()) + " views";
 				if (data["yt$rating"] !== undefined) {
 					var likes = parseFloat(data["yt$rating"].numLikes);
 					var dislikes = parseFloat(data["yt$rating"].numDislikes);

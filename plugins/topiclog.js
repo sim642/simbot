@@ -23,6 +23,22 @@ function TopicLogPlugin(bot) {
 		return self.topiclog;
 	};
 
+	self.colordiff = function(str1, str2) {
+		var diff = jsdiff.diffWords(str1, str2);
+		var str = "";
+
+		diff.forEach(function(part) {
+			if (part.added)
+				str += "\x033{+" + part.value + "+}";
+			else if (part.removed)
+				str += "\x034[-" + part.value + "-]";
+			else
+				str += "\x0f" + part.value;
+		});
+
+		return str;
+	};
+
 	self.events = {
 		"topic": function(channel, topic, nick, message) {
 			var chanlog = self.topiclog[channel];
@@ -62,13 +78,22 @@ function TopicLogPlugin(bot) {
 		},
 
 		"cmd#topics": function(nick, to, args) {
+			var cnt = Math.min(Math.max(args[1], 1) || 1, 5);
 			var chanlog = self.topiclog[to];
 
-			for (var i = -3; i < 0; i++) {
+			var lastentry = chanlog[chanlog.length - cnt - 1];
+			for (var i = -cnt; i < 0; i++) {
 				var entry = chanlog[chanlog.length + i];
 				if (entry)
 				{
-					bot.notice(nick, "Topic in " + to + " by " + entry.nick + " at " + entry.time.toUTCString() + ": " + entry.topic);
+					var str;
+					if (lastentry)
+						str = self.colordiff(lastentry.topic, entry.topic);
+					else
+						str = entry.topic;
+
+					bot.notice(nick, "Topic in " + to + " by " + entry.nick + " at " + entry.time.toUTCString() + ": " + str);
+					lastentry = entry;
 				}
 			}
 		},
@@ -77,18 +102,7 @@ function TopicLogPlugin(bot) {
 			var chanlog = self.topiclog[to];
 			if (chanlog.length >= 2)
 			{
-				var diff = jsdiff.diffWords(chanlog[chanlog.length - 2].topic, chanlog[chanlog.length - 1].topic);
-
-				var str = "";
-				diff.forEach(function(part) {
-					if (part.added)
-						str += "\x033{+" + part.value + "+}";
-					else if (part.removed)
-						str += "\x034[-" + part.value + "-]";
-					else
-						str += "\x0f" + part.value;
-				});
-
+				var str = self.colordiff(chanlog[chanlog.length - 2].topic, chanlog[chanlog.length - 1].topic);
 				bot.say(to, "Topic diff: " + str);
 			}
 			else

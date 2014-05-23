@@ -33,15 +33,20 @@ function YoutubePlugin(bot) {
 		return x1 + x2;
 	};
 
-	self.duration = function(secs) {
+	self.duration = function(t) {
 		var str = "";
-		str = (secs % 60).toString();
-		secs = Math.floor(secs / 60);
-		if (secs > 0) {
-			str = (secs % 60).toString() + ":" + str;
-			secs = Math.floor(secs / 60);
-			if (secs > 0)
-				str = secs.toString() + ":" + str;
+		str = (t % 60).toString();
+		t = Math.floor(t / 60);
+		if (t > 0) {
+			if (str.length < 2)
+				str = "0" + str;
+			str = (t % 60).toString() + ":" + str;
+			t = Math.floor(t / 60);
+			if (t > 0) {
+				if (str.length < 5)
+					str = "0" + str;
+				str = t.toString() + ":" + str;
+			}
 		}
 		return str;
 	};

@@ -78,7 +78,7 @@ function TopicLogPlugin(bot) {
 		},
 
 		"cmd#topics": function(nick, to, args) {
-			var cnt = Math.min(Math.max(args[1], 1) || 1, 5);
+			var cnt = Math.min(Math.max(args[1], 1) || 3, 5);
 			var chanlog = self.topiclog[to];
 
 			var lastentry = chanlog[chanlog.length - cnt - 1];

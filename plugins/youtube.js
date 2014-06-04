@@ -35,19 +35,16 @@ function YoutubePlugin(bot) {
 
 	self.duration = function(t) {
 		var str = "";
-		str = (t % 60).toString();
+		str = ("0" + (t % 60).toString()).slice(-2);
 		t = Math.floor(t / 60);
 		if (t > 0) {
-			if (str.length < 2)
-				str = "0" + str;
-			str = (t % 60).toString() + ":" + str;
+			str = ("0" + (t % 60).toString()).slice(-2) + ":" + str;
 			t = Math.floor(t / 60);
-			if (t > 0) {
-				if (str.length < 5)
-					str = "0" + str;
+			if (t > 0)
 				str = t.toString() + ":" + str;
-			}
 		}
+		else
+			str = "0:" + str;
 		return str;
 	};
 

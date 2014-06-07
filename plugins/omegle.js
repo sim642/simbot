@@ -6,6 +6,8 @@ function OmeglePlugin(bot) {
 	self.help = "Omegle plugin";
 	self.depend = ["cmd"];
 
+	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>)\s*(.*)$/i
+
 	self.chats = {};
 
 	self.disable = function() {
@@ -117,7 +119,10 @@ function OmeglePlugin(bot) {
 		"nocmd": function(nick, to, text) {
 			if (to in self.chats)
 			{
-				request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": text}});
+				var match = text.match(self.regex);
+				if (nick == to || (match && (match[1] == ">" || match[2] == bot.nick))) {
+					request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": (nick != to ? match[2] : text)}});
+				}
 			}
 		}
 	}

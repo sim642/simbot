@@ -81,8 +81,8 @@ function OmeglePlugin(bot) {
 		"cmd#reomegle": function(nick, to, args, message) {
 			if (to in self.chats) {
 				bot.emit("cmd#unomegle", nick, to, args, message);
-				bot.emit("cmd#omegle", nick, to, args, message);
 			}
+			bot.emit("cmd#omegle", nick, to, args, message);
 		},
 
 		"nocmd": function(nick, to, text) {

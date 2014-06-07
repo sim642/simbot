@@ -92,7 +92,7 @@ function TopicLogPlugin(bot) {
 					else
 						str = entry.topic;
 
-					bot.notice(nick, "Topic in " + to + " by " + entry.nick + " at " + entry.time.toUTCString() + ": " + str);
+					bot.notice(nick, "\x02Topic in " + to + " by " + entry.nick + " at " + entry.time.toUTCString() + ":\x02 " + str);
 					lastentry = entry;
 				}
 			}
@@ -103,7 +103,7 @@ function TopicLogPlugin(bot) {
 			if (chanlog.length >= 2)
 			{
 				var str = self.colordiff(chanlog[chanlog.length - 2].topic, chanlog[chanlog.length - 1].topic);
-				bot.say(to, "Topic diff: " + str);
+				bot.say(to, "\x02Topic diff:\x02 " + str);
 			}
 			else
 				bot.say(to, "Cannot find topic diff with less than 2 known topics");

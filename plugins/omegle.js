@@ -121,7 +121,7 @@ function OmeglePlugin(bot) {
 			{
 				var match = text.match(self.regex);
 				if (nick == to || (match && (match[1] == ">" || match[2] == bot.nick))) {
-					request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": (nick != to ? match[2] : text)}});
+					request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": (nick != to ? match[3] : text)}});
 				}
 			}
 		}

@@ -78,6 +78,10 @@ function ChannelsPlugin(bot) {
 			bot.say(to, "autojoins: " + self.autojoins.join(", "));
 		}),
 
+		"cmd#channels": bot.plugins.auth.proxy(6, function(nick, to, args) {
+			bot.say(to, "channels: " + Object.keys(bot.chans).join(", "));
+		}),
+
 		"part": function(channel, nick) {
 			if ((nick == bot.nick) && (self.autojoins.indexOf(channel) != -1))
 				setTimeout(function() {

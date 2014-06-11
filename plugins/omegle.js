@@ -1,4 +1,5 @@
 var request = require("request");
+var qs = require("querystring");
 
 function OmeglePlugin(bot) {
 	var self = this;
@@ -17,11 +18,29 @@ function OmeglePlugin(bot) {
 		self.chats = {};
 	};
 
-	self.start = function(to) {
+	self.start = function(to, topics, lang) {
+		if (self.chats[to] === undefined) {
+			self.chats[to] = {
+				"auto": false,
+				"lang": lang || "en",
+				"topics": topics || []
+			};
+		}
+
 		var server = "http://front1.omegle.com/";
-		request.post({url: server + "start", form: {"rcs": 1}}, function(err, res, body) {
+		self.chats[to].server = server;
+
+		var query = {
+			"rcs": 1,
+			//"firstevents": 1,
+			"spid": "",
+			"lang": self.chats[to].lang,
+			"topics": JSON.stringify(self.chats[to].topics)
+		};
+		request.post({url: server + "start?" + qs.stringify(query) }, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
+				self.chats[to].id = data;
 				var interval = setInterval(function() {
 					request.post({url: server + "events", form: {"id": data}}, function(err, res, body) {
 						if (!err && res.statusCode == 200) {
@@ -30,7 +49,7 @@ function OmeglePlugin(bot) {
 								for (var i = 0; i < eventdata.length; i++) {
 									switch (eventdata[i][0]) {
 									case "waiting":
-										bot.notice(to, "waiting for stranger");
+										bot.notice(to, "waiting for stranger [lang: " + self.chats[to].lang + "; interests: " + self.chats[to].topics.join(",") + "]");
 										break;
 									case "connected":
 										bot.notice(to, "stranger connected");
@@ -68,8 +87,9 @@ function OmeglePlugin(bot) {
 					}
 				};
 
-				var auto = self.chats[to] === undefined ? false : self.chats[to].auto;
-				self.chats[to] = {"server": server, "id": data, "interval": interval, "hardDisconnect": hardDisconnect, "softDisconnect": softDisconnect, "auto": auto};
+				self.chats[to].interval = interval;
+				self.chats[to].hardDisconnect = hardDisconnect;
+				self.chats[to].softDisconnect = softDisconnect;
 			}
 		});
 	};
@@ -78,7 +98,7 @@ function OmeglePlugin(bot) {
 		"cmd#omegle": function(nick, to, args) {
 			if (!(to in self.chats)) {
 				bot.notice(to, "omegle started");
-				self.start(to);
+				self.start(to, args[1].split(","), args[2]);
 			}
 			else
 				bot.notice(to, "omegle already started");
@@ -114,6 +134,18 @@ function OmeglePlugin(bot) {
 			}
 			else
 				bot.notice(to, "omegle not started");
+		},
+
+		"cmd#lang": function(nick, to, args) {
+			if (to in self.chats) {
+				self.chats[to].lang = args[1];
+			}
+		},
+
+		"cmd#interests": function(nick, to, args) {
+			if (to in self.chats) {
+				self.chats[to].topics = args[1].split(",");
+			}
 		},
 
 		"nocmd": function(nick, to, text) {

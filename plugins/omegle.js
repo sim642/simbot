@@ -42,7 +42,7 @@ function OmeglePlugin(bot) {
 										bot.notice(to, "stopped typing");
 										break;
 									case "gotMessage":
-										bot.say(to, eventdata[i][1]);
+										bot.say(to, "\x02" + eventdata[i][1]);
 										break;
 									case "strangerDisconnected":
 										bot.notice(to, "stranger disconnected");

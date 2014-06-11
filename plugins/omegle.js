@@ -26,6 +26,12 @@ function OmeglePlugin(bot) {
 				"topics": topics || []
 			};
 		}
+		else {
+			if (topics !== undefined)
+				self.chats[to].topics = topics;
+			if (lang !== undefined)
+				self.chats[to].lang = lang;
+		}
 
 		var server = "http://front1.omegle.com/";
 		self.chats[to].server = server;
@@ -98,7 +104,7 @@ function OmeglePlugin(bot) {
 		"cmd#omegle": function(nick, to, args) {
 			if (!(to in self.chats)) {
 				bot.notice(to, "omegle started");
-				self.start(to, args[1].split(","), args[2]);
+				self.start(to, args[1] === undefined ? undefined : args[1].split(","), args[2]);
 			}
 			else
 				bot.notice(to, "omegle already started");
@@ -118,7 +124,7 @@ function OmeglePlugin(bot) {
 			if (to in self.chats) {
 				self.chats[to].hardDisconnect();
 			}
-			self.start(to);
+			self.start(to, args[1] === undefined ? undefined : args[1].split(","), args[2]);
 		},
 
 		"cmd#autoomegle": function(nick, to, args) {

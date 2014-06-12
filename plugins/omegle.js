@@ -73,6 +73,12 @@ function OmeglePlugin(bot) {
 										bot.notice(to, "stranger disconnected");
 										self.chats[to].softDisconnect();
 										break;
+									case "statusInfo":
+										//bot.notice(to, "Omegle users online: " + eventdata[i][1].count);
+										break;
+									case "commonLikes":
+										bot.notice(to, "common likes: " + eventdata[i][1].join(","));
+										break;
 									}
 								}
 							}
@@ -96,6 +102,10 @@ function OmeglePlugin(bot) {
 				self.chats[to].interval = interval;
 				self.chats[to].hardDisconnect = hardDisconnect;
 				self.chats[to].softDisconnect = softDisconnect;
+			}
+			else {
+				bot.notice(to, "omegle failure");
+				delete self.chats[to];
 			}
 		});
 	};

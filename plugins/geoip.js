@@ -5,7 +5,7 @@ function GeoIPPlugin(bot) {
 	var self = this;
 	self.name = "geoip";
 	self.help = "GeoIP plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "bitly"];
 
 	self.formatPair = function(key, value) {
 		if (value !== undefined)
@@ -30,7 +30,8 @@ function GeoIPPlugin(bot) {
 				if (locstr != "")
 					bits.push(["location", locstr]);
 
-				if (j.loc && j.loc != "")
+				var loc = j.loc && j.loc != "";
+				if (loc)
 					bits.push(["coords", j.loc]);
 
 				if (j.org)
@@ -40,15 +41,36 @@ function GeoIPPlugin(bot) {
 				if (j.bogon)
 					bits.push(["bogon"]);
 
-				var hoststr = j.hostname != "No Hostname" ? " \x02(" + j.hostname + ")\x02" : "";
-				var str = "\x02" + j.ip + hoststr + ": \x02";
-				for (var i = 0; i < bits.length; i++) {
-					str += self.formatPair(bits[i][0], bits[i][1]);
-					if (i != bits.length - 1)
-						str += ", ";
+				var func;
+				var mapsurl = "http://www.google.com/maps/place/" + j.loc + "/@" + j.loc + ",9z";
+				if (loc)
+					func = bot.plugins.bitly.shorten;
+				else {
+					func = function(_, callback) {
+						callback();
+					};
 				}
 
-				(callback || function(){})(str);
+				func(mapsurl, function(shorturl) {
+					if (loc) {
+						for (var i = 0; i < bits.length; i++) {
+							if (bits[i][0] == "coords") {
+								bits[i][1] += " \x02(" + shorturl + ")\x02";
+								break;
+							}
+						}
+					}
+
+					var hoststr = (j.hostname !== undefined && j.hostname != "No Hostname") ? " \x02(" + j.hostname + ")\x02" : "";
+					var str = "\x02" + j.ip + hoststr + ": \x02";
+					for (var i = 0; i < bits.length; i++) {
+						str += self.formatPair(bits[i][0], bits[i][1]);
+						if (i != bits.length - 1)
+							str += ", ";
+					}
+
+					(callback || function(){})(str);
+				});
 			}
 			else if (!err && res.statusCode == 404) {
 				(callback || function(){})(null);

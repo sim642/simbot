@@ -35,7 +35,7 @@ function GeoIPPlugin(bot) {
 					bits.push(["coords", j.loc]);
 
 				if (j.org)
-					bits.push(["organization", j.org]);
+					bits.push(["organization", j.org.replace(/^AS\d+ /, "")]);
 				if (j.postal)
 					bits.push(["postal code", j.postal]);
 				if (j.bogon)

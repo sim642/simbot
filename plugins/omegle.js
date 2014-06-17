@@ -70,6 +70,7 @@ function OmeglePlugin(bot) {
 										bot.notice(to, "waiting for stranger [lang: " + self.chats[to].lang + "; interests: " + self.chats[to].topics.join(",") + "]");
 										break;
 									case "connected":
+										bot.out.log("omegle", "stranger connected in " + to);
 										bot.notice(to, "stranger connected");
 										break;
 									case "typing":
@@ -80,15 +81,18 @@ function OmeglePlugin(bot) {
 										break;
 									case "gotMessage":
 										var msg = eventdata[i][1];
+										bot.out.log("omegle", "stranger in " + to + ": " + msg);
 										bot.say(to, "\x02" + msg);
 										if (self.skips.some(function(skip) {
 											return msg.match(new RegExp(skip));
 										})) {
-											bot.notice(to, "bot detected, disconnecting");
+											bot.out.log("omegle", "stranger is bot, skipping");
+											bot.notice(to, "bot detected, skipping");
 											self.chats[to].softDisconnect();
 										}
 										break;
 									case "strangerDisconnected":
+										bot.out.log("omegle", "stranger disconnected");
 										bot.notice(to, "stranger disconnected");
 										self.chats[to].softDisconnect();
 										break;
@@ -143,6 +147,7 @@ function OmeglePlugin(bot) {
 			if (to in self.chats) {
 				self.chats[to].hardDisconnect();
 				delete self.chats[to];
+				bot.out.log("omegle", nick + " in " + to + " disconnected");
 				bot.notice(to, "omegle stopped");
 			}
 			else
@@ -188,7 +193,9 @@ function OmeglePlugin(bot) {
 			{
 				var match = text.match(self.regex);
 				if (nick == to || (match && (match[1] == ">" || match[2] == bot.nick))) {
-					request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": (nick != to ? match[3] : text)}});
+					var msg = nick != to ? match[3] : text;
+					bot.out.log("omegle", nick + " in " + to + ": " + msg);
+					request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": msg}});
 				}
 			}
 		}

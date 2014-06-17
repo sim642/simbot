@@ -7,7 +7,19 @@ function OmeglePlugin(bot) {
 	self.help = "Omegle plugin";
 	self.depend = ["cmd"];
 
-	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>)\s*(.*)$/i
+	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>)\s*(.*)$/i;
+
+	self.skips = [];
+
+	self.load = function(data) {
+		if (data) {
+			self.skips = data.skips;
+		}
+	};
+
+	self.save = function() {
+		return {"skips": self.skips};
+	};
 
 	self.chats = {};
 
@@ -67,7 +79,14 @@ function OmeglePlugin(bot) {
 										bot.notice(to, "stopped typing");
 										break;
 									case "gotMessage":
-										bot.say(to, "\x02" + eventdata[i][1]);
+										var msg = eventdata[i][1];
+										bot.say(to, "\x02" + msg);
+										if (self.skips.some(function(skip) {
+											return msg.match(new RegExp(skip));
+										})) {
+											bot.notice(to, "bot detected, disconnecting");
+											self.chats[to].softDisconnect();
+										}
 										break;
 									case "strangerDisconnected":
 										bot.notice(to, "stranger disconnected");

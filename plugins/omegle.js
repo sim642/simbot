@@ -7,7 +7,7 @@ function OmeglePlugin(bot) {
 	self.help = "Omegle plugin";
 	self.depend = ["cmd"];
 
-	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>)\s*(.*)$/i;
+	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>(?!>))\s*(.*)$/i;
 
 	self.skips = [];
 

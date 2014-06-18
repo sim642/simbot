@@ -38,24 +38,24 @@ function HighlightPlugin(bot) {
 					if (!(nick in self.highlights))
 						self.highlights[nick] = {};
 					self.highlights[nick].online = true;
-					bot.say(to, nick + ": highlights set to online");
+					bot.say(nick, "highlights set to online");
 					break;
 				case "offline":
 					if (!(nick in self.highlights))
 						self.highlights[nick] = {};
 					self.highlights[nick].online = false;
-					bot.say(to, nick + ": highlights set to offline");
+					bot.say(nick, "highlights set to offline");
 					break;
 				case "off":
 					if (nick in self.highlights) {
 						delete self.highlights[nick];
-						bot.say(to, nick + ": highlights turned off");
+						bot.say(nick, "highlights turned off");
 					}
 					break;
 				}
 			}
 			else
-				bot.say(to, nick + ": pushbullet must be set to use this feature");
+				bot.say(nick, "pushbullet must be set to use this feature");
 		}
 	}
 }

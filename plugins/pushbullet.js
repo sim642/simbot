@@ -39,7 +39,6 @@ function PushbulletPlugin(bot) {
 			body: params
 		}, function (err, res, body) {
 			if (!err && res.statusCode == 200) {
-				bot.out.ok("pushbullet", params);
 				(callback || function(){})(false);
 			}
 			else {
@@ -71,8 +70,14 @@ function PushbulletPlugin(bot) {
 		"cmd#setpushbullet": function(nick, to, args) {
 			bot.plugins.nickserv.identified(nick, function(identified) {
 				if (identified) {
-					self.emails[nick] = args[1];
-					bot.say(to, nick + ": pushbullet set to " + args[1]);
+					if (args[1] !== undefined) {
+						self.emails[nick] = args[1];
+						bot.say(to, nick + ": pushbullet set to " + args[1]);
+					}
+					else {
+						delete self.emails[nick];
+						bot.say(to, nick + ": pushbullet unset");
+					}
 				}
 				else
 					bot.say(to, nick + ": must be identified for this nick to set pushbullet");

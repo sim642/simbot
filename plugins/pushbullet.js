@@ -4,12 +4,29 @@ function PushbulletPlugin(bot) {
 	var self = this;
 	self.name = "pushbullet";
 	self.help = "Pushbullet plugin";
-	self.depend = ["cmd", "auth"];
+	self.depend = ["cmd", "auth", "nickserv"];
 
 	self.token = null;
+	self.emails = {};
 
 	self.load = function(data) {
 		self.token = data.token;
+		if (data.emails)
+			self.emails = data.emails;
+	};
+
+	self.save = function() {
+		return {
+			"token": self.token,
+			"emails": self.emails
+		};
+	};
+
+	self.parseto = function(to) {
+		if (to in self.emails)
+			return self.emails[to];
+		else
+			return to;
 	};
 
 	self.push = function(params, callback) {
@@ -34,7 +51,7 @@ function PushbulletPlugin(bot) {
 
 	self.pushnote = function(to, title, body, callback) {
 		self.push({
-			"email": to,
+			"email": self.parseto(to),
 			"type": "note",
 			"title": title,
 			"body": body
@@ -47,9 +64,20 @@ function PushbulletPlugin(bot) {
 				if (err)
 					bot.say(to, nick + ": error sending pushbullet");
 				else
-					bot.say(to, nick + ": pushbullet sent");
+					bot.say(to, nick + ": pushbullet sent to " + args[1]);
 			});
-		})
+		}),
+
+		"cmd#setpushbullet": function(nick, to, args) {
+			bot.plugins.nickserv.identified(nick, function(identified) {
+				if (identified) {
+					self.emails[nick] = args[1];
+					bot.say(to, nick + ": pushbullet set to " + args[1]);
+				}
+				else
+					bot.say(to, nick + ": must be identified for this nick to set pushbullet");
+			});
+		}
 	}
 }
 

@@ -29,11 +29,16 @@ function HighlightPlugin(bot) {
 		};
 	}
 
+	self.stripcolors = function(text) {
+		return text.replace(/\x1f|\x02|\x12|\x0f|\x16|\x03(?:\d{1,2}(?:,\d{1,2})?)?/g, "");
+	}
+
 	self.events = {
 		"message": function(nick, to, text) {
 			for (var hinick in self.highlights) {
 				var level = self.highlights[hinick].level;
-				if (text.match(new RegExp("\\b" + hinick)) && !(!(level == "online" || level == "away") && (hinick in bot.chans[to].users))) {
+				if (text.match(new RegExp("\\b" + hinick, "i")) && !(!(level == "online" || level == "away") && (hinick in bot.chans[to].users))) {
+					text = self.stripcolors(text);
 					switch (level) {
 					case "online":
 						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + text);

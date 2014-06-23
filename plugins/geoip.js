@@ -80,6 +80,9 @@ function GeoIPPlugin(bot) {
 
 	self.events = {
 		"cmd#geoip": function(nick, to, args) {
+			if (!args[1]) 
+				return;
+
 			self.geoip(args[1], function(str) {
 				if (str === null) {
 					dns.resolve4(args[1], function(err, ips) {

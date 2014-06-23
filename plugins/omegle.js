@@ -25,7 +25,7 @@ function OmeglePlugin(bot) {
 
 	self.disable = function() {
 		for (var to in self.chats) {
-			self.chats[to].hardDisconnect();
+			(self.chats[to].hardDisconnect() || function(){})();
 		}
 		self.chats = {};
 	};
@@ -145,7 +145,7 @@ function OmeglePlugin(bot) {
 
 		"cmd#unomegle": function(nick, to, args) {
 			if (to in self.chats) {
-				self.chats[to].hardDisconnect();
+				(self.chats[to].hardDisconnect || function(){})();
 				delete self.chats[to];
 				bot.out.log("omegle", nick + " in " + to + " disconnected");
 				bot.notice(to, "omegle stopped");
@@ -156,7 +156,7 @@ function OmeglePlugin(bot) {
 
 		"cmd#reomegle": function(nick, to, args, message) {
 			if (to in self.chats) {
-				self.chats[to].hardDisconnect();
+				(self.chats[to].hardDisconnect || function(){})();
 			}
 			self.start(to, args[1] === undefined ? undefined : args[1].split(","), args[2]);
 		},

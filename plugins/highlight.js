@@ -35,6 +35,9 @@ function HighlightPlugin(bot) {
 
 	self.events = {
 		"message": function(nick, to, text) {
+			if (nick == to)
+				return;
+
 			for (var hinick in self.highlights) {
 				var level = self.highlights[hinick].level;
 				if (text.match(new RegExp("\\b" + hinick, "i")) && !(!(level == "online" || level == "away") && (hinick in bot.chans[to].users))) {

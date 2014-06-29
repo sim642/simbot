@@ -42,7 +42,7 @@ function CmdPlugin(bot) {
 			else if (args[1])
 				bot.say(to, nick + ": no such module `" + args[1] + "`");
 			else
-				bot.say(to, nick + ": http://wiki.awfulnet.org/index.php/Simbot");
+				bot.say(to, nick + ": https://github.com/sim642/simbot/wiki");
 		}
 	}
 }

@@ -32,7 +32,11 @@ function WeatherPlugin(bot) {
 								str = j.rain["3h"].toString() + "mm/3h";
 							else if (j.rain["1h"])
 								str = j.rain["1h"].toString() + "mm/h";
-							bits.push(["rain", str]);
+
+							if (str)
+								bits.push(["rain", str]);
+							else
+								bot.out.warn("weather", j);
 						}
 						if (j.snow) {
 							var str;
@@ -40,7 +44,11 @@ function WeatherPlugin(bot) {
 								str = j.snow["3h"].toString() + "mm/3h";
 							else if (j.snow["1h"])
 								str = j.snow["1h"].toString() + "mm/h";
-							bits.push(["snow", str]);
+
+							if (str)
+								bits.push(["snow", str]);
+							else
+								bot.out.warn("weather", j);
 						}
 						if (j.weather) {
 							var val = "";

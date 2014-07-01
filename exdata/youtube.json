@@ -1,0 +1,8 @@
+{
+    "channels": [
+        "#channel1"
+    ],
+    "ignores": [
+        "*!Karkat@*"
+    ]
+}

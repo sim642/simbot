@@ -1,0 +1,7 @@
+{
+    "autojoins": [
+        "#channel1",
+        "#chann1l2"
+    ],
+    "autojoinTime": 5000
+}

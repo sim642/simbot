@@ -22,6 +22,7 @@ function OmeglePlugin(bot) {
 	};
 
 	self.chats = {};
+	self.servers = ["front1.omegle.com"];
 
 	self.disable = function() {
 		for (var to in self.chats) {
@@ -46,7 +47,7 @@ function OmeglePlugin(bot) {
 				self.chats[to].lang = lang;
 		}
 
-		var server = "http://front1.omegle.com/";
+		var server = "http://" + self.servers[Math.floor(Math.random() * self.servers.length)] + "/";
 		self.chats[to].server = server;
 
 		var query = {
@@ -99,6 +100,7 @@ function OmeglePlugin(bot) {
 										break;
 									case "statusInfo":
 										//bot.notice(to, "Omegle users online: " + eventdata[i][1].count);
+										self.servers = eventdata[i][1].servers;
 										break;
 									case "commonLikes":
 										bot.notice(to, "common likes: " + eventdata[i][1].join(","));

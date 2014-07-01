@@ -35,7 +35,8 @@ function OmeglePlugin(bot) {
 			self.chats[to] = {
 				"auto": false,
 				"lang": lang || "en",
-				"topics": topics || []
+				"topics": topics || [],
+				"typing": null
 			};
 		}
 		else {
@@ -111,6 +112,8 @@ function OmeglePlugin(bot) {
 				var hardDisconnect = function() {
 					request.post({url: server + "disconnect", form: {"id": data}});
 					clearInterval(interval);
+					if (self.chats[to].typing != null)
+						clearTimeout(self.chats[to].typing);
 				};
 				var softDisconnect = function() {
 					hardDisconnect();
@@ -196,6 +199,21 @@ function OmeglePlugin(bot) {
 					var msg = nick != to ? match[3] : text;
 					bot.out.log("omegle", nick + " in " + to + ": " + msg);
 					request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": msg}});
+					if (self.chats[to].typing != null) {
+						clearTimeout(self.chats[to].typing);
+						self.chats[to].typing = null;
+					}
+				}
+				else {
+					if (self.chats[to].typing == null)
+						request.post({url: self.chats[to].server + "typing", form: {"id": self.chats[to].id}});
+					else
+						clearTimeout(self.chats[to].typing);
+
+					self.chats[to].typing = setTimeout(function() {
+						request.post({url: self.chats[to].server + "stoppedtyping", form: {"id": self.chats[to].id}});
+						self.chats[to].typing = null;
+					}, 7 * 1000);
 				}
 			}
 		}

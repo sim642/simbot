@@ -82,7 +82,7 @@ function HighlightPlugin(bot) {
 					self.highlights[lnick].level = args[1];
 					var activity = parseInt(args[2]);
 					self.highlights[lnick].activity = activity ? activity : null;
-					bot.say(nick, "highlights set to " + args[1]);
+					bot.say(nick, "highlights set to " + args[1] + (activity ? " (" + activity.toString() + "mins)": ""));
 					break;
 				case "off":
 					if (lnick in self.highlights) {

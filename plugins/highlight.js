@@ -41,7 +41,7 @@ function HighlightPlugin(bot) {
 			for (var hinick in self.highlights) {
 				var level = self.highlights[hinick].level;
 				var tolow = to.toLowerCase();
-				if (text.match(new RegExp("\\b" + hinick, "i")) && !(!(level == "online" || level == "away") && (hinick in bot.chans[tolow].users))) {
+				if (text.match(new RegExp("\\b" + hinick + "(?=\\b|[_|])", "i")) && !(!(level == "online" || level == "away") && (hinick in bot.chans[tolow].users))) {
 					text = self.stripcolors(text);
 					switch (level) {
 					case "online":

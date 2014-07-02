@@ -8,6 +8,7 @@ function HighlightPlugin(bot) {
 	/*
 	nick : {
 		level: online/away/offline
+		activity: [secs]/null(to disable)
 	}
 	*/
 
@@ -20,6 +21,8 @@ function HighlightPlugin(bot) {
 				self.highlights[nick].level = self.highlights[nick].online ? "online" : "offline";
 				delete self.highlights[nick].online;
 			}
+			if (self.highlights[nick].activity === undefined)
+				self.highlights[nick].activity = null;
 		}
 	};
 
@@ -40,49 +43,50 @@ function HighlightPlugin(bot) {
 
 			for (var hinick in self.highlights) {
 				var level = self.highlights[hinick].level;
+				var activity = self.highlights[hinick].activity;
 				var tolow = to.toLowerCase();
-				if (text.match(new RegExp("\\b" + hinick + "(?=\\b|[_|])", "i")) && !(!(level == "online" || level == "away") && (hinick in bot.chans[tolow].users))) {
-					text = self.stripcolors(text);
-					switch (level) {
-					case "online":
-						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + text);
-						break;
-					case "offline":
-						if (!(hinick in bot.chans[tolow].users)) {
-							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + text);
-						}
-						break;
-					case "away":
-						if (!(hinick in bot.chans[tolow].users)) {
-							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + text);
-						}
-						else {
-							bot.whois(hinick, function(info) {
-								if (info.away !== undefined) {
-									bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + text);
-								}
+
+				if (text.match(new RegExp("\\b" + hinick + "(?=\\b|[_|])", "i"))) {
+					if (Object.keys(bot.chans[tolow].users).map(function(elem) { return elem.toLowerCase(); }).indexOf(hinick) == -1)
+						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + self.stripcolors(text));
+					else if (level != "offline") {
+						if (activity !== null || level == "away") { // needs whois
+							var hinick2 = hinick;
+							bot.whois(hinick2, function(info) {
+								var good = true;
+								if (level == "away" && info.away === undefined)
+									good = false;
+								if (activity !== null && parseInt(info.idle) < (activity * 60))
+									good = false;
+
+								if (good)
+									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + nick + "> " + self.stripcolors(text));
 							});
 						}
-						break;
+						else
+							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + self.stripcolors(text));
 					}
 				}
 			}
 		},
 
 		"cmd#sethighlight": function(nick, to, args) {
-			if (nick in bot.plugins.pushbullet.emails) {
+			var lnick = nick.toLowerCase();
+			if (lnick in bot.plugins.pushbullet.emails) {
 				switch (args[1]) {
 				case "online":
 				case "away":
 				case "offline":
-					if (!(nick in self.highlights))
-						self.highlights[nick] = {};
-					self.highlights[nick].level = args[1];
+					if (!(lnick in self.highlights))
+						self.highlights[lnick] = {};
+					self.highlights[lnick].level = args[1];
+					var activity = parseInt(args[2]);
+					self.highlights[lnick].activity = activity ? activity : null;
 					bot.say(nick, "highlights set to " + args[1]);
 					break;
 				case "off":
-					if (nick in self.highlights) {
-						delete self.highlights[nick];
+					if (lnick in self.highlights) {
+						delete self.highlights[lnick];
 						bot.say(nick, "highlights turned off");
 					}
 					break;

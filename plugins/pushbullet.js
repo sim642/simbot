@@ -43,6 +43,7 @@ function PushbulletPlugin(bot) {
 			}
 			else {
 				bot.out.error("pushbullet", params);
+				bot.out.error("pushbullet", err);
 				(callback || function(){})(true);
 			}
 		});
@@ -71,11 +72,11 @@ function PushbulletPlugin(bot) {
 			bot.plugins.nickserv.identified(nick, function(identified) {
 				if (identified) {
 					if (args[1] !== undefined) {
-						self.emails[nick] = args[1];
+						self.emails[nick.toLowerCase()] = args[1];
 						bot.say(nick, "pushbullet set to " + args[1]);
 					}
 					else {
-						delete self.emails[nick];
+						delete self.emails[nick.toLowerCase()];
 						bot.say(nick, "pushbullet unset");
 					}
 				}

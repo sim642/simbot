@@ -8,12 +8,14 @@ function UnitsPlugin(bot) {
 
 	self.events = {
 		"cmd#units" : function(nick, to, args, message) {
-			var cmd = "./plugins/units/units -f ./plugins/units/definitions.units -t";
-			var inp = (args[1] || "") + "\n" + (args[2] || "") + "\n";
+			if (args[2].trim() != "?") {
+				var cmd = "./plugins/units/units -f ./plugins/units/definitions.units -t";
+				var inp = (args[1] || "") + "\n" + (args[2] || "") + "\n";
 
-			exec(cmd, function (error, stdout, stderr) {
-				bot.say(to, nick + ": " + stdout.replace(/\t/g, "").replace(/\n/g, "; "));
-			}).stdin.end(inp);
+				exec(cmd, function (error, stdout, stderr) {
+					bot.say(to, nick + ": " + stdout.replace(/\t/g, "").replace(/\n/g, "; "));
+				}).stdin.end(inp);
+			}
 		}
 	}
 }

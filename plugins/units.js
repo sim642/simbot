@@ -8,7 +8,7 @@ function UnitsPlugin(bot) {
 
 	self.events = {
 		"cmd#units" : function(nick, to, args, message) {
-			if (args[2].trim() != "?") {
+			if (args[2] === undefined || (args[2] !== undefined && args[2].trim() != "?")) {
 				var cmd = "./plugins/units/units -f ./plugins/units/definitions.units -t";
 				var inp = (args[1] || "") + "\n" + (args[2] || "") + "\n";
 

@@ -19,7 +19,7 @@ function WeatherPlugin(bot) {
 			request("http://api.openweathermap.org/data/2.5/weather?lang=en&q=" + args[0], function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var j = JSON.parse(body);
-					if (j.sys.country) {
+					if (j.cod == 200) {
 						var bits = [];
 						bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
 						bits.push(["humidity", j.main.humidity.toString() + "%"]);

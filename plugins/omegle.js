@@ -235,16 +235,13 @@ function OmeglePlugin(bot) {
 		},
 
 		"cmd#collegeverify": function(nick, to, args) {
-			var j = request.jar();
-			request({url: args[1], jar: j, followRedirect: false}, function(err, res, body) {
-				bot.out.debug("omegle", j);
+			request({url: args[1], followRedirect: false}, function(err, res, body) {
 				if (!err && res.statusCode == 302) {
-					bot.out.debug("omegle", j.getCookies("http://omegle.com")[0]);
-
-					var arr = JSON.parse(j.getCookies("http://omegle.com")[0].value);
-					self.colleges[arr[0]] = arr[1];
-
-					bot.say(to, "success I think");
+					var match = res.headers["set-cookie"].match(/college=(\[[^\]]+\])/);
+					if (match) {
+						var arr = JSON.parse(match[1]);
+						self.colleges[arr[0]] = arr[1];
+					}
 				}
 			});
 		},

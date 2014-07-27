@@ -57,11 +57,30 @@ function OmeglePlugin(bot) {
 			"lang": self.chats[to].lang,
 			"topics": JSON.stringify(self.chats[to].topics)
 		};
-		request.post({url: server + "start?" + qs.stringify(query) }, function(err, res, body) {
+		self.chats[to].req = request.post({url: server + "start?" + qs.stringify(query) }, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
 				self.chats[to].id = data;
-				var interval = setInterval(function() {
+
+				self.chats[to].hardDisconnect = function() {
+					bot.out.debug("omegle", "hardDisconnect");
+					request.post({url: server + "disconnect", form: {"id": data}});
+					clearInterval(self.chats[to].interval);
+					if (self.chats[to].typing != null)
+						clearTimeout(self.chats[to].typing);
+				};
+				self.chats[to].softDisconnect = function() {
+					bot.out.debug("omegle", "softDisconnect");
+					self.chats[to].hardDisconnect();
+					if (self.chats[to].auto) {
+						self.start(to);
+					}
+					else {
+						delete self.chats[to];
+					}
+				};
+
+				self.chats[to].interval = setInterval(function() {
 					request.post({url: server + "events", form: {"id": data}}, function(err, res, body) {
 						if (!err && res.statusCode == 200) {
 							var eventdata = JSON.parse(body);
@@ -111,25 +130,6 @@ function OmeglePlugin(bot) {
 						}
 					});
 				}, 1000);
-				var hardDisconnect = function() {
-					request.post({url: server + "disconnect", form: {"id": data}});
-					clearInterval(interval);
-					if (self.chats[to].typing != null)
-						clearTimeout(self.chats[to].typing);
-				};
-				var softDisconnect = function() {
-					hardDisconnect();
-					if (self.chats[to].auto) {
-						self.start(to);
-					}
-					else {
-						delete self.chats[to];
-					}
-				};
-
-				self.chats[to].interval = interval;
-				self.chats[to].hardDisconnect = hardDisconnect;
-				self.chats[to].softDisconnect = softDisconnect;
 			}
 			else {
 				bot.notice(to, "omegle failure");
@@ -150,6 +150,7 @@ function OmeglePlugin(bot) {
 
 		"cmd#unomegle": function(nick, to, args) {
 			if (to in self.chats) {
+				self.chats[to].req.abort();
 				(self.chats[to].hardDisconnect || function(){})();
 				delete self.chats[to];
 				bot.out.log("omegle", nick + " in " + to + " disconnected");
@@ -161,6 +162,7 @@ function OmeglePlugin(bot) {
 
 		"cmd#reomegle": function(nick, to, args, message) {
 			if (to in self.chats) {
+				self.chats[to].req.abort();
 				(self.chats[to].hardDisconnect || function(){})();
 			}
 			self.start(to, args[1] === undefined ? undefined : args[1].split(","), args[2]);

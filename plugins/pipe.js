@@ -42,6 +42,19 @@ function PipePlugin(bot) {
 				bot.say(self.backpipes[to], text);
 		},
 
+		"action": function(nick, to, text) {
+			if (to == bot.nick)
+				to = nick;
+			if (to === undefined)
+				return;
+			to = to.toLowerCase();
+			if (to in self.pipes)
+				bot.action(self.pipes[to], text);
+
+			if (to in self.backpipes)
+				bot.action(self.backpipes[to], text);
+		},
+
 		"notice": function(nick, to, text) {
 			if (to == bot.nick)
 				to = nick;
@@ -61,6 +74,14 @@ function PipePlugin(bot) {
 				bot.say(parts[0].trim(), parts[1].trim());
 			else
 				bot.say(to, parts[0].trim());
+		}),
+
+		"cmd#me": bot.plugins.auth.proxy(8, function(nick, to, args) {
+			var parts = args[0].split(":", 2);
+			if (parts.length == 2)
+				bot.action(parts[0].trim(), parts[1].trim());
+			else
+				bot.action(to, parts[0].trim());
 		}),
 
 		"cmd#notice": bot.plugins.auth.proxy(8, function(nick, to, args) {

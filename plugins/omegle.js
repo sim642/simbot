@@ -39,6 +39,8 @@ function OmeglePlugin(bot) {
 				"auto": false,
 				"lang": lang || "en",
 				"topics": topics || [],
+				"college": null,
+				"collegeMode": "any",
 				"typing": null
 			};
 		}
@@ -57,8 +59,15 @@ function OmeglePlugin(bot) {
 			//"firstevents": 1,
 			"spid": "",
 			"lang": self.chats[to].lang,
-			"topics": JSON.stringify(self.chats[to].topics)
+			"topics": JSON.stringify(self.chats[to].topics),
 		};
+
+		if (self.chats[to].college != null) {
+			query["college"] = self.chats[to].college;
+			query["college_auth"] = self.colleges[self.chats[to].college];
+			query["any_college"] = self.chats[to].collegeMode == "any" ? 1 : 0;
+		}
+
 		self.chats[to].req = request.post({url: server + "start?" + qs.stringify(query) }, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
@@ -90,7 +99,14 @@ function OmeglePlugin(bot) {
 								for (var i = 0; i < eventdata.length; i++) {
 									switch (eventdata[i][0]) {
 									case "waiting":
-										bot.notice(to, "waiting for stranger [lang: " + self.chats[to].lang + "; interests: " + self.chats[to].topics.join(",") + "]");
+										var bits = [];
+										if (self.chats[to].lang != "en")
+											bits.push("lang: " + self.chats[to].lang);
+										if (self.chats[to].topics.length != 0)
+											bits.push("interests: " + self.chats[to].topics.join(","));
+										if (self.chats[to].college != null)
+											bits.push("college: " + (self.chats[to].collegeMode == "any" ? "any" : self.chats[to].college));
+										bot.notice(to, "waiting for stranger" + (bits.length == 0 ? "" : " [" + bits.join("; ") + "]"));
 										break;
 									case "connected":
 										bot.out.log("omegle", "stranger connected in " + to);
@@ -125,6 +141,9 @@ function OmeglePlugin(bot) {
 										break;
 									case "commonLikes":
 										bot.notice(to, "common likes: " + eventdata[i][1].join(","));
+										break;
+									case "partnerCollege":
+										bot.notice(to, "stranger's college: " + eventdata[i][1]);
 										break;
 									}
 								}
@@ -223,6 +242,20 @@ function OmeglePlugin(bot) {
 		"cmd#colleges": function(nick, to, args) {
 			bot.say(to, "Usable omegle colleges: " + Object.keys(self.colleges).join(", "));
 		},
+
+		"cmd#college": function(nick, to, args) {
+			var college = args[1];
+			if (to in self.chats && college in self.colleges) {
+				self.chats[to].college = college;
+			}
+		},
+
+		"cmd#collegemode": function(nick, to, args) {
+			if (to in self.chats) {
+				self.chats[to].collegeMode = args[1];
+			}
+		},
+
 		"nocmd": function(nick, to, text) {
 			if (to in self.chats)
 			{

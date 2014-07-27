@@ -33,22 +33,32 @@ function OmeglePlugin(bot) {
 		self.chats = {};
 	};
 
-	self.start = function(to, topics, lang) {
+	self.start = function(to, args) {
 		if (self.chats[to] === undefined) {
 			self.chats[to] = {
 				"auto": false,
-				"lang": lang || "en",
-				"topics": topics || [],
+				"lang": "en",
+				"topics": [],
 				"college": null,
-				"collegeMode": "any",
-				"typing": null
+				"collegemode": "any",
+				"interval": null
 			};
 		}
-		else {
-			if (topics !== undefined)
-				self.chats[to].topics = topics;
-			if (lang !== undefined)
-				self.chats[to].lang = lang;
+		if (args !== undefined) {
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+				if (arg == "auto")
+					self.chats[to].auto = true;
+				else if (arg == "my" || arg == "any")
+					self.chats[to].collegeMode = arg;
+				else if (arg.length == 2)
+					self.chats[to].lang = arg;
+				else if (arg in self.colleges)
+					self.chats[to].college = arg;
+				else {
+					self.chats[to].topics = arg.split(",").map(function(elem) { return elem.trim(); }).filter(function(elem) { return elem != ""; });
+				}
+			}
 		}
 
 		var server = "http://" + self.servers[Math.floor(Math.random() * self.servers.length)] + "/";
@@ -163,7 +173,7 @@ function OmeglePlugin(bot) {
 		"cmd#omegle": function(nick, to, args) {
 			if (!(to in self.chats)) {
 				bot.notice(to, "omegle started");
-				self.start(to, args[1] === undefined ? undefined : args[1].split(","), args[2]);
+				self.start(to, args);
 			}
 			else
 				bot.notice(to, "omegle already started");
@@ -186,7 +196,7 @@ function OmeglePlugin(bot) {
 				self.chats[to].req.abort();
 				(self.chats[to].hardDisconnect || function(){})();
 			}
-			self.start(to, args[1] === undefined ? undefined : args[1].split(","), args[2]);
+			self.start(to, args);
 		},
 
 		"cmd#autoomegle": function(nick, to, args) {

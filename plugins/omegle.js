@@ -40,7 +40,7 @@ function OmeglePlugin(bot) {
 				"lang": "en",
 				"topics": [],
 				"college": null,
-				"collegemode": "any",
+				"collegeMode": "any",
 				"interval": null
 			};
 		}
@@ -237,7 +237,7 @@ function OmeglePlugin(bot) {
 		"cmd#collegeverify": function(nick, to, args) {
 			request({url: args[1], followRedirect: false}, function(err, res, body) {
 				if (!err && res.statusCode == 302) {
-					var match = res.headers["set-cookie"].match(/college=(\[[^\]]+\])/);
+					var match = res.headers["set-cookie"].toString().match(/college=(\[[^\]]+\])/);
 					if (match) {
 						var arr = JSON.parse(match[1]);
 						self.colleges[arr[0]] = arr[1];

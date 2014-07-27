@@ -102,7 +102,7 @@ function OmeglePlugin(bot) {
 										var bits = [];
 										if (self.chats[to].lang != "en")
 											bits.push("lang: " + self.chats[to].lang);
-										if (self.chats[to].topics.length != 0)
+										if (self.chats[to].topics.join(",") != "")
 											bits.push("interests: " + self.chats[to].topics.join(","));
 										if (self.chats[to].college != null)
 											bits.push("college: " + (self.chats[to].collegeMode == "any" ? "any" : self.chats[to].college));
@@ -123,7 +123,7 @@ function OmeglePlugin(bot) {
 										bot.out.log("omegle", "stranger in " + to + ": " + msg);
 										bot.say(to, "\x02" + msg);
 										if (self.skips.some(function(skip) {
-											return msg.match(new RegExp(skip));
+											return msg.match(new RegExp(skip, "i"));
 										})) {
 											bot.out.log("omegle", "stranger is bot, skipping");
 											bot.notice(to, "bot detected, skipping");

@@ -10,15 +10,17 @@ function OmeglePlugin(bot) {
 	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>(?!>))\s*(.*)$/i;
 
 	self.skips = [];
+	self.colleges = {};
 
 	self.load = function(data) {
 		if (data) {
 			self.skips = data.skips;
+			self.colleges = data.colleges;
 		}
 	};
 
 	self.save = function() {
-		return {"skips": self.skips};
+		return {"skips": self.skips, "colleges": self.colleges};
 	};
 
 	self.chats = {};
@@ -195,6 +197,32 @@ function OmeglePlugin(bot) {
 			}
 		},
 
+		"cmd#collegeemail": function(nick, to, args) {
+			request.post({url: "http://" + self.servers[0] + "/send_email", form: {email: args[1]}}, function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					bot.say(to, body);
+				}
+			});
+		},
+
+		"cmd#collegeverify": function(nick, to, args) {
+			var j = request.jar();
+			request({url: args[1], jar: j, followRedirect: false}, function(err, res, body) {
+				bot.out.debug("omegle", j);
+				if (!err && res.statusCode == 302) {
+					bot.out.debug("omegle", j.getCookies("http://omegle.com")[0]);
+
+					var arr = JSON.parse(j.getCookies("http://omegle.com")[0].value);
+					self.colleges[arr[0]] = arr[1];
+
+					bot.say(to, "success I think");
+				}
+			});
+		},
+
+		"cmd#colleges": function(nick, to, args) {
+			bot.say(to, "Usable omegle colleges: " + Object.keys(self.colleges).join(", "));
+		},
 		"nocmd": function(nick, to, text) {
 			if (to in self.chats)
 			{

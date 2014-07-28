@@ -84,14 +84,12 @@ function OmeglePlugin(bot) {
 				self.chats[to].id = data;
 
 				self.chats[to].hardDisconnect = function() {
-					bot.out.debug("omegle", "hardDisconnect");
 					request.post({url: server + "disconnect", form: {"id": data}});
 					clearInterval(self.chats[to].interval);
 					if (self.chats[to].typing != null)
 						clearTimeout(self.chats[to].typing);
 				};
 				self.chats[to].softDisconnect = function() {
-					bot.out.debug("omegle", "softDisconnect");
 					self.chats[to].hardDisconnect();
 					if (self.chats[to].auto) {
 						self.start(to);
@@ -229,21 +227,28 @@ function OmeglePlugin(bot) {
 		"cmd#collegeemail": function(nick, to, args) {
 			request.post({url: "http://" + self.servers[0] + "/send_email", form: {email: args[1]}}, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
-					bot.say(to, body);
+					var j = JSON.parse(body);
+					bot.say(to, nick + ": omegle college " + (j.success ? "success" : "failure") + " - " + j.msg.replace("\n", " ", "g"));
 				}
 			});
 		},
 
 		"cmd#collegeverify": function(nick, to, args) {
-			request({url: args[1], followRedirect: false}, function(err, res, body) {
-				if (!err && res.statusCode == 302) {
-					var match = res.headers["set-cookie"].toString().match(/college=(\[[^\]]+\])/);
-					if (match) {
-						var arr = JSON.parse(match[1]);
-						self.colleges[arr[0]] = arr[1];
+			if (args[1].match("^http://chatserv\.omegle\.com/verify/\w+$")) {
+				request({url: args[1], followRedirect: false}, function(err, res, body) {
+					if (!err && res.statusCode == 302) {
+						var match = res.headers["set-cookie"].toString().match(/college=(\[[^\]]+\])/);
+						if (match) {
+							var arr = JSON.parse(match[1]);
+							self.colleges[arr[0]] = arr[1];
+						}
 					}
-				}
-			});
+					else
+						bot.out.error("omegle", err);
+				});
+			}
+			else
+				bot.say(to, nick + ": invalid omegle college verification link");
 		},
 
 		"cmd#colleges": function(nick, to, args) {

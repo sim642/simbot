@@ -41,6 +41,8 @@ function OmeglePlugin(bot) {
 				"topics": [],
 				"college": null,
 				"collegeMode": "any",
+				"question": null,
+				"spyee": false,
 				"interval": null
 			};
 		}
@@ -51,6 +53,11 @@ function OmeglePlugin(bot) {
 					self.chats[to].auto = true;
 				else if (arg == "my" || arg == "any")
 					self.chats[to].collegeMode = arg;
+				else if (arg == "spyee") {
+					self.chats[to].spyee = true;
+					self.chats[to].topics = [];
+					self.chats[to].question = null;
+				}
 				else if (arg.length == 2)
 					self.chats[to].lang = arg;
 				else if (arg in self.colleges)
@@ -58,6 +65,13 @@ function OmeglePlugin(bot) {
 				else {
 					self.chats[to].topics = arg.split(",").map(function(elem) { return elem.trim(); }).filter(function(elem) { return elem != ""; });
 				}
+			}
+
+			var parts = args[0].split(":");
+			if (parts.length == 2) {
+				self.chats[to].question = parts[1].trim();
+				self.chats[to].topics = [];
+				self.chats[to].spyee = false;
 			}
 		}
 
@@ -69,13 +83,24 @@ function OmeglePlugin(bot) {
 			//"firstevents": 1,
 			"spid": "",
 			"lang": self.chats[to].lang,
-			"topics": JSON.stringify(self.chats[to].topics),
 		};
+
+		if (self.chats[to].topics.join(",") != "") {
+			query["topics"] = JSON.stringify(self.chats[to].topics);
+		}
 
 		if (self.chats[to].college != null) {
 			query["college"] = self.chats[to].college;
 			query["college_auth"] = self.colleges[self.chats[to].college];
 			query["any_college"] = self.chats[to].collegeMode == "any" ? 1 : 0;
+		}
+
+		if (self.chats[to].question != null) {
+			query["ask"] = self.chats[to].question;
+		}
+
+		if (self.chats[to].spyee != false) {
+			query["wantsspy"] = 1;
 		}
 
 		self.chats[to].req = request.post({url: server + "start?" + qs.stringify(query) }, function(err, res, body) {
@@ -107,6 +132,7 @@ function OmeglePlugin(bot) {
 								for (var i = 0; i < eventdata.length; i++) {
 									switch (eventdata[i][0]) {
 									case "waiting":
+										var who = "stranger";
 										var bits = [];
 										if (self.chats[to].lang != "en")
 											bits.push("lang: " + self.chats[to].lang);
@@ -114,14 +140,24 @@ function OmeglePlugin(bot) {
 											bits.push("interests: " + self.chats[to].topics.join(","));
 										if (self.chats[to].college != null)
 											bits.push("college: " + (self.chats[to].collegeMode == "any" ? "any" : self.chats[to].college));
-										bot.notice(to, "waiting for stranger" + (bits.length == 0 ? "" : " [" + bits.join("; ") + "]"));
+										if (self.chats[to].question != null) {
+											bits.push("spy");
+											who += "s";
+										}
+										if (self.chats[to].spyee)
+											bits.push("spyee");
+										bot.notice(to, "waiting for " + who + (bits.length == 0 ? "" : " [" + bits.join("; ") + "]"));
 										break;
 									case "connected":
-										bot.out.log("omegle", "stranger connected in " + to);
-										bot.notice(to, "stranger connected");
+										var who = "stranger" + (self.chats[to].question != null ? "s" : "");
+										bot.out.log("omegle", who + " connected in " + to);
+										bot.notice(to, who + " connected");
 										break;
 									case "typing":
 										bot.notice(to, "typing...");
+										break;
+									case "spyTyping":
+										bot.notice(to, eventdata[i][1] + " typing...");
 										break;
 									case "stoppedTyping": 
 										bot.notice(to, "stopped typing");
@@ -138,20 +174,44 @@ function OmeglePlugin(bot) {
 											self.chats[to].softDisconnect();
 										}
 										break;
+									case "spyMessage":
+										var who = eventdata[i][1];
+										var msg = eventdata[i][2];
+										bot.out.log("omegle", who + " in " + to + ": " + msg);
+										bot.say(to, "\x02<" + who + "> " + msg);
+										// TODO: maybe also check for bots
+										break;
 									case "strangerDisconnected":
 										bot.out.log("omegle", "stranger disconnected");
 										bot.notice(to, "stranger disconnected");
+										self.chats[to].softDisconnect();
+										break;
+									case "spyDisconnected":
+										var who = eventdata[i][1];
+										bot.out.log("omegle", who + " disconnected");
+										bot.notice(to, who + " disconnected");
 										self.chats[to].softDisconnect();
 										break;
 									case "statusInfo":
 										//bot.notice(to, "Omegle users online: " + eventdata[i][1].count);
 										self.servers = eventdata[i][1].servers;
 										break;
+									case "identDigests":
+										break;
 									case "commonLikes":
 										bot.notice(to, "common likes: " + eventdata[i][1].join(","));
 										break;
 									case "partnerCollege":
 										bot.notice(to, "stranger's college: " + eventdata[i][1]);
+										break;
+									case "question":
+										bot.notice(to, "question: " + eventdata[i][1]);
+										break;
+									case "error":
+										bot.out.error("omegle", "Error: " + eventdata[i][1]);
+										break;
+									default:
+										bot.out.debug("omegle", "Unhandled event: " + eventdata[i].toString());
 										break;
 									}
 								}
@@ -268,8 +328,16 @@ function OmeglePlugin(bot) {
 			}
 		},
 
+		"cmd#question": function(nick, to, args) {
+			if (to in self.chats) {
+				self.chats[to].question = args[0];
+				self.chats[to].topics = [];
+				self.chats[to].spyee = false;
+			}
+		},
+
 		"nocmd": function(nick, to, text) {
-			if (to in self.chats)
+			if (to in self.chats && self.chats[to].question == null)
 			{
 				var match = text.match(self.regex);
 				if (nick == to || (match && (match[1] == ">" || match[2] == bot.nick))) {

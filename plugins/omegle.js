@@ -162,6 +162,9 @@ function OmeglePlugin(bot) {
 									case "stoppedTyping": 
 										bot.notice(to, "stopped typing");
 										break;
+									case "spyStoppedTyping":
+										bot.notice(to, eventdata[i][1] + " stopped typing");
+										break;
 									case "gotMessage":
 										var msg = eventdata[i][1];
 										bot.out.log("omegle", "stranger in " + to + ": " + msg);

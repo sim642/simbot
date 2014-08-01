@@ -37,11 +37,15 @@ plugins.load = function(name) {
 	}
 };
 
-plugins._enable = function(p) {
-	for (var cmd in p.events) {
+plugins.loadEvents = function(events) {
+	for (var cmd in events) {
 		//console.log("Adding " + cmd);
-		bot.addListener(cmd, p.events[cmd]);
+		bot.addListener(cmd, events[cmd]);
 	}
+};
+
+plugins._enable = function(p) {
+	this.loadEvents(p.events);
 	(p.enable || function(){})();
 };
 
@@ -71,12 +75,16 @@ plugins.unload = function(name) {
 	this._unload(this[name]);
 };
 
+plugins.unloadEvents = function(events) {
+	for (var cmd in events) {
+		//console.log("Removing " + cmd);
+		bot.removeListener(cmd, events[cmd]);
+	}
+};
+
 plugins._disable = function(p) {
 	(p.disable || function(){})();
-	for (var cmd in p.events) {
-		//console.log("Removing " + cmd);
-		bot.removeListener(cmd, p.events[cmd]);
-	}
+	this.unloadEvents(p.events);
 };
 
 plugins.disable = function(name) {

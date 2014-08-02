@@ -154,16 +154,16 @@ function OmeglePlugin(bot) {
 										bot.notice(to, who + " connected");
 										break;
 									case "typing":
-										bot.notice(to, "typing...");
+										bot.action(to, "is typing...");
 										break;
 									case "spyTyping":
-										bot.notice(to, eventdata[i][1] + " typing...");
+										bot.action(to, eventdata[i][1] + " is typing...");
 										break;
 									case "stoppedTyping": 
-										bot.notice(to, "stopped typing");
+										bot.action(to, "stopped typing");
 										break;
 									case "spyStoppedTyping":
-										bot.notice(to, eventdata[i][1] + " stopped typing");
+										bot.action(to, eventdata[i][1] + " stopped typing");
 										break;
 									case "gotMessage":
 										var msg = eventdata[i][1];

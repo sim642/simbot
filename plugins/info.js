@@ -23,14 +23,8 @@ function InfoPlugin(bot) {
 				bot.out.error("info", err);
 			}
 
-			var offset = 1;
-			var placeholders = nicks.map(function(name, i) {
-				return "$" + (i + offset);
-			}).join(",");
-
 			client.query("SELECT alias, nick, info FROM multiinfo($1)", [nicks], function(err, result) {
 				done();
-
 				if (err) {
 					bot.out.error("info", err);
 				}

@@ -331,8 +331,8 @@ function StalkerPlugin(bot) {
 						nicks.push(row.nick);
 				}
 
-				var callback = function(info, inick) {
-					if (info !== undefined)
+				var callback = function(inick, alias, info) {
+					if (info != null)
 						bot.notice(nick, nick2 + " as " + inick + ": " + info);
 				};
 

@@ -297,13 +297,14 @@ function OmeglePlugin(bot) {
 		},
 
 		"cmd#collegeverify": function(nick, to, args) {
-			if (args[1].match("^http://chatserv\.omegle\.com/verify/\w+$")) {
+			if (args[1].match(/^http:\/\/chatserv\.omegle\.com\/verify\/\w+$/)) {
 				request({url: args[1], followRedirect: false}, function(err, res, body) {
 					if (!err && res.statusCode == 302) {
 						var match = res.headers["set-cookie"].toString().match(/college=(\[[^\]]+\])/);
 						if (match) {
 							var arr = JSON.parse(match[1]);
 							self.colleges[arr[0]] = arr[1];
+							bot.say(to, nick + ": " + arr[0] + " added successfully");
 						}
 					}
 					else

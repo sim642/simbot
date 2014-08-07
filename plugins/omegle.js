@@ -5,7 +5,7 @@ function OmeglePlugin(bot) {
 	var self = this;
 	self.name = "omegle";
 	self.help = "Omegle plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "bitly"];
 
 	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>(?![>\.]))\s*(.*)$/i;
 
@@ -210,6 +210,20 @@ function OmeglePlugin(bot) {
 									case "question":
 										bot.notice(to, "question: " + eventdata[i][1]);
 										break;
+									case "recaptchaRequired":
+									case "recaptchaRejected":
+										request("https://www.google.com/recaptcha/api/challenge?k=" + eventdata[i][1], function(err, res, body) {
+											if (!err && res.statusCode == 200) {
+												var match = body.match(/challenge\s*:\s*'(.+)'/);
+												self.chats[to].recaptcha = match[1];
+												if (match) {
+													bot.plugins.bitly.shorten("http://www.google.com/recaptcha/api/image?c=" + match[1], function(url) {
+														bot.notice(to, "solve reCaptcha (using =recaptcha): " + url);
+													});
+												}
+											}
+										});
+										break;
 									case "error":
 										bot.out.error("omegle", "Error: " + eventdata[i][1]);
 										break;
@@ -337,6 +351,16 @@ function OmeglePlugin(bot) {
 				self.chats[to].question = args[0];
 				self.chats[to].topics = [];
 				self.chats[to].spyee = false;
+			}
+		},
+
+		"cmd#recaptcha": function(nick, to, args) {
+			if (to in self.chats && self.chats[to].recaptcha !== undefined) {
+				request.post({url: self.chats[to].server + "recaptcha", form: {"id": self.chats[to].id, "challenge": self.chats[to].recaptcha, "response": args[0]}}, function(err, res, body) {
+					if (!err && res.statusCode == 200) {
+						delete self.chats[to].recaptcha;
+					}
+				});
 			}
 		},
 

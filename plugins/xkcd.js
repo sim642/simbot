@@ -6,6 +6,17 @@ function XkcdPlugin(bot) {
 	self.help = "Xkcd plugin";
 	self.depend = ["cmd"];
 
+	self.apiKey = null;
+
+	self.load = function(data) {
+		if (data)
+			self.apiKey = data.apiKey;
+	};
+
+	self.save = function() {
+		return {"apiKey": self.apiKey};
+	}
+
 	self.events = {
 		"cmd#xkcd": function(nick, to, args) {
 			if (!args[1] || /^\d+$/.test(args[1])) {
@@ -23,7 +34,7 @@ function XkcdPlugin(bot) {
 				request({
 						uri: "https://www.googleapis.com/customsearch/v1",
 						qs: {
-							key: "AIzaSyCrnaYtsUBVjQrMJiuOXRwOgQDhcULePFQ",
+							key: self.apiKey,
 							cx: "012652707207066138651:zudjtuwe28q",
 							q: args[0]
 						}

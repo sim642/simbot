@@ -77,8 +77,11 @@ function YoutubePlugin(bot) {
 	self.search = function(query, callback) {
 		request("https://gdata.youtube.com/feeds/api/videos/?v=2&alt=json&max-results=1&q=" + querystring.escape(query), function(err, res, body) {
 			if (!err && res.statusCode == 200) {
-				var data = JSON.parse(body).feed.entry[0];
-				self.format(data, callback);
+				var data = JSON.parse(body).feed;
+				if (data.entry !== undefined)
+					self.format(data.entry[0], callback);
+				else
+					(callback || function(){})("'\x02" + query + "\x02' returned no videos");
 			}
 		});
 	};

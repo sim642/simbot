@@ -1,10 +1,11 @@
 var request = require("request");
+var querystring = require("querystring");
 
 function YoutubePlugin(bot) {
 	var self = this;
 	self.name = "youtube";
 	self.help = "Youtube plugin";
-	self.depend = ["auth"];
+	self.depend = ["auth", "cmd"];
 	
 	self.vidre = new RegExp('(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})', "i");
 
@@ -51,19 +52,33 @@ function YoutubePlugin(bot) {
 		return str;
 	};
 
+	self.format = function(data, callback) {
+		var views = data["yt$statistics"] ? data["yt$statistics"].viewCount : 0;
+		var id = data.id["$t"].split(":")[3]; // hacky way to parse video id out of given result to use in link
+		var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 [" + self.duration(data["media$group"]["yt$duration"].seconds) + "] by " + data.author[0].name["$t"] + "; " + self.thseps(views.toString()) + " views";
+		if (data["yt$rating"] !== undefined) {
+			var likes = parseFloat(data["yt$rating"].numLikes);
+			var dislikes = parseFloat(data["yt$rating"].numDislikes);
+			var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03"; 
+			str += "; " + bar;
+		}
+		(callback || function(){})(str);
+	};
+
 	self.lookup = function(id, callback) {
 		request("https://gdata.youtube.com/feeds/api/videos/" + id + "?v=2&alt=json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).entry;
-				var views = data["yt$statistics"] ? data["yt$statistics"].viewCount : 0;
-				var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 [" + self.duration(data["media$group"]["yt$duration"].seconds) + "] by " + data.author[0].name["$t"] + "; " + self.thseps(views.toString()) + " views";
-				if (data["yt$rating"] !== undefined) {
-					var likes = parseFloat(data["yt$rating"].numLikes);
-					var dislikes = parseFloat(data["yt$rating"].numDislikes);
-					var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03"; 
-					str += "; " + bar;
-				}
-				(callback || function(){})(str);
+				self.format(data, callback);
+			}
+		});
+	};
+
+	self.search = function(query, callback) {
+		request("https://gdata.youtube.com/feeds/api/videos/?v=2&alt=json&max-results=1&q=" + querystring.escape(query), function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var data = JSON.parse(body).feed.entry[0];
+				self.format(data, callback);
 			}
 		});
 	};
@@ -93,6 +108,12 @@ function YoutubePlugin(bot) {
 				});
 			}
 		},
+
+		"cmd#yt": function(nick, to, args) {
+			self.search(args[0], function(str) {
+				bot.say(to, str);
+			});
+		}
 	}
 }
 

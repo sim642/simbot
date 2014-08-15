@@ -50,6 +50,8 @@ function HighlightPlugin(bot) {
 					if (Object.keys(bot.chans[tolow].users).map(function(elem) { return elem.toLowerCase(); }).indexOf(hinick) == -1)
 						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + self.stripcolors(text));
 					else if (level != "offline") {
+						var op = bot.chans[tolow].users[nick].substr(0, 1);
+
 						if (activity !== null || level == "away") { // needs whois
 							var hinick2 = hinick;
 							bot.whois(hinick2, function(info) {
@@ -60,11 +62,11 @@ function HighlightPlugin(bot) {
 									good = false;
 
 								if (good)
-									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + nick + "> " + self.stripcolors(text));
+									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));
 							});
 						}
 						else
-							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + self.stripcolors(text));
+							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));
 					}
 				}
 			}

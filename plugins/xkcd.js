@@ -41,7 +41,7 @@ function XkcdPlugin(bot) {
 					}, function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var json = JSON.parse(body);
-						if (json.items.length != 0) {
+						if (json.items !== undefined && json.items.length != 0) {
 							var first = json.items[0];
 							bot.say(to, first.title + " - " + first.link);
 						}

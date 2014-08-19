@@ -18,7 +18,7 @@ function ImgurPlugin(bot) {
 					var data = JSON.parse(body).data;
 					var i = Math.floor(Math.random() * data.length);
 					var image = data[i];
-					bot.say(to, (image.title ? "\x02" + image.title + "\x02: " : "") + image.link + " " + (image.nsfw ? "[\x02NSFW\x02]" : ""));
+					bot.say(to, "[r/" + image.section + "] " + (image.title ? "\x02" + image.title + "\x02: " : "") + image.link + " " + (image.nsfw ? "[\x02NSFW\x02]" : ""));
 				}
 			});
 		}

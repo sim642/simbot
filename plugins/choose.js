@@ -40,7 +40,7 @@ function ChoosePlugin(bot) {
 		"message": function(nick, to, text) {
 			var dotRe = /^\.choose(.*)/;
 			var match = text.match(dotRe);
-			if (match) {
+			if (match && match[1].trim() != "") {
 				bot.emit("cmd#choose", nick, to, [match[1]]);
 			}
 		}

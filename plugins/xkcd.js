@@ -57,7 +57,7 @@ function XkcdPlugin(bot) {
 						if (json.items !== undefined && json.items.length != 0) {
 							if (i - 1 >= 0 && i - 1 < json.items.length) {
 								var item = json.items[i - 1];
-								var title = item.title.match(/^xkcd:(.*)$/)[1];
+								var title = item.title.match(/^xkcd:\s+(.*)$/)[1].trim();
 								bot.say(to, "xkcd '" + str + "' [" + i + "/" + json.items.length + "]: \x02" + title + "\x02 - " + item.link);
 							}
 							else

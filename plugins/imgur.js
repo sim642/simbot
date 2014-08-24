@@ -23,11 +23,26 @@ function ImgurPlugin(bot) {
 		return {clientID: self.clientID};
 	};
 
+	self.datas = {};
+
 	self.events = {
 		"cmd#gallery": function(nick, to, args) {
-			self.request("https://api.imgur.com/3/gallery/r/" + args[1] + "/", function(err, res, body) {
-				if (!err && res.statusCode == 200) {
-					var data = JSON.parse(body).data;
+			var sub = args[1];
+
+			self.request({url: "https://api.imgur.com/3/gallery/r/" + sub + "/", headers: (sub in self.datas ? {"If-None-Match": self.datas[sub].etag} : {})}, function(err, res, body) {
+				if (!err) {
+					var data;
+					if (res.statusCode == 200) {
+						data = JSON.parse(body);
+						self.datas[sub] = data;
+						self.datas[sub].etag = res.headers["etag"];
+					}
+					else if (res.statusCode == 304) {
+						data = self.datas[sub];
+					}
+
+					data = data.data;
+
 					var i = Math.floor(Math.random() * data.length);
 					var image = data[i];
 					if (image !== undefined)

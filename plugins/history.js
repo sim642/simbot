@@ -6,8 +6,19 @@ function HistoryPlugin(bot) {
 	self.help = "History plugin";
 	self.depend = ["cmd"];
 	
-	self.basedir = "./znclog/";
-	self.basename = "simbot_Awfulnet_";
+	self.basedir = null;
+	self.basename = null;
+
+	self.load = function(data) {
+		if (data) {
+			self.basedir = data.basedir;
+			self.basename = data.basename;
+		}
+	};
+
+	self.save = function() {
+		return {basedir: self.basedir, basename: self.basename};
+	}
 
 	self.events = {
 		"cmd#history": function(nick, to, args) {

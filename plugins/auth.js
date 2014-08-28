@@ -2,7 +2,7 @@ function AuthPlugin(bot) {
 	var self = this;
 	self.name = "auth";
 	self.help = "Authentication/admin plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "nickserv"];
 
 	self.accounts = {};
 
@@ -23,7 +23,9 @@ function AuthPlugin(bot) {
 		return re.test(cur);
 	};
 
-	self.getLevel = function(message) {
+	self.getLevel = function(message, callback) {
+		// TODO: return highest level the user could get, not the first one
+
 		var level = 0;
 		matching:
 		for (var key in self.accounts) {
@@ -35,25 +37,48 @@ function AuthPlugin(bot) {
 				}
 			}
 		}
-		return level;
+
+		if (level > 0)
+			callback(level);
+		else {
+			bot.plugins.nickserv.identified(message.nick, function(NSaccount) {
+				matching2:
+				for (var key in self.accounts) {
+					var account = self.accounts[key];
+					for (var i = 0; i < account.nickservs.length; i++) {
+						if (account.nickservs[i] == NSaccount) {
+							level = account.level;
+							break matching2;
+						}
+					}
+				}
+
+				callback(level);
+			});
+		}
 	};
 
-	self.check = function(reqLevel, message) {
-		return (self.getLevel(message) >= reqLevel);
+	self.check = function(reqLevel, message, callback) {
+		self.getLevel(message, function(level) {
+			callback(level >= reqLevel);
+		});
 	};
 
 	self.proxy = function(reqLevel, listener) {
 		return function(nick, to, args, message) {
 			var args = Array.prototype.slice.call(arguments);
-			if (self.check(reqLevel, args[args.length - 1])) {
-				listener.apply(listener, args);
-			}
+			self.check(reqLevel, args[args.length - 1], function(check) {
+				if (check)
+					listener.apply(listener, args);
+			});
 		};
 	};
 
 	self.events = {
 		"cmd#myauth": function(nick, to, args, message) {
-			bot.say(to, nick + ": your auth level is " + self.getLevel(message));
+			self.getLevel(message, function(level) {
+				bot.say(to, nick + ": your auth level is " + level);
+			});
 		}
 	};
 

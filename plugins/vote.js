@@ -56,11 +56,20 @@ function VotePlugin(bot) {
 		},
 
 		"cmd#voteend": function(nick, to, args, message) {
-			if ((to in self.votes) && (nick == self.votes[to].by || bot.plugins.auth.check(5, message))) {
-				self.voteend(to);
+			if (to in self.votes) {
+				if (nick == self.votes[to].by)
+					self.voteend(to);
+				else {
+					bot.plugins.auth.check(5, message, function(check) {
+						if (check)
+							self.voteend(to);
+						else
+							bot.notice(nick, "You can only stop your own vote");
+					});
+				}
 			}
 			else {
-				bot.notice(nick, "You can only stop your own ongoing vote");
+				bot.notice(nick, "No ongoing vote in " + to);
 			}
 		},
 

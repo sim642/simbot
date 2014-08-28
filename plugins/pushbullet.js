@@ -69,7 +69,7 @@ function PushbulletPlugin(bot) {
 		}),
 
 		"cmd#setpushbullet": function(nick, to, args) {
-			bot.plugins.nickserv.identified(nick, function(identified) {
+			bot.plugins.nickserv.nickIdentified(nick, function(identified) {
 				if (identified) {
 					if (args[1] !== undefined) {
 						self.emails[nick.toLowerCase()] = args[1];

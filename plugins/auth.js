@@ -30,10 +30,12 @@ function AuthPlugin(bot) {
 		matching:
 		for (var key in self.accounts) {
 			var account = self.accounts[key];
-			for (var i = 0; i < account.masks.length; i++) {
-				if (self.match(message.prefix, account.masks[i])) {
-					level = account.level;
-					break matching;
+			if (account.masks) {
+				for (var i = 0; i < account.masks.length; i++) {
+					if (self.match(message.prefix, account.masks[i])) {
+						level = account.level;
+						break matching;
+					}
 				}
 			}
 		}
@@ -45,10 +47,12 @@ function AuthPlugin(bot) {
 				matching2:
 				for (var key in self.accounts) {
 					var account = self.accounts[key];
-					for (var i = 0; i < account.nickservs.length; i++) {
-						if (account.nickservs[i] == NSaccount) {
-							level = account.level;
-							break matching2;
+					if (account.nickservs) {
+						for (var i = 0; i < account.nickservs.length; i++) {
+							if (account.nickservs[i] == NSaccount) {
+								level = account.level;
+								break matching2;
+							}
 						}
 					}
 				}

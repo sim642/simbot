@@ -2,9 +2,10 @@ function AuthPlugin(bot) {
 	var self = this;
 	self.name = "auth";
 	self.help = "Authentication/admin plugin";
-	self.depend = ["cmd", "nickserv"];
+	self.depend = ["cmd", "nickserv", "watch"];
 
 	self.accounts = {};
+	self.nicks = {};
 
 	self.load = function(data) {
 		self.accounts = data;
@@ -58,15 +59,33 @@ function AuthPlugin(bot) {
 	};
 
 	self.getLevel = function(message, callback) {
-		var level = self.findMask(message.prefix);
+		var nick = message.nick;
+		var level = 0;
 
+		if (nick in self.nicks) {
+			level = self.findNickserv(self.nicks[nick]);
+
+			if (level > 0) {
+				callback(level, "nscache");
+				return;
+			}
+		}
+
+		level = self.findMask(message.prefix);
 		if (level > 0)
 			callback(level, "mask");
 		else {
-			bot.plugins.nickserv.identified(message.nick, function(NSaccount) {
+			bot.plugins.nickserv.identified(nick, function(NSaccount) {
 				level = self.findNickserv(NSaccount);
 
-				callback(level, level > 0 ? "nickserv" : "none");
+				if (level > 0) {
+					self.nicks[nick] = NSaccount;
+					bot.plugins.watch.add(nick);
+
+					callback(level, "nickserv");
+				}
+				else
+					callback(level, "none");
 			});
 		}
 	};
@@ -88,6 +107,21 @@ function AuthPlugin(bot) {
 	};
 
 	self.events = {
+		"nick": function(oldnick, newnick, channels, message) {
+			if (oldnick in self.nicks) {
+				self.nicks[newnick] = self.nicks[oldnick];
+				delete self.nicks[oldnick];
+				bot.plugins.watch.change(oldnick, newnick);
+			}
+		},
+
+		"watch#logoff": function(watch) {
+			if (watch.nick in self.nicks) {
+				delete self.nicks[watch.nick];
+				bot.plugins.watch.remove(watch.nick);
+			}
+		},
+
 		"cmd#myauth": function(nick, to, args, message) {
 			self.getLevel(message, function(level, method) {
 				bot.say(to, nick + ": your auth level is " + level + " (" + method + ")");

@@ -65,7 +65,8 @@ function AuthPlugin(bot) {
 		else {
 			bot.plugins.nickserv.identified(message.nick, function(NSaccount) {
 				level = self.findNickserv(NSaccount);
-				callback(level, "nickserv");
+
+				callback(level, level > 0 ? "nickserv" : "none");
 			});
 		}
 	};

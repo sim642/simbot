@@ -39,7 +39,7 @@ function WatchPlugin(bot) {
 					nick: message.args[1],
 					user: message.args[2],
 					host: message.args[3],
-					logon: message.args[4]
+					logon: new Date(message.args[4] * 1000)
 				};
 
 				bot.emit(self.emitEvents[message.rawCommand], watch);

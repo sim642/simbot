@@ -23,41 +23,49 @@ function AuthPlugin(bot) {
 		return re.test(cur);
 	};
 
-	self.getLevel = function(message, callback) {
-		// TODO: return highest level the user could get, not the first one
-
+	self.findMask = function(mask) {
 		var level = 0;
-		matching:
+
 		for (var key in self.accounts) {
 			var account = self.accounts[key];
 			if (account.masks) {
 				for (var i = 0; i < account.masks.length; i++) {
-					if (self.match(message.prefix, account.masks[i])) {
-						level = account.level;
-						break matching;
+					if (self.match(mask, account.masks[i])) {
+						level = Math.max(level, account.level);
 					}
 				}
 			}
 		}
 
-		if (level > 0)
-			callback(level);
-		else {
-			bot.plugins.nickserv.identified(message.nick, function(NSaccount) {
-				matching2:
-				for (var key in self.accounts) {
-					var account = self.accounts[key];
-					if (account.nickservs) {
-						for (var i = 0; i < account.nickservs.length; i++) {
-							if (account.nickservs[i] == NSaccount) {
-								level = account.level;
-								break matching2;
-							}
-						}
+		return level;
+	};
+
+	self.findNickserv = function(NSaccount) {
+		var level = 0;
+
+		for (var key in self.accounts) {
+			var account = self.accounts[key];
+			if (account.nickservs) {
+				for (var i = 0; i < account.nickservs.length; i++) {
+					if (account.nickservs[i] == NSaccount) {
+						level = Math.max(level, account.level);
 					}
 				}
+			}
+		}
 
-				callback(level);
+		return level;
+	};
+
+	self.getLevel = function(message, callback) {
+		var level = self.findMask(message.prefix);
+
+		if (level > 0)
+			callback(level, "mask");
+		else {
+			bot.plugins.nickserv.identified(message.nick, function(NSaccount) {
+				level = self.findNickserv(NSaccount);
+				callback(level, "nickserv");
 			});
 		}
 	};
@@ -80,8 +88,8 @@ function AuthPlugin(bot) {
 
 	self.events = {
 		"cmd#myauth": function(nick, to, args, message) {
-			self.getLevel(message, function(level) {
-				bot.say(to, nick + ": your auth level is " + level);
+			self.getLevel(message, function(level, method) {
+				bot.say(to, nick + ": your auth level is " + level + " (" + method + ")");
 			});
 		}
 	};

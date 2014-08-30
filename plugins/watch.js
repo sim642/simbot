@@ -96,19 +96,30 @@ function WatchPlugin(bot) {
 				break;
 
 			case "607": // end of watchlist
-				for (var i = 0; i < self.listCallbacks.length; i++) {
-					self.listCallbacks[i](self.listArray);
-				}
+				var re = /End of WATCH (\w)/;
+				var match = message.args[1].match(re);
+				if (match) {
+					switch (match[1]) {
+					case "l":
+						for (var i = 0; i < self.listCallbacks.length; i++) {
+							self.listCallbacks[i](self.listArray);
+						}
 
-				for (var i = 0; i < self.statCallbacks.length; i++) {
-					var data = self.statData;
-					self.statCallbacks[i](data.have, data.on, data.list);
-				}
+						self.listCallbacks = [];
+						self.listArray = [];
+					break;
 
-				self.listCallbacks = [];
-				self.listArray = [];
-				self.statCallbacks = [];
-				self.statData = {};
+					case "s":
+						for (var i = 0; i < self.statCallbacks.length; i++) {
+							var data = self.statData;
+							self.statCallbacks[i](data.have, data.on, data.list);
+						}
+
+						self.statCallbacks = [];
+						self.statData = {};
+						break;
+					}
+				}
 				break;
 
 			case "303": // ISON reply

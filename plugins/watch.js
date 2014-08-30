@@ -10,6 +10,8 @@ function WatchPlugin(bot) {
 	self.statData = {};
 	self.statCallbacks = [];
 
+	self.isonCallbacks = [];
+
 	self.watch = function(args) {
 		args.unshift("WATCH");
 		bot.send.apply(bot, args);
@@ -41,6 +43,13 @@ function WatchPlugin(bot) {
 		}
 
 		self.statCallbacks.push(callback);
+	};
+
+	self.ison = function(nicks, callback) {
+		nicks.unshift("ISON");
+		bot.send.apply(bot, nicks);
+
+		self.isonCallbacks.push(callback);
 	};
 
 	self.emitEvents = {
@@ -100,6 +109,11 @@ function WatchPlugin(bot) {
 				self.listArray = [];
 				self.statCallbacks = [];
 				self.statData = {};
+				break;
+
+			case "303": // ISON reply
+				var callback = self.isonCallbacks.shift();
+				callback(message.args[1].trim().split(" "));
 				break;
 			}
 		}

@@ -34,15 +34,6 @@ function CmdPlugin(bot) {
 
 		"cmd#": function(nick, to, cmd, args, message) {
 			//bot.notice(nick, "no such command: " + cmd);
-		},
-
-		"cmd#help": function(nick, to, args, message) {
-			if (bot.plugins[args[1]])
-				bot.say(to, nick + ": " + args[1] + " - " + bot.plugins[args[1]].help);
-			else if (args[1])
-				bot.say(to, nick + ": no such module `" + args[1] + "`");
-			else
-				bot.say(to, nick + ": https://github.com/sim642/simbot/wiki");
 		}
 	}
 }

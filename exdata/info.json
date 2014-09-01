@@ -1,0 +1,3 @@
+{
+    "conStr": "postgres://user:password@host/db"
+}

@@ -1,0 +1,4 @@
+{
+    "basedir": "./path/to/znc/logs/",
+    "basename": "simbot_network_"
+}

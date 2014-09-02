@@ -44,6 +44,7 @@ function PushbulletPlugin(bot) {
 			else {
 				bot.out.error("pushbullet", params);
 				bot.out.error("pushbullet", err);
+				bot.out.error("pushbullet", body);
 				(callback || function(){})(true);
 			}
 		});

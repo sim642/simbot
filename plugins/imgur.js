@@ -28,8 +28,10 @@ function ImgurPlugin(bot) {
 	self.events = {
 		"cmd#gallery": function(nick, to, args) {
 			var sub = args[1];
+			var sort = args[2] || "time";
+			var time = args[3] || "week";
 
-			self.request({url: "https://api.imgur.com/3/gallery/r/" + sub + "/", headers: (sub in self.datas ? {"If-None-Match": self.datas[sub].etag} : {})}, function(err, res, body) {
+			self.request({url: "https://api.imgur.com/3/gallery/r/" + sub + "/" + sort + "/" + time + "/", headers: (sub in self.datas ? {"If-None-Match": self.datas[sub].etag} : {})}, function(err, res, body) {
 				if (!err) {
 					var data;
 					if (res.statusCode == 200) {

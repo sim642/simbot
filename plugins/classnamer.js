@@ -36,7 +36,7 @@ Process"];
 			for (var i = 0; i < self.parts.length; i++) {
 				var cnt = 1;
 				if (args[i + 1] && parseInt(args[i + 1], 10) !== NaN)
-					cnt = parseInt(args[i + 1], 10);
+					cnt = Math.min(parseInt(args[i + 1], 10), 10);
 
 				for (var j = 0; j < cnt; j++) {
 					var a = self.parts[i].split(" ");

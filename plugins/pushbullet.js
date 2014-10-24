@@ -45,7 +45,7 @@ function PushbulletPlugin(bot) {
 				bot.out.error("pushbullet", params);
 				bot.out.error("pushbullet", err);
 				bot.out.error("pushbullet", body);
-				(callback || function(){})(true);
+				setTimeout(function(){ self.push(params, callback); }, 30 * 1000); // retry pushing again in 30 seconds
 			}
 		});
 	};

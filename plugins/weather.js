@@ -298,7 +298,7 @@ function WeatherPlugin(bot) {
 							bot.say(to, str);
 						}
 						else {
-							bot.say(to, "No forecast found for \x02" + jj.city.name + ", " + jj.city.country + " @ " + time.toUTCString());
+							bot.say(to, "No forecast found for \x02" + place + " @ " + time.toUTCString());
 						}
 					}
 					else {

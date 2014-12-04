@@ -26,13 +26,71 @@ function WhatpulsePlugin(bot) {
 			return user;
 	};
 
+	self.formatPair = function(key, value) {
+		return key + ": \x02" + value + "\x02";
+	};
+
 	self.events = {
 		"cmd#whatpulse": function(nick, to, args) {
-			var user = self.parseuser((args[1] || nick).toLowerCase());
-			request("http://api.whatpulse.org/user.php?format=json&user=" + user, function(err, res, body) {
+			var realuser = args[1] || nick;
+			var user = self.parseuser(realuser.toLowerCase());
+			request("http://api.whatpulse.org/user.php?format=json&formatted=yes&user=" + user, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
-					var data = JSON.parse(body);
-					bot.say(to, data.AccountName + ": " + data.Keys);
+					var j = JSON.parse(body);
+
+					if (!j.error) {
+						var bits = [];
+						if (j.Team !== "0")
+							bits.push(["team", j.Team.Name]);
+						bits.push(["pulses", j.Pulses]);
+						bits.push(["keys", j.Keys + " (" + j.Ranks.Keys + ")"]);
+						bits.push(["clicks", j.Clicks + " (" + j.Ranks.Clicks + ")"]);
+						bits.push(["download", j.Download + " (" + j.Ranks.Download + ")"]);
+						bits.push(["upload", j.Upload + " (" + j.Ranks.Upload + ")"]);
+						bits.push(["uptime", j.UptimeShort + " (" + j.Ranks.Uptime + ")"]);
+
+						var str = "\x02" + j.AccountName + (realuser.toLowerCase() != j.AccountName.toLowerCase() ? " (" + realuser + ")" : "") + ": \x02";
+						for (var i = 0; i < bits.length; i++) {
+							str += self.formatPair(bits[i][0], bits[i][1]);
+							if (i != bits.length - 1)
+								str += "; ";
+						}
+
+						bot.say(to, str);
+					}
+					else {
+						bot.say(to, nick + ": " + j.error);
+					}
+				}
+			});
+		},
+
+		"cmd#whatpulseteam": function(nick, to, args) {
+			request("http://api.whatpulse.org/team.php?format=json&formatted=yes&team=" + args[1], function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var j = JSON.parse(body);
+
+					if (!j.error) {
+						var bits = [];
+						bits.push(["founder", j.Founder]);
+						bits.push(["keys", j.Keys + " (" + j.Ranks.Keys + ")"]);
+						bits.push(["clicks", j.Clicks + " (" + j.Ranks.Clicks + ")"]);
+						bits.push(["download", j.Download + " (" + j.Ranks.Download + ")"]);
+						bits.push(["upload", j.Upload + " (" + j.Ranks.Upload + ")"]);
+						bits.push(["uptime", j.UptimeShort + " (" + j.Ranks.Uptime + ")"]);
+
+						var str = "\x02" + j.Name + ": \x02";
+						for (var i = 0; i < bits.length; i++) {
+							str += self.formatPair(bits[i][0], bits[i][1]);
+							if (i != bits.length - 1)
+								str += "; ";
+						}
+
+						bot.say(to, str);
+					}
+					else {
+						bot.say(to, nick + ": " + j.error);
+					}
 				}
 			});
 		},

@@ -42,15 +42,15 @@ function WhatpulsePlugin(bot) {
 				if (identified) {
 					if (args[1] !== undefined) {
 						self.users[nick.toLowerCase()] = args[1];
-						bot.say(nick, "whatpulse set to " + args[1]);
+						bot.notice(nick, "whatpulse set to " + args[1]);
 					}
 					else {
 						delete self.users[nick.toLowerCase()];
-						bot.say(nick, "whatpulse unset");
+						bot.notice(nick, "whatpulse unset");
 					}
 				}
 				else
-					bot.say(nick, "must be identified for this nick to set whatpulse");
+					bot.notice(nick, "must be identified for this nick to set whatpulse");
 			});
 		}
 	}

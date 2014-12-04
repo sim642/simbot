@@ -63,9 +63,9 @@ function PushbulletPlugin(bot) {
 		"cmd#pushbullet": bot.plugins.auth.proxy(6, function(nick, to, args) {
 			self.pushnote(args[1], args[2], args[3], function(err) {
 				if (err)
-					bot.say(nick, "error sending pushbullet");
+					bot.notice(nick, "error sending pushbullet");
 				else
-					bot.say(nick, "pushbullet sent to " + args[1]);
+					bot.notice(nick, "pushbullet sent to " + args[1]);
 			});
 		}),
 
@@ -74,15 +74,15 @@ function PushbulletPlugin(bot) {
 				if (identified) {
 					if (args[1] !== undefined) {
 						self.emails[nick.toLowerCase()] = args[1];
-						bot.say(nick, "pushbullet set to " + args[1]);
+						bot.notice(nick, "pushbullet set to " + args[1]);
 					}
 					else {
 						delete self.emails[nick.toLowerCase()];
-						bot.say(nick, "pushbullet unset");
+						bot.notice(nick, "pushbullet unset");
 					}
 				}
 				else
-					bot.say(nick, "must be identified for this nick to set pushbullet");
+					bot.notice(nick, "must be identified for this nick to set pushbullet");
 			});
 		}
 	}

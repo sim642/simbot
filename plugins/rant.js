@@ -8,10 +8,14 @@ function RantPlugin(bot) {
 
 	self.events = {
 		"cmd#rant": function(nick, to, args) {
-			request({url: "http://berkin.me/probox/run", method: "POST", form: {nsfw: true, code: args[0]}}, function(err, res, body) {
+			request({url: "http://berkin.me/rantbox/run", method: "POST", form: {nsfw: true, code: args[0]}}, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var data = JSON.parse(body);
 					bot.say(to, nick + ": " + data.result);
+				}
+				else {
+					bot.out.error("rant", err);
+					bot.out.error("rant", body);
 				}
 			});
 		}

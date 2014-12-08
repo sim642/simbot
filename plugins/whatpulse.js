@@ -7,15 +7,19 @@ function WhatpulsePlugin(bot) {
 	self.depend = ["cmd", "nickserv"];
 
 	self.users = {};
+	self.defaultTeam = null;
 
 	self.load = function(data) {
 		if (data && data.users)
 			self.users = data.users;
+		if (data && data.defaultTeam)
+			self.defaultTeam  = data.defaultTeam;
 	};
 
 	self.save = function() {
 		return {
-			"users": self.users
+			"users": self.users,
+			"defaultTeam": self.defaultTeam
 		};
 	};
 
@@ -66,33 +70,36 @@ function WhatpulsePlugin(bot) {
 		},
 
 		"cmd#whatpulseteam": function(nick, to, args) {
-			request("http://api.whatpulse.org/team.php?format=json&formatted=yes&team=" + args[1], function(err, res, body) {
-				if (!err && res.statusCode == 200) {
-					var j = JSON.parse(body);
+			var team = args[1] || self.defaultTeam;
+			if (team) {
+				request("http://api.whatpulse.org/team.php?format=json&formatted=yes&team=" + team, function(err, res, body) {
+					if (!err && res.statusCode == 200) {
+						var j = JSON.parse(body);
 
-					if (!j.error) {
-						var bits = [];
-						bits.push(["founder", j.Founder]);
-						bits.push(["keys", j.Keys + " (" + j.Ranks.Keys + ")"]);
-						bits.push(["clicks", j.Clicks + " (" + j.Ranks.Clicks + ")"]);
-						bits.push(["download", j.Download + " (" + j.Ranks.Download + ")"]);
-						bits.push(["upload", j.Upload + " (" + j.Ranks.Upload + ")"]);
-						bits.push(["uptime", j.UptimeShort + " (" + j.Ranks.Uptime + ")"]);
+						if (!j.error) {
+							var bits = [];
+							bits.push(["founder", j.Founder]);
+							bits.push(["keys", j.Keys + " (" + j.Ranks.Keys + ")"]);
+							bits.push(["clicks", j.Clicks + " (" + j.Ranks.Clicks + ")"]);
+							bits.push(["download", j.Download + " (" + j.Ranks.Download + ")"]);
+							bits.push(["upload", j.Upload + " (" + j.Ranks.Upload + ")"]);
+							bits.push(["uptime", j.UptimeShort + " (" + j.Ranks.Uptime + ")"]);
 
-						var str = "\x02" + j.Name + ": \x02";
-						for (var i = 0; i < bits.length; i++) {
-							str += self.formatPair(bits[i][0], bits[i][1]);
-							if (i != bits.length - 1)
-								str += "; ";
+							var str = "\x02" + j.Name + ": \x02";
+							for (var i = 0; i < bits.length; i++) {
+								str += self.formatPair(bits[i][0], bits[i][1]);
+								if (i != bits.length - 1)
+									str += "; ";
+							}
+
+							bot.say(to, str);
 						}
-
-						bot.say(to, str);
+						else {
+							bot.say(to, nick + ": " + j.error);
+						}
 					}
-					else {
-						bot.say(to, nick + ": " + j.error);
-					}
-				}
-			});
+				});
+			}
 		},
 
 		"cmd#setwhatpulse": function(nick, to, args) {

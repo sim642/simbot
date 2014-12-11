@@ -23,7 +23,7 @@ function SpacePeoplePlugin(bot) {
 						data = self.data;
 					}
 
-					bot.say(to, "People in space right now: " + data.number + " (" + data.people.map(function(person) { return person.name + " [" + person.country + "]"; }).join(", ") + ")");
+					bot.say(to, "People in space right now: \x02" + data.number + "\x02 (" + data.people.map(function(person) { return "\x02" + person.name + "\x02 [" + person.country + "]"; }).join(", ") + ")");
 				}
 			});
 		}

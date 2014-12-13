@@ -24,10 +24,10 @@ function XkcdPlugin(bot) {
 				if (args[1])
 					uri += args[1] + "/";
 				request(uri, function(err, res, body) {
-					var re = /<div id="ctitle">(.+)<\/div>/;
+					var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
 					var m = body.match(re);
 					if (m)
-						bot.say(to, "xkcd" + (args[1] ? " #" + args[1] : "") + ": \x02" + m[1] + "\x02 - " + uri);
+						bot.say(to, "xkcd" + (args[1] ? " #" + args[1] : "") + ": \x02" + m[1] + "\x02 - " + m[2]);
 				});
 			}
 			else {

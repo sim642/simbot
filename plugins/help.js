@@ -8,6 +8,7 @@ function HelpPlugin(bot) {
 	self.depend = ["cmd"];
 
 	self.github = "https://github.com/sim642/simbot";
+	self.githubRaw = "https://raw.githubusercontent.com/wiki/sim642/simbot";
 	self.cmdRe = /^=(\S+)$/;
 
 	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
@@ -53,7 +54,8 @@ function HelpPlugin(bot) {
 		"cmd#help": function(nick, to, args, message) {
 			if (bot.plugins[args[1]]) {
 				var url = self.github + "/wiki/" + args[1];
-				request.head({"url": url, followRedirect: false}, function(err, res, body) {
+				var urlRaw = self.githubRaw + "/" + args[1] + ".md";
+				request.head(urlRaw, function(err, res, body) {
 					bot.say(to, nick + ": " + args[1] + " - " + bot.plugins[args[1]].help + (!err && res.statusCode == 200 ? " - " + url : ""));
 				});
 			}
@@ -75,7 +77,8 @@ function HelpPlugin(bot) {
 
 					if (names.length == 1) {
 						var url = self.github + "/wiki/" + names[0];
-						request(url + ".md", function(err, res, body) {
+						var urlRaw = self.githubRaw + "/" + names[0] + ".md";
+						request(urlRaw, function(err, res, body) {
 							bot.say(to, nick + ": " + args[1] + " in " + names[0] + " - " + bot.plugins[names[0]].help + (!err && res.statusCode == 200 ? " - " + url : ""));
 
 							if (!err && res.statusCode == 200) {

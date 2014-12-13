@@ -1,5 +1,5 @@
 var request = require("request");
-var cheerio = require("cheerio");
+var marked = require("marked");
 
 function HelpPlugin(bot) {
 	var self = this;
@@ -14,6 +14,40 @@ function HelpPlugin(bot) {
 	self.escapeRegExp = function(str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
+
+	self.ircRenderer = new marked.Renderer();
+	self.ircRenderer.paragraph = function(text) {
+		return text;
+	};
+	self.ircRenderer.strong = function(text) {
+		return "\x1F" + text + "\x1F";
+	};
+	self.ircRenderer.em = function(text) {
+		return "\x0314" + text + "\x0F";
+	};
+	self.ircRenderer.codespan = function(code) {
+		return "\x02" + code + "\x02";
+	};
+	self.ircRenderer.link = function(href, title, text) {
+		bot.out.debug("help", [href, title, text]);
+		return title;
+	};
+
+	self.unescapeHtml = function(html) {
+		return html.replace(/&([#\w]+);/g, function(_, n) {
+			n = n.toLowerCase();
+			if (n === 'colon') return ':';
+			if (n === 'lt') return '<';
+			if (n === 'gt') return '>';
+			if (n === 'quot') return '"';
+			if (n.charAt(0) === '#') {
+				return n.charAt(1) === 'x'
+				? String.fromCharCode(parseInt(n.substring(2), 16))
+				: String.fromCharCode(+n.substring(1));
+			}
+			return '';
+		});
+	};
 
 	self.events = {
 		"cmd#help": function(nick, to, args, message) {
@@ -41,14 +75,30 @@ function HelpPlugin(bot) {
 
 					if (names.length == 1) {
 						var url = self.github + "/wiki/" + names[0];
-						request({"url": url, followRedirect: false}, function(err, res, body) {
+						request(url + ".md", function(err, res, body) {
 							bot.say(to, nick + ": " + args[1] + " in " + names[0] + " - " + bot.plugins[names[0]].help + (!err && res.statusCode == 200 ? " - " + url : ""));
 
 							if (!err && res.statusCode == 200) {
-								var re = new RegExp("^" + self.escapeRegExp(args[1]) + "((?=\\s)|$)");
-								bot.out.debug("help", re);
-								var $ = cheerio.load(body);
-								$("ul.task-list > li").filter(function(i) { return $("code", this).filter(function(i) {return $(this).text().match(re); }).length > 0; }).each(function(i) { bot.notice(nick, $(this).text().replace(/[\r\n]/g, "")); });
+								var re = new RegExp("`" + self.escapeRegExp(args[1]) + "(\\s.*)?`");
+								var tokens = marked.lexer(body);
+								var listItem = false;
+								for (var i = 0; i < tokens.length; i++) {
+									switch (tokens[i].type) {
+									case "list_item_start":
+										listItem = true;
+										break;
+									case "list_item_end":
+										listItem = false;
+										break;
+									case "text":
+										if (listItem) {
+											var text = tokens[i].text;
+											if (text.match(re))
+												bot.notice(nick, self.unescapeHtml(marked(text, { renderer: self.ircRenderer, sanitize: true})));
+										}
+										break;
+									}
+								}
 							}
 						});
 					}

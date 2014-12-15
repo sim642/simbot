@@ -4,17 +4,21 @@ function XkcdPlugin(bot) {
 	var self = this;
 	self.name = "xkcd";
 	self.help = "Xkcd plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "pushbullet"];
 
 	self.apiKey = null;
+	self.chans = [];
 
 	self.load = function(data) {
-		if (data)
+		if (data) {
 			self.apiKey = data.apiKey;
+			self.chans = data.chans;
+		}
+		bot.plugins.pushbullet.subscribe("xkcd");
 	};
 
 	self.save = function() {
-		return {"apiKey": self.apiKey};
+		return {"apiKey": self.apiKey, "chans": self.chans};
 	}
 
 	self.events = {
@@ -67,6 +71,13 @@ function XkcdPlugin(bot) {
 							bot.say(to, nick + ": couldn't find xkcd");
 					}
 				});
+			}
+		},
+
+		"pushbullet#subscription#xkcd": function(push) {
+			var text = "new xkcd: \x02" + push.title + "\x02 - " + push.url;
+			for (var i = 0; i < self.chans.length; i++) {
+				bot.say(self.chans[i], text);
 			}
 		}
 	}

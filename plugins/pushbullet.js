@@ -15,6 +15,14 @@ function PushbulletPlugin(bot) {
 	self.setToken = function(token) {
 		self.token = token;
 		self.ws = new WebSocket("wss://stream.pushbullet.com/websocket/" + self.token);
+		self.ws.on("error", function(code, message) {
+			bot.out.error("pushbullet", "WS errored (" + code + "): " + message);
+			setTimeout(function() { self.setToken(token); }, 30 * 1000);
+		});
+		self.ws.on("close", function(code, message) {
+			bot.out.error("pushbullet", "WS closed (" + code + "): " + message);
+			setTimeout(function() { self.setToken(token); }, 30 * 1000);
+		});
 		self.ws.on("message", function(message) {
 			var data = JSON.parse(message);
 			if (data.type == "tickle" && data.subtype == "push") {

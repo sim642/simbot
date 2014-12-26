@@ -79,34 +79,47 @@ function TopicLogPlugin(bot) {
 
 		"cmd#topics": function(nick, to, args) {
 			var cnt = Math.min(Math.max(args[1], 1) || 3, 5);
-			var chanlog = self.topiclog[to];
+			var chan = args[2] || to;
 
-			var lastentry = chanlog[chanlog.length - cnt - 1];
-			for (var i = -cnt; i < 0; i++) {
-				var entry = chanlog[chanlog.length + i];
-				if (entry)
-				{
-					var str;
-					if (lastentry)
-						str = self.colordiff(lastentry.topic, entry.topic);
-					else
-						str = entry.topic;
+			if (chan in self.topiclog)
+			{
+				var chanlog = self.topiclog[chan];
 
-					bot.notice(nick, "\x02Topic in " + to + " by " + entry.nick + " at " + entry.time.toUTCString() + ":\x02 " + str);
-					lastentry = entry;
+				var lastentry = chanlog[chanlog.length - cnt - 1];
+				for (var i = -cnt; i < 0; i++) {
+					var entry = chanlog[chanlog.length + i];
+					if (entry)
+					{
+						var str;
+						if (lastentry)
+							str = self.colordiff(lastentry.topic, entry.topic);
+						else
+							str = entry.topic;
+
+						bot.notice(nick, "\x02Topic in " + chan + " by " + entry.nick + " at " + entry.time.toUTCString() + ":\x02 " + str);
+						lastentry = entry;
+					}
 				}
 			}
+			else
+				bot.say(to, "No such channel on record");
 		},
 
 		"cmd#topicdiff": function(nick, to, args) {
-			var chanlog = self.topiclog[to];
-			if (chanlog.length >= 2)
+			var chan = args[1] || to;
+			if (chan in self.topiclog)
 			{
-				var str = self.colordiff(chanlog[chanlog.length - 2].topic, chanlog[chanlog.length - 1].topic);
-				bot.say(to, "\x02Topic diff:\x02 " + str);
+				var chanlog = self.topiclog[chan];
+				if (chanlog.length >= 2)
+				{
+					var str = self.colordiff(chanlog[chanlog.length - 2].topic, chanlog[chanlog.length - 1].topic);
+					bot.say(to, "\x02Topic diff of " + chan + ":\x02 " + str);
+				}
+				else
+					bot.say(to, "Cannot find topic diff with less than 2 known topics");
 			}
 			else
-				bot.say(to, "Cannot find topic diff with less than 2 known topics");
+				bot.say(to, "No such channel on record");
 		}
 	}
 }

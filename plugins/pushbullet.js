@@ -173,7 +173,7 @@ function PushbulletPlugin(bot) {
 
 	self.events = {
 		"pushbullet#push": function(push, live) {
-			bot.out.log("pushbullet", push.type + " push (" + live + ") from " + push.sender_email + ": " + push.title);
+			bot.out.log("pushbullet", push.type + " push" + (live ? "" : "(" + (new Date(push.modified * 1000)).toUTCString() + ")") + " from " + push.sender_email + ": " + push.title);
 			bot.emit("pushbullet#push#" + push.sender_email, push, live);
 
 			if (push.title && (push.title in bot.chans)) {
@@ -221,7 +221,7 @@ function PushbulletPlugin(bot) {
 		},
 
 		"pushbullet#subscription": function(push, live) {
-			bot.out.log("pushbullet", push.type + " subscription (" + live + ") from " + push.sender_name + ": " + push.title);
+			bot.out.log("pushbullet", push.type + " subscription" + (live ? "" : " (" + (new Date(push.modified * 1000)).toUTCString() + ")") + " from " + push.sender_name + ": " + push.title);
 			bot.emit("pushbullet#subscription#" + push.sender_name, push, live);
 		},
 

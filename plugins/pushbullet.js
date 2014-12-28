@@ -5,12 +5,22 @@ function PushbulletPlugin(bot) {
 	var self = this;
 	self.name = "pushbullet";
 	self.help = "Pushbullet plugin";
-	self.depend = ["cmd", "auth", "nickserv"];
+	self.depend = ["cmd", "auth", "nickserv", "bitly"];
 
 	self.token = null;
 	self.emails = {};
 	self.ws = null;
 	self.lastTs = null;
+
+	// https://stackoverflow.com/questions/9907419/javascript-object-get-key-by-value
+	self.getKeyByValue = function(obj, value) {
+		for (var prop in obj) {
+			if(obj.hasOwnProperty(prop)) {
+				 if(obj[prop] === value)
+					 return prop;
+			}
+		}
+	};
 
 	self.setToken = function(token) {
 		self.token = token;
@@ -165,6 +175,49 @@ function PushbulletPlugin(bot) {
 		"pushbullet#push": function(push, live) {
 			bot.out.log("pushbullet", push.type + " push (" + live + ") from " + push.sender_email + ": " + push.title);
 			bot.emit("pushbullet#push#" + push.sender_email, push, live);
+
+			if (push.title && (push.title in bot.chans)) {
+				var sender = self.getKeyByValue(self.emails, push.sender_email);
+				if (sender === null)
+					sender = push.sender_email;
+				var msg = "push" + (live ? "" : "ed (" + (new Date(push.modified * 1000)).toUTCString() + ")") + " [\x02" + sender + "\x02] ";
+
+				switch (push.type) {
+				case "note":
+					msg += (push.body !== undefined ? push.body : "");
+					break;
+				case "link":
+					msg += (push.body !== undefined ? push.body + " - " : "");
+					break;
+				case "file":
+					msg += (push.body !== undefined ? push.body + " - " : "") + "\x02" + push.file_name + "\x02 (" + push.file_type + "): ";
+					break;
+				default:
+					break;
+				}
+
+				if (push.type == "link") {
+					if (push.url.length > 50) {
+						bot.plugins.bitly.shorten(push.url, function(shortened) {
+							msg += shortened;
+							bot.say(push.title, msg);
+						});
+					}
+					else {
+						msg += push.url;
+						bot.say(push.title, msg);
+					}
+				}
+				else if (push.type == "file") {
+					bot.plugins.bitly.shorten(push.file_url, function(shortened) {
+						msg += shortened;
+						bot.say(push.title, msg);
+					});
+				}
+				else {
+					bot.say(push.title, msg);
+				}
+			}
 		},
 
 		"pushbullet#subscription": function(push, live) {

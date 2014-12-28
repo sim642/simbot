@@ -21,7 +21,8 @@ function PushbulletPlugin(bot) {
 		});
 		self.ws.on("close", function(code, message) {
 			bot.out.error("pushbullet", "WS closed (" + code + "): " + message);
-			setTimeout(function() { self.setToken(token); }, 30 * 1000);
+			if (code != 1000)
+				setTimeout(function() { self.setToken(token); }, 30 * 1000);
 		});
 		self.ws.on("message", function(message) {
 			var data = JSON.parse(message);
@@ -55,7 +56,7 @@ function PushbulletPlugin(bot) {
 	};
 
 	self.disable = function() {
-		self.ws.close();
+		self.ws.close(1000, "disabling plugin");
 	};
 
 	self.parseto = function(to) {

@@ -10,7 +10,7 @@ function PushbulletPlugin(bot) {
 	self.token = null;
 	self.emails = {};
 	self.ws = null;
-	self.lastTs = Date.now() / 1000;
+	self.lastTs = null;
 
 	self.setToken = function(token) {
 		self.token = token;
@@ -33,9 +33,9 @@ function PushbulletPlugin(bot) {
 
 					pushes.forEach(function(push) {
 						if (push.receiver_email == "sim642bot@gmail.com")
-							bot.emit("pushbullet#push", push);
+							bot.emit("pushbullet#push", push, true);
 						else if (push.channel_iden)
-							bot.emit("pushbullet#subscription", push);
+							bot.emit("pushbullet#subscription", push, true);
 					});
 				});
 			}
@@ -46,13 +46,33 @@ function PushbulletPlugin(bot) {
 		self.setToken(data.token);
 		if (data.emails)
 			self.emails = data.emails;
+		if (data.lastTs)
+			self.lastTs = data.lastTs;
 	};
 
 	self.save = function() {
 		return {
 			"token": self.token,
-			"emails": self.emails
+			"emails": self.emails,
+			"lastTs": self.lastTs
 		};
+	};
+
+	self.enable = function() {
+		if (self.lastTs === null)
+			self.lastTs = Date.now() / 1000;
+
+		self.getPushes(self.lastTs, function(pushes) {
+			if (pushes[0])
+				self.lastTs = pushes[0].modified;
+
+			pushes.forEach(function(push) {
+				if (push.receiver_email == "sim642bot@gmail.com")
+					bot.emit("pushbullet#push", push, false);
+				else if (push.channel_iden)
+					bot.emit("pushbullet#subscription", push, false);
+			});
+		});
 	};
 
 	self.disable = function() {
@@ -142,14 +162,14 @@ function PushbulletPlugin(bot) {
 	};
 
 	self.events = {
-		"pushbullet#push": function(push) {
-			bot.out.log("pushbullet", "Push from " + push.sender_email + ": " + push.title);
-			bot.emit("pushbullet#push#" + push.sender_email, push);
+		"pushbullet#push": function(push, live) {
+			bot.out.log("pushbullet", push.type + " push (" + live + ") from " + push.sender_email + ": " + push.title);
+			bot.emit("pushbullet#push#" + push.sender_email, push, live);
 		},
 
-		"pushbullet#subscription": function(push) {
-			bot.out.log("pushbullet", "Subscription from " + push.sender_name + ": " + push.title);
-			bot.emit("pushbullet#subscription#" + push.sender_name, push);
+		"pushbullet#subscription": function(push, live) {
+			bot.out.log("pushbullet", push.type + " subscription (" + live + ") from " + push.sender_name + ": " + push.title);
+			bot.emit("pushbullet#subscription#" + push.sender_name, push, live);
 		},
 
 		"cmd#pushbullet": bot.plugins.auth.proxy(6, function(nick, to, args) {

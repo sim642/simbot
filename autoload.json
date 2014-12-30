@@ -1,3 +1,3 @@
 {
-	"autoload": ["auth", "cmd", "channels", "vote", "units", "greet", "pipe", "nickserv", "xkcd", "cats", "stalker", "fortune", "plugins", "classnamer", "age", "weather", "youtube", "topiclog", "omegle", "geoip", "pushbullet", "highlight", "history", "choose", "imgur", "help", "cdecl", "rant", "whatpulse", "spacepeople"]
+	"autoload": ["auth", "cmd", "channels", "vote", "units", "greet", "pipe", "nickserv", "xkcd", "cats", "stalker", "fortune", "plugins", "classnamer", "age", "weather", "youtube", "topiclog", "omegle", "geoip", "pushbullet", "highlight", "history", "choose", "imgur", "help", "cdecl", "rant", "whatpulse", "spacepeople", "barcode"]
 }

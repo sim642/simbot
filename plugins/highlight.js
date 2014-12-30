@@ -92,6 +92,10 @@ function HighlightPlugin(bot) {
 						bot.say(nick, "highlights turned off");
 					}
 					break;
+				default:
+					var user = self.highlights[lnick]
+					bot.say(nick, "highlights set to " + user.level + (user.activity ? " (" + user.activity.toString() + "mins)": ""));
+					break;
 				}
 			}
 			else

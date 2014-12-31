@@ -45,21 +45,27 @@ function HighlightPlugin(bot) {
 				var level = self.highlights[hinick].level;
 				var activity = self.highlights[hinick].activity;
 				var tolow = to.toLowerCase();
+				var op = bot.chans[tolow].users[nick].substr(0, 1);
 
 				if (text.match(new RegExp("\\b" + hinick + "(?=\\b|[_|])", "i"))) {
 					if (Object.keys(bot.chans[tolow].users).map(function(elem) { return elem.toLowerCase(); }).indexOf(hinick) == -1)
-						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + nick + "> " + self.stripcolors(text));
+						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));
 					else if (level != "offline") {
-						var op = bot.chans[tolow].users[nick].substr(0, 1);
-
 						if (activity !== null || level == "away") { // needs whois
 							var hinick2 = hinick;
 							bot.whois(hinick2, function(info) {
 								var good = true;
-								if (level == "away" && info.away === undefined)
+								if (level == "away" && info.away === undefined) {
 									good = false;
-								if (activity !== null && parseInt(info.idle) < (activity * 60))
-									good = false;
+								}
+
+								if (info.idle !== undefined) {
+									if (activity !== null && parseInt(info.idle) < (activity * 60)) {
+										good = false;
+									}
+								}
+								else
+									bot.out.error("highlight", "no idle data in WHOIS reply");
 
 								if (good)
 									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));

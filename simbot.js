@@ -13,6 +13,20 @@ var defcfg = {
 config.__proto__ = defcfg;
 
 var bot = new irc.Client(config.server, config.nick, config);
+
+bot.whois = function(nick, callback) { // copied from node-irc source
+	if ( typeof callback === 'function' ) {
+		var callbackWrapper = function(info) {
+			if ( info.nick == nick ) {
+				this.removeListener('whois', callbackWrapper);
+				return callback.apply(this, arguments);
+			}
+		};
+		this.addListener('whois', callbackWrapper);
+	}
+	this.send('WHOIS', nick, nick); // double nick for all info
+};
+
 bot.out = {};
 bot.out.file = fs.createWriteStream("./data/simbot.log", {flags: 'a'});
 

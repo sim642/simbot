@@ -20,6 +20,7 @@ function PushbulletPlugin(bot) {
 					 return prop;
 			}
 		}
+		return null;
 	};
 
 	self.setToken = function(token) {
@@ -178,7 +179,7 @@ function PushbulletPlugin(bot) {
 
 			if (push.title && (push.title in bot.chans)) {
 				var sender = self.getKeyByValue(self.emails, push.sender_email);
-				if (sender)
+				if (!sender)
 					sender = push.sender_email;
 				var msg = "push" + (live ? "" : "ed (" + (new Date(push.modified * 1000)).toUTCString() + ")") + " [\x02" + sender + "\x02] ";
 

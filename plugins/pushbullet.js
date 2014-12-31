@@ -183,15 +183,17 @@ function PushbulletPlugin(bot) {
 					sender = push.sender_email;
 				var msg = "push" + (live ? "" : "ed (" + (new Date(push.modified * 1000)).toUTCString() + ")") + " [\x02" + sender + "\x02] ";
 
+				var text = push.body !== undefined ? push.body.replace(/\n/g, " \\ ") : "";
+
 				switch (push.type) {
 				case "note":
-					msg += (push.body !== undefined ? push.body : "");
+					msg += text;
 					break;
 				case "link":
-					msg += (push.body !== undefined ? push.body + " - " : "");
+					msg += (text != "" ? text + " - " : "");
 					break;
 				case "file":
-					msg += (push.body !== undefined ? push.body + " - " : "") + "\x02" + push.file_name + "\x02 (" + push.file_type + "): ";
+					msg += (text != "" ? text + " - " : "") + "\x02" + push.file_name + "\x02 (" + push.file_type + "): ";
 					break;
 				default:
 					break;

@@ -84,22 +84,22 @@ function HighlightPlugin(bot) {
 					self.highlights[lnick].level = args[1];
 					var activity = parseInt(args[2]);
 					self.highlights[lnick].activity = activity ? activity : null;
-					bot.say(nick, "highlights set to " + args[1] + (activity ? " (" + activity.toString() + "mins)": ""));
+					bot.notice(nick, "highlights set to " + args[1] + (activity ? " (" + activity.toString() + "mins)": ""));
 					break;
 				case "off":
 					if (lnick in self.highlights) {
 						delete self.highlights[lnick];
-						bot.say(nick, "highlights turned off");
+						bot.notice(nick, "highlights turned off");
 					}
 					break;
 				default:
 					var user = self.highlights[lnick]
-					bot.say(nick, "highlights set to " + user.level + (user.activity ? " (" + user.activity.toString() + "mins)": ""));
+					bot.notice(nick, "highlights set to " + user.level + (user.activity ? " (" + user.activity.toString() + "mins)": ""));
 					break;
 				}
 			}
 			else
-				bot.say(nick, "pushbullet must be set to use this feature");
+				bot.notice(nick, "pushbullet must be set to use this feature");
 		}
 	}
 }

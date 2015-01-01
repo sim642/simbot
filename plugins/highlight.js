@@ -38,7 +38,7 @@ function HighlightPlugin(bot) {
 
 	self.events = {
 		"message": function(nick, to, text) {
-			if (nick == to)
+			if (to == bot.nick)
 				return;
 
 			for (var hinick in self.highlights) {

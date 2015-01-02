@@ -34,6 +34,14 @@ function XkcdPlugin(bot) {
 						bot.say(to, "xkcd" + (args[1] ? " #" + args[1] : "") + ": \x02" + m[1] + "\x02 - " + m[2]);
 				});
 			}
+			else if (args[1] == "random") {
+				request("http://c.xkcd.com/random/comic/", function(err, res, body) {
+					var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
+					var m = body.match(re);
+					if (m)
+						bot.say(to, "random xkcd: \x02" + m[1] + "\x02 - " + m[2]);
+				});
+			}
 			else {
 				var match = args[0].match(/^(.*)\s+(\d+)\s*$/);
 				var str;

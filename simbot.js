@@ -27,6 +27,15 @@ bot.whois = function(nick, callback) { // copied from node-irc source
 	this.send('WHOIS', nick, nick); // double nick for all info
 };
 
+bot.forward = function(to) {
+	return function() {
+		var args = Array.prototype.slice.call(arguments);
+		args.unshift(to);
+		//bot.out.debug("simbot", args);
+		return bot.emit.apply(bot, args);
+	};
+};
+
 bot.out = {};
 bot.out.file = fs.createWriteStream("./data/simbot.log", {flags: 'a'});
 

@@ -35,9 +35,7 @@ function WhatpulsePlugin(bot) {
 	};
 
 	self.events = {
-		"cmd#wp": function(nick, to, args, message) {
-			bot.emit("cmd#whatpulse", nick, to, args, message);
-		},
+		"cmd#wp": bot.forward("cmd#whatpulse"),
 
 		"cmd#whatpulse": function(nick, to, args) {
 			var realuser = args[1] || nick;
@@ -73,9 +71,7 @@ function WhatpulsePlugin(bot) {
 			});
 		},
 
-		"cmd#wpteam": function(nick, to, args, message) {
-			bot.emit("cmd#whatpulseteam", nick, to, args, message);
-		},
+		"cmd#wpteam": bot.forward("cmd#whatpulseteam"),
 
 		"cmd#whatpulseteam": function(nick, to, args) {
 			var team = args[1] || self.defaultTeam;

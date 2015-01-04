@@ -17,26 +17,6 @@ function InfoPlugin(bot) {
 		return {"conStr": self.conStr};
 	};
 
-	self.info = function(nicks, callback) {
-		pg.connect(self.conStr, function(err, client, done) {
-			if (err) {
-				bot.out.error("info", err);
-			}
-
-			client.query("SELECT alias, nick, info FROM multiinfo($1)", [nicks], function(err, result) {
-				done();
-				if (err) {
-					bot.out.error("info", err);
-				}
-
-				for (var i = 0; i < result.rowCount; i++) {
-					var row = result.rows[i];
-					callback(row.alias, row.nick != null && row.alias.toLowerCase() != row.nick.toLowerCase() ? row.nick : null, row.info);
-				}
-			});
-		});
-	};
-
 	self.multiinfo = function(nicks, callback) {
 		pg.connect(self.conStr, function(err, client, done) {
 			if (err) {
@@ -61,6 +41,15 @@ function InfoPlugin(bot) {
 
 				callback(ret);
 			});
+		});
+	};
+
+	self.info = function(nicks, callback) {
+		self.multiinfo(nicks, function(infos) {
+			for (var nick in infos) {
+				var info = infos[nick];
+				callback(nick, info.alias, info.info);
+			}
 		});
 	};
 

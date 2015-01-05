@@ -83,7 +83,7 @@ function XkcdPlugin(bot) {
 		},
 
 		"pushbullet#subscription#xkcd": function(push) {
-			var text = "new xkcd: \x02" + push.title + "\x02 - " + push.url;
+			var text = "new xkcd: \x02" + push.title + "\x02 - " + push.url.replace("m.", "");
 			for (var i = 0; i < self.chans.length; i++) {
 				bot.say(self.chans[i], text);
 			}

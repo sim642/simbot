@@ -42,6 +42,7 @@ function PushbulletPlugin(bot) {
 					if (pushes[0])
 						self.lastTs = pushes[0].modified;
 
+
 					pushes.forEach(function(push) {
 						if (push.receiver_email == "sim642bot@gmail.com")
 							bot.emit("pushbullet#push", push, true);
@@ -160,13 +161,13 @@ function PushbulletPlugin(bot) {
 				"channel_tag": channel
 			}
 		}, function(err, res, body) {
-			if (!err && res.statusCode == 200) {
-				(callback || function(){})(body);
+			if (!err && (res.statusCode == 200 || (body.error !== undefined && body.error.type == "invalid_request" && body.error.param == "channel_tag" && body.error.message == "Already subscribed to this channel."))) {
+				(callback || function(){})(true, body);
 			}
 			else {
 				bot.out.error("pushbullet", err);
 				bot.out.error("pushbullet", body);
-				(callback || function(){})(body);
+				(callback || function(){})(false, body);
 			}
 
 		});

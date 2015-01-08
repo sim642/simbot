@@ -1,0 +1,7 @@
+{
+	"server": "hostname",
+	"port": 6667,
+	"nick": "simbot",
+	"password": "server_password",
+	"saveinterval": 15
+}

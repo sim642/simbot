@@ -1,4 +1,4 @@
-var exec = require("child_process").exec;
+var execFile = require("child_process").execFile;
 
 function UnitsPlugin(bot) {
 	var self = this;
@@ -9,10 +9,9 @@ function UnitsPlugin(bot) {
 	self.events = {
 		"cmd#units" : function(nick, to, args, message) {
 			if (args[2] === undefined || (args[2] !== undefined && args[2].trim() != "?")) {
-				var cmd = "./plugins/units/units -f ./plugins/units/definitions.units -t";
 				var inp = (args[1] || "") + "\n" + (args[2] || "") + "\n";
 
-				exec(cmd, function (error, stdout, stderr) {
+				execFile("./plugins/units/units", ["-f", "./plugins/units/definitions.units", "-t"], function (error, stdout, stderr) {
 					bot.say(to, nick + ": " + stdout.replace(/\t/g, "").replace(/\n/g, "; "));
 				}).stdin.end(inp);
 			}

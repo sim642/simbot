@@ -1,4 +1,4 @@
-var child_process = require("child_process");
+var execFile = require("child_process").execFile;
 
 function CDeclPlugin(bot) {
 	var self = this;
@@ -15,7 +15,7 @@ function CDeclPlugin(bot) {
 
 	self.events = {
 		"cmd#cdecl" : function(nick, to, args) {
-			child_process.exec("cdecl -q", function (error, stdout, stderr) {
+			execFile("cdecl", ["-q"], function (error, stdout, stderr) {
 				stdout.split("\n").forEach(function (line) {
 					if (line != "")
 						bot.say(to, nick + ": " + line);
@@ -24,7 +24,7 @@ function CDeclPlugin(bot) {
 		},
 
 		"cmd#c++decl" : function(nick, to, args) {
-			child_process.exec("c++decl -q", function (error, stdout, stderr) {
+			execFile("c++decl", ["-q"], function (error, stdout, stderr) {
 				stdout.split("\n").forEach(function (line) {
 					if (line != "")
 						bot.say(to, nick + ": " + line);

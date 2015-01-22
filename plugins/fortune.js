@@ -11,7 +11,7 @@ function FortunePlugin(bot) {
 			var arr = ["-s"];
 			if (args[1] && args[1].match(/^\w+$/))
 				arr.push(args[1]);
-			execFile("fortune", arr, {timeout: 100}, function (error, stdout, stderr) {
+			execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
 				if (error && error.killed == true)
 					bot.say(to, nick + ": no such fortune found");
 
@@ -30,7 +30,7 @@ function FortunePlugin(bot) {
 			var arr = ["-s", "/usr/share/games/fortunes/off/"];
 			if (args[1] && args[1].match(/^\w+$/))
 				arr.push(args[1]);
-			execFile("fortune", arr, {timeout: 100}, function (error, stdout, stderr) {
+			execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
 				if (error && error.killed == true)
 					bot.say(to, nick + ": no such fortune found");
 

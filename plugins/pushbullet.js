@@ -10,6 +10,7 @@ function PushbulletPlugin(bot) {
 	self.token = null;
 	self.emails = {};
 	self.ws = null;
+	self.wsTimeout = null;
 	self.lastTs = null;
 
 	// https://stackoverflow.com/questions/9907419/javascript-object-get-key-by-value
@@ -28,16 +29,39 @@ function PushbulletPlugin(bot) {
 		self.ws = new WebSocket("wss://stream.pushbullet.com/websocket/" + self.token);
 		self.ws.on("error", function(code, message) {
 			bot.out.error("pushbullet", "WS errored (" + code + "): " + message);
+
+			if (self.wsTimeout) {
+				clearTimeout(self.wsTimeout);
+				self.wsTimeout = null;
+			}
+
 			setTimeout(function() { self.setToken(token); }, 30 * 1000);
 		});
 		self.ws.on("close", function(code, message) {
 			bot.out.error("pushbullet", "WS closed (" + code + "): " + message);
+
+			if (self.wsTimeout) {
+				clearTimeout(self.wsTimeout);
+				self.wsTimeout = null;
+			}
+
 			if (code != 1000)
 				setTimeout(function() { self.setToken(token); }, 30 * 1000);
 		});
 		self.ws.on("message", function(message) {
 			var data = JSON.parse(message);
-			if (data.type == "tickle" && data.subtype == "push") {
+			if (data.type == "nop") {
+				if (self.wsTimeout) {
+					clearTimeout(self.wsTimeout);
+					self.wsTimeout = null;
+				}
+
+				self.wsTimeout = setTimeout(function() {
+					bot.out.warn("pushbullet", "WS missed nop");
+					self.setToken(self.token); // reconnect stream
+				}, 60 * 1000);
+			}
+			else if (data.type == "tickle" && data.subtype == "push") {
 				self.getPushes(self.lastTs, function(pushes) {
 					if (pushes[0])
 						self.lastTs = pushes[0].modified;

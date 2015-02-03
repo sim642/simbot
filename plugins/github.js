@@ -34,6 +34,7 @@ function GithubPlugin(bot) {
 
 					var longstreak = 0;
 					var total = contribs[0][1];
+					var most = 0;
 					for (var i = 1; i < contribs.length; i++) {
 						total += contribs[i][1];
 
@@ -45,10 +46,12 @@ function GithubPlugin(bot) {
 						}
 
 						longstreak = Math.max(longstreak, contribs[i][2]);
+						most = Math.max(most, contribs[i][1]);
 					}
 					var curstreak = Math.max(contribs[contribs.length - 2][2], contribs[contribs.length - 1][2]);
 
 					bits.push(["commits", total]);
+					bits.push(["most daily contributions", most]);
 					bits.push(["longest streak", longstreak + " days"]);
 					bits.push(["current streak", curstreak + " days"]);
 

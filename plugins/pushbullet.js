@@ -25,8 +25,12 @@ function PushbulletPlugin(bot) {
 	};
 
 	self.setToken = function(token) {
+		bot.out.doing("pushbullet", "WS connecting...");
 		self.token = token;
 		self.ws = new WebSocket("wss://stream.pushbullet.com/websocket/" + self.token);
+		self.ws.on("open", function() {
+			bot.out.ok("pushbullet", "WS connected");
+		});
 		self.ws.on("error", function(code, message) {
 			bot.out.error("pushbullet", "WS errored (" + code + "): " + message);
 

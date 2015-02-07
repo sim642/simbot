@@ -8,6 +8,9 @@ function GithubPlugin(bot) {
 	self.help = "Github stats plugin";
 	self.depend = ["cmd"];
 
+	self.userRe = /^\w[\w-]+$/;
+	self.repoRe = /^(\w[\w-]+)\/(\w[\w-]+)$/;
+
 	self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
 
 	self.formatPair = function(key, value, data) {
@@ -37,7 +40,7 @@ function GithubPlugin(bot) {
 				bot.say(to, str);
 			};
 
-			if (arg.indexOf("/") != -1) { // repo
+			if (arg.match(self.repoRe)) { // repo
 				self.request("https://api.github.com/repos/" + arg, function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var j = JSON.parse(body);
@@ -56,7 +59,7 @@ function GithubPlugin(bot) {
 					}
 				});
 			}
-			else { // user/org
+			else if (arg.match(self.userRe)) { // user/org
 				self.request("https://api.github.com/users/" + arg, function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var j = JSON.parse(body);
@@ -118,6 +121,9 @@ function GithubPlugin(bot) {
 							finish();
 					}
 				});
+			}
+			else {
+				bot.say(to, nick + ": invalid argument '\x02" + arg + "\x02'");
 			}
 		}
 	}

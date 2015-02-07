@@ -14,12 +14,13 @@ function GithubPlugin(bot) {
 	self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
 
 	self.formatPair = function(key, value, data) {
-		if (value !== undefined)
-			return key + ": \x02" + value + "\x02";
-		else {
-			var wrap = ["", "\x02", "\x1F"][data || 0];
-			return wrap + key + wrap;
-		}
+		var str = "";
+		if (key)
+			str += key + ": ";
+
+		var wrap = ["", "\x02", "\x1F"][data || 1];
+		str += wrap + value + wrap;
+		return str;
 	};
 
 	self.events = {
@@ -46,14 +47,14 @@ function GithubPlugin(bot) {
 						var j = JSON.parse(body);
 						prefix = j.full_name;
 						if (j.description)
-							bits.push([j.description, , 0]);
+							bits.push([, j.description, 0]);
 						bits.push(["stars", j.stargazers_count]);
 						bits.push(["watch", j.watchers_count]);
 						bits.push(["forks", j.forks_count]);
 						if (j.language)
 							bits.push(["language", j.language]);
 						bits.push(["issues", j.open_issues_count]);
-						bits.push([j.html_url, , 2]);
+						bits.push([, j.html_url, 2]);
 
 						output();
 					}
@@ -64,15 +65,15 @@ function GithubPlugin(bot) {
 					if (!err && res.statusCode == 200) {
 						var j = JSON.parse(body);
 						prefix = j.login;
-						bits.push([j.type, , 1]);
+						bits.push([, j.type]);
 						if (j.bio)
-							bits.push([j.bio, , 0]);
+							bits.push([, j.bio, 0]);
 						bits.push(["repos", j.public_repos]);
 						bits.push(["followers", j.followers]);
 						bits.push(["following", j.following]);
 
 						var finish = function() {
-							bits.push([j.html_url, , 2]);
+							bits.push([, j.html_url, 2]);
 							output();
 						};
 

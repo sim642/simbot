@@ -4,7 +4,7 @@ function WhatpulsePlugin(bot) {
 	var self = this;
 	self.name = "whatpulse";
 	self.help = "Whatpulse plugin";
-	self.depend = ["cmd", "nickserv"];
+	self.depend = ["cmd", "bits", "nickserv"];
 
 	self.users = {};
 	self.defaultTeam = null;
@@ -30,10 +30,6 @@ function WhatpulsePlugin(bot) {
 			return user;
 	};
 
-	self.formatPair = function(key, value) {
-		return key + ": \x02" + value + "\x02";
-	};
-
 	self.events = {
 		"cmd#wp": bot.forward("cmd#whatpulse"),
 
@@ -45,7 +41,9 @@ function WhatpulsePlugin(bot) {
 					var j = JSON.parse(body);
 
 					if (!j.error) {
+						var prefix = j.AccountName + (realuser.toLowerCase() != j.AccountName.toLowerCase() ? " (" + realuser + ")" : "");
 						var bits = [];
+
 						if (j.Team !== "0")
 							bits.push(["team", j.Team.Name]);
 						bits.push(["pulses", j.Pulses]);
@@ -55,14 +53,7 @@ function WhatpulsePlugin(bot) {
 						bits.push(["upload", j.Upload + " (" + j.Ranks.Upload + ")"]);
 						bits.push(["uptime", j.UptimeShort + " (" + j.Ranks.Uptime + ")"]);
 
-						var str = "\x02" + j.AccountName + (realuser.toLowerCase() != j.AccountName.toLowerCase() ? " (" + realuser + ")" : "") + ": \x02";
-						for (var i = 0; i < bits.length; i++) {
-							str += self.formatPair(bits[i][0], bits[i][1]);
-							if (i != bits.length - 1)
-								str += "; ";
-						}
-
-						bot.say(to, str);
+						bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 					}
 					else {
 						bot.say(to, nick + ": " + j.error);
@@ -81,7 +72,9 @@ function WhatpulsePlugin(bot) {
 						var j = JSON.parse(body);
 
 						if (!j.error) {
+							var prefix = j.Name;
 							var bits = [];
+
 							bits.push(["founder", j.Founder]);
 							bits.push(["keys", j.Keys + " (" + j.Ranks.Keys + ")"]);
 							bits.push(["clicks", j.Clicks + " (" + j.Ranks.Clicks + ")"]);
@@ -89,14 +82,7 @@ function WhatpulsePlugin(bot) {
 							bits.push(["upload", j.Upload + " (" + j.Ranks.Upload + ")"]);
 							bits.push(["uptime", j.UptimeShort + " (" + j.Ranks.Uptime + ")"]);
 
-							var str = "\x02" + j.Name + ": \x02";
-							for (var i = 0; i < bits.length; i++) {
-								str += self.formatPair(bits[i][0], bits[i][1]);
-								if (i != bits.length - 1)
-									str += "; ";
-							}
-
-							bot.say(to, str);
+							bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 						}
 						else {
 							bot.say(to, nick + ": " + j.error);

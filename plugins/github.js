@@ -6,22 +6,12 @@ function GithubPlugin(bot) {
 	var self = this;
 	self.name = "github";
 	self.help = "Github stats plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "bits"];
 
 	self.userRe = /^\w[\w-]+$/;
 	self.repoRe = /^(\w[\w-]+)\/(\w[\w-]+)$/;
 
 	self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
-
-	self.formatPair = function(key, value, data) {
-		var str = "";
-		if (key)
-			str += key + ": ";
-
-		var wrap = ["", "\x02", "\x1F"][data || 1];
-		str += wrap + value + wrap;
-		return str;
-	};
 
 	self.events = {
 		"cmd#github": function(nick, to, args) {
@@ -31,14 +21,7 @@ function GithubPlugin(bot) {
 			var bits = [];
 
 			var output = function() {
-				var str = "\x02" + prefix + ": \x02";
-				for (var i = 0; i < bits.length; i++) {
-					str += self.formatPair(bits[i][0], bits[i][1], bits[i][2]);
-					if (i != bits.length - 1)
-						str += ", ";
-				}
-
-				bot.say(to, str);
+				bot.say(to, bot.plugins.bits.format(prefix, bits));
 			};
 
 			if (arg.match(self.repoRe)) { // repo

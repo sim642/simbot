@@ -15,7 +15,7 @@ function GithubPlugin(bot) {
 
 	self.events = {
 		"cmd#github": function(nick, to, args) {
-			var arg = args[1];
+			var arg = args[1] || nick;
 
 			var prefix = "";
 			var bits = [];

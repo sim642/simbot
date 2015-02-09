@@ -1,4 +1,5 @@
 var irc = require("irc");
+	require("./patch-whois");
 var repl = require("repl");
 var fs = require("fs");
 var util = require("util");
@@ -12,36 +13,6 @@ var defcfg = {
 config.__proto__ = defcfg;
 
 var bot = new irc.Client(config.server, config.nick, config);
-
-// all lowercase whois functions
-// WARNING: leaves nick all lowercase instead of the server-returned nick because fucking node-irc
-bot.whois = function(nick, callback) { // copied from node-irc source
-	nick = nick.toLowerCase();
-	if ( typeof callback === 'function' ) {
-		var callbackWrapper = function(info) {
-			if ( info.nick.toLowerCase() == nick ) {
-				this.removeListener('whois', callbackWrapper);
-				return callback.apply(this, arguments);
-			}
-		};
-		this.addListener('whois', callbackWrapper);
-	}
-	this.send('WHOIS', nick, nick); // double nick for all info
-};
-
-bot.__addWhoisData = bot._addWhoisData; // copy old function
-bot._addWhoisData = function() {
-	var args = Array.prototype.slice.call(arguments);
-	args[0] = args[0].toLowerCase(); // nick
-	bot.__addWhoisData.apply(bot, args);
-};
-
-bot.__clearWhoisData = bot._clearWhoisData; // copy old function
-bot._clearWhoisData = function() {
-	var args = Array.prototype.slice.call(arguments);
-	args[0] = args[0].toLowerCase(); // nick
-	return bot.__clearWhoisData.apply(bot, args);
-};
 
 bot.forward = function(to) {
 	return function() {

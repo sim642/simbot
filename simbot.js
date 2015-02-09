@@ -1,7 +1,6 @@
 var irc = require("irc");
 var repl = require("repl");
 var fs = require("fs");
-var clc = require("cli-color");
 var util = require("util");
 
 var config = JSON.parse(fs.readFileSync("config.json"));
@@ -53,47 +52,11 @@ bot.forward = function(to) {
 	};
 };
 
-bot.out = {};
-bot.out.file = fs.createWriteStream("./data/simbot.log", {flags: 'a'});
-
-bot.conn.setTimeout(180 * 1000);
-bot.out.time = function() {
-	return new Date().toISOString();
-};
-
-bot.out.wrapper = function(type, color, module, message) {
-	if (!(typeof(message) === "string" || message instanceof String))
-		message = util.inspect(message, {colors: true});
-	console.log(clc.blackBright(bot.out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
-	bot.out.file.write(bot.out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
-};
-
-bot.out.log = function(module, message) {
-	bot.out.wrapper("LOG", clc.cyan, module, message);
-};
-
-bot.out.doing = function(module, message) {
-	bot.out.wrapper("DOING", clc.cyanBright, module, message);
-};
-
-bot.out.ok = function(module, message) {
-	bot.out.wrapper("OK", clc.greenBright, module, message);
-};
-
-bot.out.debug = function(module, message) {
-	bot.out.wrapper("DEBUG", clc.magentaBright, module, message);
-};
-
-bot.out.warn = function(module, message) {
-	bot.out.wrapper("WARN", clc.yellowBright, module, message);
-};
-
-bot.out.error = function(module, message) {
-	bot.out.wrapper("ERROR", clc.redBright, module, message);
-};
+bot.out = require("./out");
 
 bot.out.ok("bot", "bot started");
 
+bot.conn.setTimeout(180 * 1000);
 bot.conn.on("timeout", function() {
 	bot.conn.destroy();
 	//bot.connect();

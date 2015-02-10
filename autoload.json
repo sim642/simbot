@@ -33,6 +33,7 @@
 		"barcode",
 		"sierpinski",
 		"oeis",
-		"github"
+		"github",
+		"status"
 	]
 }

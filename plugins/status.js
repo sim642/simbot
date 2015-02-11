@@ -1,4 +1,5 @@
 var fs = require("fs");
+var path = require("path");
 
 function StatusPlugin(bot) {
 	var self = this;
@@ -35,6 +36,16 @@ function StatusPlugin(bot) {
 		return str;
 	};
 
+	self.dirSize = function(dir, callback) {
+		var files = fs.readdirSync(dir);
+		var size = 0;
+		for (var i = 0; i < files.length; i++) {
+			var stat = fs.statSync(path.join(dir, files[i]));
+			size += stat.size;
+		}
+		callback(size);
+	};
+
 	self.events = {
 		"cmd#uptime": function(nick, to, args) {
 			fs.readFile("/proc/uptime", {encoding: "utf8"}, function(err, data) {
@@ -43,6 +54,12 @@ function StatusPlugin(bot) {
 				str += "; ";
 				str += "system uptime: " + self.durationStr(parseFloat(data));
 				bot.say(to, str);
+			});
+		},
+
+		"cmd#disk": function(nick, to, args) {
+			self.dirSize("./data/", function(size) {
+				bot.say(to, "simbot's data: " + size + " bytes");
 			});
 		}
 	}

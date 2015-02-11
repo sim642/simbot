@@ -37,13 +37,26 @@ function StatusPlugin(bot) {
 	};
 
 	self.dirSize = function(dir, callback) {
-		var files = fs.readdirSync(dir);
 		var size = 0;
-		for (var i = 0; i < files.length; i++) {
-			var stat = fs.statSync(path.join(dir, files[i]));
-			size += stat.size;
-		}
-		callback(size);
+		var added = 0;
+
+		fs.readdir(dir, function(err, files) {
+			for (var i = 0; i < files.length; i++) {
+				fs.stat(path.join(dir, files[i]), function(err, stats) {
+					added++;
+					size += stats.size;
+
+					if (added == files.length)
+						callback(size);
+				});
+			}
+		});
+	};
+
+	self.formatSize = function(size) {
+		var units = ["B", "kB", "MiB", "GiB"];
+		var i = Math.floor(Math.log(size) / Math.log(1024));
+		return Math.round(size / Math.pow(1024, i) * 100) / 100 + " " + units[i];
 	};
 
 	self.events = {
@@ -59,7 +72,7 @@ function StatusPlugin(bot) {
 
 		"cmd#disk": function(nick, to, args) {
 			self.dirSize("./data/", function(size) {
-				bot.say(to, "simbot's data: " + size + " bytes");
+				bot.say(to, "simbot's data: " + self.formatSize(size));
 			});
 		}
 	}

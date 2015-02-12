@@ -5,7 +5,7 @@ function StatusPlugin(bot) {
 	var self = this;
 	self.name = "status";
 	self.help = "simbot and system status plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "bits"];
 
 	self.duration = function(dt) {
 		dt *= 1000; // seconds -> milliseconds because floating point
@@ -70,28 +70,43 @@ function StatusPlugin(bot) {
 	self.events = {
 		"cmd#uptime": function(nick, to, args) {
 			fs.readFile("/proc/uptime", {encoding: "utf8"}, function(err, data) {
-				var str = "";
-				str += "simbot uptime: " + self.durationStr(process.uptime());
-				str += "; ";
-				str += "system uptime: " + self.durationStr(parseFloat(data));
-				bot.say(to, str);
+				var prefix = "uptime";
+				var bits = [];
+
+				bits.push(["simbot", process.uptime()]);
+				bits.push(["system", parseFloat(data)]);
+
+				for (var i = 0; i < bits.length; i++)
+					bits[i][1] = self.durationStr(bits[i][1]);
+
+				bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 			});
 		},
 
 		"cmd#disk": function(nick, to, args) {
 			var todo = 0;
-			var str = "";
-			var addStr = function(dstr) {
+			var prefix = "disk usage";
+			var bits = [];
+
+			var addSize = function(bit) {
 				todo--;
-				str += (str == "" ? "" : "; ") + dstr;
+				bits.push(bit);
 				if (todo == 0) {
-					bot.say(to, str);
+					var total = 0;
+					for (var i = 0; i < bits.length; i++)
+						total += bits[i][1];
+					bits.push(["total", total]);
+
+					for (var i = 0; i < bits.length; i++)
+						bits[i][1] = self.formatSize(bits[i][1]);
+
+					bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 				}
 			};
 
 			todo++;
 			self.dirSize("./data/", function(size) {
-				addStr("simbot data: " + self.formatSize(size));
+				addSize(["simbot", size]);
 			});
 
 			if (bot.plugins.history) {
@@ -100,7 +115,7 @@ function StatusPlugin(bot) {
 				self.dirSize(bot.plugins.history.basedir, function(filename) {
 					return filename.match(re);
 				}, function(size) {
-					addStr("simbot logs: " + self.formatSize(size));
+					addSize(["logs", size]);
 				});
 			}
 		}

@@ -36,11 +36,19 @@ function StatusPlugin(bot) {
 		return str;
 	};
 
-	self.dirSize = function(dir, callback) {
+	self.dirSize = function(dir, filter, callback) {
+		if (callback === undefined) {
+			callback = filter;
+			filter = function() {
+				return true;
+			};
+		}
+
 		var size = 0;
 		var added = 0;
 
 		fs.readdir(dir, function(err, files) {
+			files = files.filter(filter);
 			for (var i = 0; i < files.length; i++) {
 				fs.stat(path.join(dir, files[i]), function(err, stats) {
 					added++;
@@ -71,9 +79,30 @@ function StatusPlugin(bot) {
 		},
 
 		"cmd#disk": function(nick, to, args) {
+			var todo = 0;
+			var str = "";
+			var addStr = function(dstr) {
+				todo--;
+				str += (str == "" ? "" : "; ") + dstr;
+				if (todo == 0) {
+					bot.say(to, str);
+				}
+			};
+
+			todo++;
 			self.dirSize("./data/", function(size) {
-				bot.say(to, "simbot's data: " + self.formatSize(size));
+				addStr("simbot data: " + self.formatSize(size));
 			});
+
+			if (bot.plugins.history) {
+				todo++;
+				var re = new RegExp("^" + bot.plugins.history.basename + ".+" + "_\\d{8}\\.log$");
+				self.dirSize(bot.plugins.history.basedir, function(filename) {
+					return filename.match(re);
+				}, function(size) {
+					addStr("simbot logs: " + self.formatSize(size));
+				});
+			}
 		}
 	}
 }

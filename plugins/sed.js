@@ -6,6 +6,10 @@ function SedPlugin(bot) {
 
 	self.sedRe = new RegExp("^(?:(\\S+)[:,]\\s)?(?:((?:\\\\/|[^/])+)/)?s/((?:\\\\/|[^/])+)/((?:\\\\/|[^/])*?)/([a-z]*)");
 
+	self.strUnescape = function(str) {
+		return JSON.parse('"' + str.replace(/\\0/g, "\\x00").replace(/\\v/g, "\\x0B").replace(/\\x/g, "\\u00").replace(/\\([^"\\\/bfnrtu])/g, '$1') + '"');
+	};
+
 	self.events = {
 		"message": function(nick, to, text) {
 			var m = text.match(self.sedRe);
@@ -15,7 +19,7 @@ function SedPlugin(bot) {
 				var sedNick = m[1] || nick;
 				var sedPrere = new RegExp(m[2] || ".*");
 				var sedRe = new RegExp(m[3], m[5]);
-				var sedRepl = m[4];
+				var sedRepl = self.strUnescape(m[4]);
 
 				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick));
 
@@ -26,7 +30,7 @@ function SedPlugin(bot) {
 					if (m2) {
 						var text2 = m2[2];
 						if (!self.sedRe.test(text2) && sedPrere.test(text2)) {
-							var out = text2.replace(sedRe, sedRepl);
+							var out = text2.replace(sedRe, sedRepl).replace(/[\r\n]/g, "");
 							if (out != text2) {
 								bot.say(to, m2[1] + " " + out);
 								return false;

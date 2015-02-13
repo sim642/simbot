@@ -17,18 +17,18 @@ function SedPlugin(bot) {
 				var sedRe = new RegExp(m[3], m[5]);
 				var sedRepl = m[4];
 
-				var re = new RegExp("^\\[[\\d:]{8}\\] <" + sedNick + "> (.*)$");
+				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick));
 
 				var cnt = 0;
 				bot.plugins.history.iterate(to, function(line) {
 					cnt++;
 					var m2 = line.match(re);
 					if (m2) {
-						var text2 = m2[1];
+						var text2 = m2[2];
 						if (!self.sedRe.test(text2) && sedPrere.test(text2)) {
 							var out = text2.replace(sedRe, sedRepl);
 							if (out != text2) {
-								bot.say(to, "<" + sedNick + "> " + out);
+								bot.say(to, m2[1] + " " + out);
 								return false;
 							}
 						}

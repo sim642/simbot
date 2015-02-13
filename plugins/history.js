@@ -1,4 +1,5 @@
 var fs = require("fs");
+var path = require("path");
 
 function HistoryPlugin(bot) {
 	var self = this;
@@ -28,16 +29,29 @@ function HistoryPlugin(bot) {
 			}).sort();
 
 			var found = false;
-			for (var i = logfiles.length - 1; !found && i >= 0; i--) {
-				var lines = fs.readFileSync(self.basedir + logfiles[i]).toString().split("\n");
+			var func = function(logfiles) {
+				if (!found && logfiles.length > 0) {
+					var logfile = logfiles.pop();
+					fs.readFile(path.join(self.basedir, logfile), {encoding: "utf8"}, function(err, data) {
+						if (err)
+							throw err;
 
-				for (var j = lines.length - 1 - 1; !found && j >= 0; j--) {
-					if (!lineCb(lines[j]))
-						found = true;
+						var lines = data.split("\n");
+
+						for (var j = lines.length - 1 - 1; !found && j >= 0; j--) {
+							if (!lineCb(lines[j]))
+								found = true;
+						}
+
+						func(logfiles);
+					});
 				}
-			}
+				else {
+					(endCb || function(){})(found);
+				}
+			};
 
-			(endCb || function(){})(found);
+			func(logfiles);
 		});
 	};
 

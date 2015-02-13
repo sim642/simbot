@@ -10,10 +10,17 @@ out.time = function() {
 	return new Date().toISOString();
 };
 
+out.ignores = [];
+
 out.wrapper = function(type, color, module, message) {
 	if (!(typeof(message) === "string" || message instanceof String))
 		message = util.inspect(message, {colors: true});
-	console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
+
+	if (!out.ignores.some(function(re) {
+			return type.match(re);
+		})) {
+		console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
+	}
 	out.file.write(out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
 };
 

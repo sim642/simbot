@@ -7,7 +7,13 @@ function SedPlugin(bot) {
 	self.sedRe = new RegExp("^(?:(\\S+)[:,]\\s)?(?:((?:\\\\/|[^/])+)/)?s/((?:\\\\/|[^/])+)/((?:\\\\/|[^/])*?)/([a-z]*)");
 
 	self.strUnescape = function(str) {
-		return JSON.parse('"' + str.replace(/\\0/g, "\\x00").replace(/\\v/g, "\\x0B").replace(/\\x/g, "\\u00").replace(/\\([^"\\\/bfnrtu])/g, '$1') + '"');
+		try {
+			return JSON.parse('"' + str.replace(/\\0/g, "\\x00").replace(/\\v/g, "\\x0B").replace(/\\x/g, "\\u00").replace(/\\([^"\\\/bfnrtu])/g, '$1') + '"');
+		}
+		catch (e) {
+			bot.out.error("sed", e);
+			bot.out.error("sed", str);
+		}
 	};
 
 	self.events = {

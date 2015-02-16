@@ -8,16 +8,37 @@ function SedPlugin(bot) {
 
 	self.strUnescape = function(str) {
 		try {
-			var str2 = "";
-			str2 += '"';
-			str2 += str.replace(/(\\*)"/g, function(m, p1) {
-				if (p1.length % 2 == 0)
-					p1 += "\\";
-				return p1 + '"';
-			}).replace(/\\0/g, "\\x00").replace(/\\v/g, "\\x0B").replace(/\\x/g, "\\u00").replace(/\\([^"\\\/bfnrtu])/g, '$1');
-			str2 += '"';
-			//bot.out.debug("sed", str2);
-			return JSON.parse(str2);
+			return str.replace(/\\(?:([bfnrtv0])|u([0-9A-Fa-f]{4})|x([0-9A-Fa-f]{2})|([^bfnrtv0ux]))/g, function(m, s, u, x, o) {
+				if (s) {
+					switch (s) {
+					case "b":
+						return "\b";
+					case "f":
+						return "\f";
+					case "n":
+						return "\n";
+					case "r":
+						return "\r";
+					case "t":
+						return "\t";
+					case "v":
+						return "\v";
+					case "0":
+						return "\0";
+					}
+				}
+				else if (u) {
+					return String.fromCharCode(parseInt(u, 16));
+				}
+				else if (x) {
+					return String.fromCharCode(parseInt(x, 16));
+				}
+				else if (o) {
+					return o;
+				}
+
+				throw new Error("Impossible escape: " + m);
+			});
 		}
 		catch (e) {
 			bot.out.error("sed", e);

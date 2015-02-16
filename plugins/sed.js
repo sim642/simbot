@@ -8,7 +8,16 @@ function SedPlugin(bot) {
 
 	self.strUnescape = function(str) {
 		try {
-			return JSON.parse('"' + str.replace(/\\0/g, "\\x00").replace(/\\v/g, "\\x0B").replace(/\\x/g, "\\u00").replace(/\\([^"\\\/bfnrtu])/g, '$1') + '"');
+			var str2 = "";
+			str2 += '"';
+			str2 += str.replace(/(\\*)"/g, function(m, p1) {
+				if (p1.length % 2 == 0)
+					p1 += "\\";
+				return p1 + '"';
+			}).replace(/\\0/g, "\\x00").replace(/\\v/g, "\\x0B").replace(/\\x/g, "\\u00").replace(/\\([^"\\\/bfnrtu])/g, '$1');
+			str2 += '"';
+			//bot.out.debug("sed", str2);
+			return JSON.parse(str2);
 		}
 		catch (e) {
 			bot.out.error("sed", e);

@@ -1,5 +1,6 @@
 var irc = require("irc");
 	require("./patch-whois");
+	require("./patch-bel");
 var repl = require("repl");
 var fs = require("fs");
 var util = require("util");

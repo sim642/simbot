@@ -81,7 +81,7 @@ function SedPlugin(bot) {
 
 					return true;
 				}, function(found) {
-					bot.out.debug("sed", "line " + cnt + " " + found);
+					//bot.out.debug("sed", "line " + cnt + " " + found);
 				});
 			}
 		}

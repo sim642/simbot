@@ -4,7 +4,12 @@ function SedPlugin(bot) {
 	self.help = "Sed replacement plugin";
 	self.depend = ["history"];
 
-	self.sedRe = new RegExp("^(?:(\\S+)[:,]\\s)?(?:((?:\\\\/|[^/])+)/)?s/((?:\\\\/|[^/])+)/((?:\\\\/|[^/])*?)/([a-z]*)");
+	self.sedRe = new RegExp(
+		"^(?:(\\S+)[:,]\\s)?" +
+		"(?:((?:\\\\/|[^/])+)/)?" +
+		"s(\\W)((?:\\\\\\3|(?!\\3).)+)" +
+		"\\3((?:\\\\\\3|(?!\\3).)*?)" +
+		"\\3([a-z])*");
 
 	self.strUnescape = function(str) {
 		try {
@@ -54,8 +59,8 @@ function SedPlugin(bot) {
 
 				var sedNick = m[1] || nick;
 				var sedPrere = new RegExp(m[2] || ".*");
-				var sedRe = new RegExp(m[3], m[5]);
-				var sedRepl = self.strUnescape(m[4]);
+				var sedRe = new RegExp(m[4], m[6]);
+				var sedRepl = self.strUnescape(m[5]);
 
 				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick));
 

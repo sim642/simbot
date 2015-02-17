@@ -82,6 +82,19 @@ function XkcdPlugin(bot) {
 			}
 		},
 
+		"message": function(nick, to, text) {
+			var m = text.match(/xkcd\.com\/(\d+)/);
+			if (m) {
+				var uri = "http://xkcd.com/" + m[1];
+				request(uri, function(err, res, body) {
+					var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
+					var m = body.match(re);
+					if (m)
+						bot.say(to, "xkcd" + ": \x02" + m[1] + "\x02 - " + m[2]);
+				});
+			}
+		},
+
 		"pushbullet#subscription#xkcd": function(push) {
 			var text = "new xkcd: \x02" + push.title + "\x02 - " + push.url.replace("m.", "");
 			for (var i = 0; i < self.chans.length; i++) {

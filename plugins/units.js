@@ -6,6 +6,30 @@ function UnitsPlugin(bot) {
 	self.help = "Unit conversion plugin";
 	self.depend = ["cmd"];
 
+	self.curUpdate = function() {
+		bot.out.doing("units", "updating currency.units");
+		execFile("python3", ["units_cur3"], {cwd: "./plugins/units/"}, function(error, stdout, stderr) {
+			if (error) {
+				bot.out.debug("units", error);
+				bot.out.debug("units", stdout);
+				bot.out.debug("units", stderr);
+			}
+			else
+				bot.out.ok("units", "currency.units updated");
+		});
+	};
+
+	self.updater = null;
+
+	self.enable = function() {
+		self.curUpdate();
+		self.updater = setInterval(self.curUpdate, 24 * 60 * 60 * 1000);
+	};
+
+	self.disable = function() {
+		clearInterval(self.updater);
+	};
+
 	self.events = {
 		"cmd#units" : function(nick, to, args, message) {
 			if (args[2] === undefined || (args[2] !== undefined && args[2].trim() != "?")) {

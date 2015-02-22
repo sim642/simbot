@@ -7,6 +7,7 @@ function PushbulletPlugin(bot) {
 	self.help = "Pushbullet plugin";
 	self.depend = ["cmd", "auth", "nickserv", "bitly"];
 
+	self.email = null;
 	self.token = null;
 	self.emails = {};
 	self.ws = null;
@@ -72,7 +73,7 @@ function PushbulletPlugin(bot) {
 
 
 					pushes.forEach(function(push) {
-						if (push.receiver_email == "sim642bot@gmail.com")
+						if (push.receiver_email == self.email)
 							bot.emit("pushbullet#push", push, true);
 						else if (push.channel_iden)
 							bot.emit("pushbullet#subscription", push, true);
@@ -83,6 +84,7 @@ function PushbulletPlugin(bot) {
 	}
 
 	self.load = function(data) {
+		self.email = data.email;
 		self.setToken(data.token);
 		if (data.emails)
 			self.emails = data.emails;
@@ -92,6 +94,7 @@ function PushbulletPlugin(bot) {
 
 	self.save = function() {
 		return {
+			"email": self.email,
 			"token": self.token,
 			"emails": self.emails,
 			"lastTs": self.lastTs
@@ -107,7 +110,7 @@ function PushbulletPlugin(bot) {
 				self.lastTs = pushes[0].modified;
 
 			pushes.forEach(function(push) {
-				if (push.receiver_email == "sim642bot@gmail.com")
+				if (push.receiver_email == self.email)
 					bot.emit("pushbullet#push", push, false);
 				else if (push.channel_iden)
 					bot.emit("pushbullet#subscription", push, false);

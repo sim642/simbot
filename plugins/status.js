@@ -1,5 +1,6 @@
 var fs = require("fs");
 var path = require("path");
+var os = require("os");
 
 function StatusPlugin(bot) {
 	var self = this;
@@ -69,18 +70,16 @@ function StatusPlugin(bot) {
 
 	self.events = {
 		"cmd#uptime": function(nick, to, args) {
-			fs.readFile("/proc/uptime", {encoding: "utf8"}, function(err, data) {
-				var prefix = "uptime";
-				var bits = [];
+			var prefix = "uptime";
+			var bits = [];
 
-				bits.push(["simbot", process.uptime()]);
-				bits.push(["system", parseFloat(data)]);
+			bits.push(["simbot", process.uptime()]);
+			bits.push(["system", os.uptime()]);
 
-				for (var i = 0; i < bits.length; i++)
-					bits[i][1] = self.durationStr(bits[i][1]);
+			for (var i = 0; i < bits.length; i++)
+				bits[i][1] = self.durationStr(bits[i][1]);
 
-				bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
-			});
+			bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 		},
 
 		"cmd#disk": function(nick, to, args) {

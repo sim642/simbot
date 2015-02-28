@@ -195,7 +195,7 @@ function PushbulletPlugin(bot) {
 				"channel_tag": channel
 			}
 		}, function(err, res, body) {
-			if (!err && (res.statusCode == 200 || (body.error !== undefined && body.error.type == "invalid_request" && body.error.param == "channel_tag" && body.error.message == "Already subscribed to this channel."))) {
+			if (!err && (res.statusCode == 200 || (body.error !== undefined && (body.error.type == "invalid_request" || body.error.type == "") && body.error.param == "channel_tag" && body.error.message == "Already subscribed to this channel."))) {
 				(callback || function(){})(true, body);
 			}
 			else {

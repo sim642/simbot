@@ -117,6 +117,30 @@ function StatusPlugin(bot) {
 					addSize(["logs", size]);
 				});
 			}
+		},
+
+		"cmd#loadavg": function(nick, to, args) {
+			var prefix = "average loads";
+			var bits = [];
+
+			var loads = os.loadavg();
+			bits.push(["1 min", loads[0].toFixed(2)]);
+			bits.push(["5 mins", loads[1].toFixed(2)]);
+			bits.push(["15 mins", loads[2].toFixed(2)]);
+
+			bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
+		},
+
+		"cmd#memory": function(nick, to, args) {
+			var prefix = "memory";
+			var bits = [];
+
+			var total = os.totalmem(), free = os.freemem(); // free doesn't seem correct
+			bits.push(["used", self.formatSize(total - free)]);
+			bits.push(["free", self.formatSize(free)]);
+			bits.push(["total", self.formatSize(total)]);
+
+			bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 		}
 	}
 }

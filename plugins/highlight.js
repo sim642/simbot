@@ -37,15 +37,26 @@ function HighlightPlugin(bot) {
 	}
 
 	self.events = {
-		"message": function(nick, to, text) {
-			if (to == bot.nick)
+		"message": function(nick, to, text, message) {
+			var tolow = to.toLowerCase();
+			if (tolow == bot.nick.toLowerCase())
 				return;
 
 			for (var hinick in self.highlights) {
 				var level = self.highlights[hinick].level;
 				var activity = self.highlights[hinick].activity;
-				var tolow = to.toLowerCase();
-				var op = bot.chans[tolow].users[nick].substr(0, 1);
+
+				var op;
+				try {
+					if (nick in bot.chans[tolow].users)
+						op = bot.chans[tolow].users[nick].substr(0, 1);
+					else // handle out of channel messages
+						op = "";
+				}
+				catch (e) {
+					bot.out.error("highlight", message);
+					return;
+				}
 
 				if (text.match(new RegExp("\\b" + hinick + "(?=\\b|[_|])", "i"))) {
 					if (Object.keys(bot.chans[tolow].users).map(function(elem) { return elem.toLowerCase(); }).indexOf(hinick) == -1)

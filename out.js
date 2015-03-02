@@ -12,38 +12,31 @@ out.time = function() {
 
 out.ignores = [];
 
-out.wrapper = function(type, color, module, message) {
-	if (!(typeof(message) === "string" || message instanceof String))
-		message = util.inspect(message, {colors: true});
+out.wrapper = function(type, color) {
+	return function() {
+		var args = Array.prototype.slice.call(arguments);
+		var module = args.shift();
 
-	if (!out.ignores.some(function(re) {
+		var print = !out.ignores.some(function(re) {
 			return type.match(re);
-		})) {
-		console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
-	}
-	out.file.write(out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
+		});
+
+		args.forEach(function(message) {
+			if (!(typeof(message) === "string" || message instanceof String))
+				message = util.inspect(message, {colors: true});
+
+			if (print)
+				console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
+
+			out.file.write(out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
+		});
+	};
 };
 
-out.log = function(module, message) {
-	out.wrapper("LOG", clc.cyan, module, message);
-};
+out.log = out.wrapper("LOG", clc.cyan);
+out.doing = out.wrapper("DOING", clc.cyanBright);
+out.ok = out.wrapper("OK", clc.greenBright);
+out.debug = out.wrapper("DEBUG", clc.magentaBright);
+out.warn = out.wrapper("WARN", clc.yellowBright);
+out.error = out.wrapper("ERROR", clc.redBright);
 
-out.doing = function(module, message) {
-	out.wrapper("DOING", clc.cyanBright, module, message);
-};
-
-out.ok = function(module, message) {
-	out.wrapper("OK", clc.greenBright, module, message);
-};
-
-out.debug = function(module, message) {
-	out.wrapper("DEBUG", clc.magentaBright, module, message);
-};
-
-out.warn = function(module, message) {
-	out.wrapper("WARN", clc.yellowBright, module, message);
-};
-
-out.error = function(module, message) {
-	out.wrapper("ERROR", clc.redBright, module, message);
-};

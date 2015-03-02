@@ -46,8 +46,7 @@ function SedPlugin(bot) {
 			});
 		}
 		catch (e) {
-			bot.out.error("sed", e);
-			bot.out.error("sed", str);
+			bot.out.error("sed", e, str);
 		}
 	};
 

@@ -14,8 +14,7 @@ function RantPlugin(bot) {
 					bot.say(to, nick + ": " + data.result);
 				}
 				else {
-					bot.out.error("rant", err);
-					bot.out.error("rant", body);
+					bot.out.error("rant", err, body);
 				}
 			});
 		}

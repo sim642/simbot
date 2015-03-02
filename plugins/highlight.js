@@ -76,7 +76,7 @@ function HighlightPlugin(bot) {
 									}
 								}
 								else
-									bot.out.error("highlight", "no idle data in WHOIS reply");
+									bot.out.error("highlight", "no idle data in WHOIS reply", info, message);
 
 								if (good)
 									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));

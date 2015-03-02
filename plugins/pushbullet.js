@@ -147,8 +147,7 @@ function PushbulletPlugin(bot) {
 				(callback || function(){})(body.pushes);
 			}
 			else {
-				bot.out.error("pushbullet", err);
-				bot.out.error("pushbullet", body);
+				bot.out.error("pushbullet", err, body);
 				(callback || function(){})(undefined);
 			}
 		});
@@ -167,9 +166,7 @@ function PushbulletPlugin(bot) {
 				(callback || function(){})(false);
 			}
 			else {
-				bot.out.error("pushbullet", params);
-				bot.out.error("pushbullet", err);
-				bot.out.error("pushbullet", body);
+				bot.out.error("pushbullet", params, err, body);
 				setTimeout(function(){ self.push(params, callback); }, 30 * 1000); // retry pushing again in 30 seconds
 			}
 		});
@@ -199,8 +196,7 @@ function PushbulletPlugin(bot) {
 				(callback || function(){})(true, body);
 			}
 			else {
-				bot.out.error("pushbullet", err);
-				bot.out.error("pushbullet", body);
+				bot.out.error("pushbullet", err, body);
 				(callback || function(){})(false, body);
 			}
 

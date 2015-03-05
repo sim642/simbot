@@ -10,6 +10,10 @@ function HistoryPlugin(bot) {
 	self.basedir = null;
 	self.basename = null;
 
+	self.grepRe = new RegExp(
+		"(/)((?:\\\\\\1|(?!\\1).)+)" +
+		"\\1([a-z])*"); // simplified from sed plugin
+
 	self.load = function(data) {
 		if (data) {
 			self.basedir = data.basedir;
@@ -59,6 +63,7 @@ function HistoryPlugin(bot) {
 		"cmd#history": function(nick, to, args) {
 			var linecnt;
 			var channel = to;
+			var re = null;
 
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
@@ -67,6 +72,12 @@ function HistoryPlugin(bot) {
 					channel = arg;
 				else if (arg.match(/^\d+/))
 					linecnt = parseInt(arg);
+				else {
+					var m = arg.match(self.grepRe);
+					if (m) {
+						re = new RegExp(m[2], m[3]);
+					}
+				}
 			}
 
 			var extra = channel == to;
@@ -74,12 +85,14 @@ function HistoryPlugin(bot) {
 
 			var outlines = [];
 			self.iterate(channel, function(line) {
-				outlines.unshift(line);
-				linecnt--;
+				if (re === null || line.match(re)) {
+					outlines.unshift(line);
+					linecnt--;
+				}
 
 				return linecnt > 0;
 			}, function() {
-				if (extra)
+				if (extra && (re === null || outlines[outlines.length - 1].match(re)))
 					outlines.pop();
 
 				bot.say(nick, "--- Begin history for " + channel + " ---");

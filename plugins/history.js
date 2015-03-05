@@ -59,27 +59,27 @@ function HistoryPlugin(bot) {
 		"cmd#history": function(nick, to, args) {
 			var linecnt;
 			var channel = to;
-			if (args[1] !== undefined && args[1].match(/^#/)) {
-				linecnt = args[2];
-				channel = args[1];
+
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg.match(/^#/))
+					channel = arg;
+				else if (arg.match(/^\d+/))
+					linecnt = parseInt(arg);
 			}
-			else
-				linecnt = args[1];
 
-			linecnt = Math.min(linecnt || 15, 50) + 1;
-
-			if (!channel.match(/^#/))
-				return;
+			var extra = channel == to;
+			linecnt = Math.min(linecnt || 15, 50) + extra;
 
 			var outlines = [];
-
 			self.iterate(channel, function(line) {
 				outlines.unshift(line);
 				linecnt--;
 
 				return linecnt > 0;
 			}, function() {
-				if (channel == to)
+				if (extra)
 					outlines.pop();
 
 				bot.say(nick, "--- Begin history for " + channel + " ---");

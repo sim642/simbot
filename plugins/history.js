@@ -5,7 +5,7 @@ function HistoryPlugin(bot) {
 	var self = this;
 	self.name = "history";
 	self.help = "History plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "auth"];
 	
 	self.basedir = null;
 	self.basename = null;
@@ -101,7 +101,35 @@ function HistoryPlugin(bot) {
 				}
 				bot.say(nick, "--- End history for " + channel + " ---");
 			});
-		}
+		},
+
+		"cmd#historycount": bot.plugins.auth.proxy(6, function(nick, to, args) {
+			var channel = to;
+			var re = null;
+
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg.match(/^#/))
+					channel = arg;
+				else {
+					var m = arg.match(self.grepRe);
+					if (m) {
+						re = new RegExp(m[2], m[3]);
+					}
+				}
+			}
+
+			var cnt = 0;
+			self.iterate(channel, function(line) {
+				if (re === null || line.match(re))
+					cnt++;
+
+				return true; // continue forever
+			}, function() {
+				bot.say(to, nick + ": " + cnt);
+			});
+		})
 	}
 }
 

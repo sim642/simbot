@@ -29,7 +29,7 @@ function RedditPlugin(bot) {
 
 				if (results.length > 0) {
 					var post = results[0].data;
-					var str = url.resolve("http://www.reddit.com/", post.permalink);
+					var str = "\x1Fhttp://redd.it/" + post.id + "\x1F : \x02" + post.title + "\x02 [r/" + post.subreddit + "] by " + post.author + "; " + post.num_comments + " comments; " + post.score + " score";
 					(callback || function(){})(str);
 				}
 			}

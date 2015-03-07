@@ -1,5 +1,4 @@
 var request = require("request");
-var url = require("url");
 
 function RedditPlugin(bot) {
 	var self = this;
@@ -7,10 +6,12 @@ function RedditPlugin(bot) {
 	self.help = "Reddit plugin";
 	self.depend = ["auth", "cmd"];
 
-	self.urlRe = /(https?|ftp):\/\/[^\s\/$.?#].[^\s]*/i;
+	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\b/i;
 
 	self.channels = [];
 	self.ignores = [];
+
+	self.request = request.defaults({headers: {"User-Agent": "simbot reddit 1.0"}});
 
 	self.load = function(data) {
 		self.channels = data.channels;
@@ -22,7 +23,7 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookup = function(lurl, callback) {
-		request("https://www.reddit.com/search.json?q=url:" + lurl, function(err, res, body) {
+		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:" + lurl, "limit": 1, "sort": "hot", "t": "week"}}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).data;
 				var results = data.children;
@@ -44,23 +45,13 @@ function RedditPlugin(bot) {
 				})) {
 				var match = text.match(self.urlRe);
 				if (match) {
-					bot.out.log("reddit", nick + " in " + to + ": " + match[0]);
 					self.lookup(match[0], function(str) {
+						bot.out.log("reddit", nick + " in " + to + ": " + match[0]);
 						bot.say(to, str);
 					});
 				}
 			}
-		},
-
-		/*"pm": function(nick, text, message) {
-			var match = text.match(self.vidre);
-			if (match) {
-				bot.out.log("youtube", nick + " in PM: " + match[0]);
-				self.lookup(match[1], function(str) {
-					bot.say(nick, str);
-				});
-			}
-		}*/
+		}
 	}
 }
 

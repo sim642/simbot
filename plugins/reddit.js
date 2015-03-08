@@ -7,6 +7,8 @@ function RedditPlugin(bot) {
 	self.depend = ["auth", "cmd"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\b/i;
+	self.urlSort = "";
+	self.urlTime = "";
 
 	self.channels = [];
 	self.ignores = [];
@@ -14,16 +16,18 @@ function RedditPlugin(bot) {
 	self.request = request.defaults({headers: {"User-Agent": "simbot reddit 1.0"}});
 
 	self.load = function(data) {
+		self.urlSort = data.urlSort;
+		self.urlTime = data.urlTime;
 		self.channels = data.channels;
 		self.ignores = data.ignores;
 	};
 
 	self.save = function() {
-		return {channels: self.channels, ignores: self.ignores};
+		return {urlSort: self.urlSort, urlTime: self.urlTime, channels: self.channels, ignores: self.ignores};
 	};
 
 	self.lookup = function(lurl, callback) {
-		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:" + lurl, "limit": 1, "sort": "hot", "t": "week"}}, function(err, res, body) {
+		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:" + lurl, "limit": 1, "sort": self.urlSort, "t": self.urlTime}}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).data;
 				var results = data.children;

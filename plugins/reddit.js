@@ -7,6 +7,7 @@ function RedditPlugin(bot) {
 	self.depend = ["auth", "cmd"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\b/i;
+	self.redditRe = /reddit\.com\/r\/[^\s\/]+\/comments\//i;
 	self.urlSort = "";
 	self.urlTime = "";
 
@@ -26,19 +27,40 @@ function RedditPlugin(bot) {
 		return {urlSort: self.urlSort, urlTime: self.urlTime, channels: self.channels, ignores: self.ignores};
 	};
 
-	self.lookup = function(lurl, callback) {
+	self.formatPost = function(post) {
+		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F : \x02" + post.title + "\x02 [r/" + post.subreddit + "] by " + post.author + "; " + post.num_comments + " comments; " + post.score + " score";
+
+		return str;
+	};
+
+	self.lookupOther = function(lurl, callback) {
 		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:" + lurl, "limit": 1, "sort": self.urlSort, "t": self.urlTime}}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).data;
 				var results = data.children;
 
 				if (results.length > 0) {
-					var post = results[0].data;
-					var str = "\x1Fhttp://redd.it/" + post.id + "\x1F : \x02" + post.title + "\x02 [r/" + post.subreddit + "] by " + post.author + "; " + post.num_comments + " comments; " + post.score + " score";
-					(callback || function(){})(str);
+					(callback || function(){})(self.formatPost(results[0].data));
 				}
 			}
 		});
+	};
+
+	self.lookupReddit = function(rurl, callback) {
+		self.request(rurl + ".json", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var data = JSON.parse(body)[0].data;
+				var results = data.children;
+
+				if (results.length > 0) {
+					(callback || function(){})(self.formatPost(results[0].data));
+				}
+			}
+		});
+	};
+
+	self.lookup = function(url, callback) {
+		(url.match(self.redditRe) ? self.lookupReddit : self.lookupOther)(url, callback);
 	};
 
 	self.events = {

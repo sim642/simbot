@@ -5,7 +5,7 @@ function YoutubePlugin(bot) {
 	var self = this;
 	self.name = "youtube";
 	self.help = "Youtube plugin";
-	self.depend = ["auth", "cmd"];
+	self.depend = ["cmd", "ignore"];
 	
 	self.vidre = new RegExp('(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})', "i");
 
@@ -88,10 +88,7 @@ function YoutubePlugin(bot) {
 
 	self.events = {
 		"message": function(nick, to, text, message) {
-			if ((self.channels.indexOf(to) != -1) &&
-				!self.ignores.some(function (elem, i, arr) {
-					return bot.plugins.auth.match(message.nick + "!" + message.user + "@" + message.host, elem);
-				})) {
+			if ((self.channels.indexOf(to) != -1) && !bot.plugins.ignore.ignored(self.ignores, message)) {
 				var match = text.match(self.vidre);
 				if (match) {
 					bot.out.log("youtube", nick + " in " + to + ": " + match[0]);

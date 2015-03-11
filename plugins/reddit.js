@@ -4,7 +4,7 @@ function RedditPlugin(bot) {
 	var self = this;
 	self.name = "reddit";
 	self.help = "Reddit plugin";
-	self.depend = ["auth", "cmd"];
+	self.depend = ["cmd", "ignore"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\b/i;
 	self.redditRe = /reddit\.com\/r\/[^\s\/]+\/comments\//i;
@@ -65,10 +65,7 @@ function RedditPlugin(bot) {
 
 	self.events = {
 		"message": function(nick, to, text, message) {
-			if ((self.channels.indexOf(to) != -1) &&
-				!self.ignores.some(function (elem, i, arr) {
-					return bot.plugins.auth.match(message.nick + "!" + message.user + "@" + message.host, elem);
-				})) {
+			if ((self.channels.indexOf(to) != -1) && !bot.plugins.ignore.ignored(self.ignores, message)) {
 				var match = text.match(self.urlRe);
 				if (match) {
 					self.lookup(match[0], function(str) {

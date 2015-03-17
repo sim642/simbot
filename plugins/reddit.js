@@ -1,4 +1,5 @@
 var request = require("request");
+var url = require("url");
 
 function RedditPlugin(bot) {
 	var self = this;
@@ -34,6 +35,12 @@ function RedditPlugin(bot) {
 		return str;
 	};
 
+	self.cleanUrl = function(lurl) {
+		var obj = url.parse(lurl);
+		obj.search = obj.query = obj.hash = null;
+		return url.format(obj);
+	};
+
 	self.lookupOther = function(lurl, callback) {
 		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:" + lurl, "limit": 1, "sort": self.urlSort, "t": self.urlTime}}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
@@ -61,7 +68,7 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookup = function(url, callback) {
-		(url.match(self.redditRe) ? self.lookupReddit : self.lookupOther)(url, callback);
+		(url.match(self.redditRe) ? self.lookupReddit : self.lookupOther)(self.cleanUrl(url), callback);
 	};
 
 	self.events = {

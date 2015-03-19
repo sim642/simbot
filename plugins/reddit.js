@@ -30,7 +30,7 @@ function RedditPlugin(bot) {
 
 	self.formatPost = function(post) {
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + post.title + "\x02 [r/" + post.subreddit + "] by " + post.author + "; " + post.num_comments + " comments; " + post.score + " score";
+		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + post.title + "\x02 [r/" + post.subreddit + "] by " + post.author + " on " + new Date(post.created_utc * 1000).toUTCString() + "; " + post.num_comments + " comments; " + post.score + " score";
 
 		return str;
 	};

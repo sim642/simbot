@@ -82,7 +82,17 @@ function RedditPlugin(bot) {
 					});
 				}
 			}
-		}
+		},
+
+		"pm": function(nick, text, message) {
+			var match = text.match(self.urlRe);
+			if (match) {
+				self.lookup(match[0], function(str) {
+					bot.out.log("reddit", nick + " in PM: " + match[0]);
+					bot.say(nick, str);
+				});
+			}
+		},
 	}
 }
 

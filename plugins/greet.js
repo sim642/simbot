@@ -21,6 +21,13 @@ function GreetPlugin(bot) {
 				else if (m[3] !== undefined)
 					bot.say(to, m[2] + m[3].replace(bot.nick, nick));
 			}
+		},
+
+		"action": function(nick, to, text, message) { // undocumented event, message is undefined for no reason
+			var text2 = text.replace(bot.nick, nick);
+			if (text != text2) { // something was replaced, simbot was mentioned
+				bot.action(to, text2);
+			}
 		}
 	}
 }

@@ -8,10 +8,25 @@ function GithubPlugin(bot) {
 	self.help = "Github stats plugin";
 	self.depend = ["cmd", "bits"];
 
+	self.blocks = "▁▂▃▄▅▆▇█";
+
 	self.userRe = /^\w[\w-]+$/;
 	self.repoRe = /^(\w[\w-]+)\/(\w[\w-]+)$/;
 
 	self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
+
+	self.graph = function(arr, minMult) {
+		var min = Math.min.apply(null, arr);
+		var max = Math.max.apply(null, arr);
+		var mult = Math.max(minMult || 0.5, (max - min) / (self.blocks.length - 1));
+
+		var str = "";
+		for (var i = 0; i < arr.length; i++) {
+			var x = (arr[i] - min) / mult;
+			str += self.blocks[Math.ceil(x)];
+		}
+		return str;
+	};
 
 	self.events = {
 		"cmd#github": function(nick, to, args) {
@@ -96,6 +111,11 @@ function GithubPlugin(bot) {
 									bits.push(["most daily contributions", most]);
 									bits.push(["longest streak", longstreak + " days"]);
 									bits.push(["current streak", curstreak + " days"]);
+
+									var justContribs = contribs.map(function(tuple) {
+										return tuple[1];
+									});
+									bits.push(["recent contributions", self.graph(justContribs.slice(-14)), 0]);
 
 									finish();
 								}

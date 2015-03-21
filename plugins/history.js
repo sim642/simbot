@@ -25,7 +25,7 @@ function HistoryPlugin(bot) {
 		return {basedir: self.basedir, basename: self.basename};
 	}
 
-	self.iterate = function(channel, lineCb, endCb) {
+	self.iterate = function(channel, lineCb, endCb, fileCb) {
 		fs.readdir(self.basedir, function(err, files) {
 			var re = new RegExp("^" + self.basename + channel + "_\\d{8}\\.log$");
 			var logfiles = files.filter(function (file) {
@@ -46,6 +46,8 @@ function HistoryPlugin(bot) {
 							if (!lineCb(lines[j]))
 								found = true;
 						}
+
+						(fileCb || function(){})(logfile);
 
 						func(logfiles);
 					});
@@ -84,10 +86,12 @@ function HistoryPlugin(bot) {
 			linecnt = Math.min(linecnt || 15, 50) + extra;
 
 			var outlines = [];
+			var fileUsed = false;
 			self.iterate(channel, function(line) {
 				if (re === null || line.match(re)) {
 					outlines.unshift(line);
 					linecnt--;
+					fileUsed = true;
 				}
 
 				return linecnt > 0;
@@ -95,11 +99,16 @@ function HistoryPlugin(bot) {
 				if (extra && (re === null || outlines[outlines.length - 1].match(re)))
 					outlines.pop();
 
-				bot.say(nick, "--- Begin history for " + channel + " ---");
+				bot.say(nick, "\x031--- Begin history for " + channel + " ---");
 				for (var i = 0; i < outlines.length; i++) {
 					bot.say(nick, outlines[i]);
 				}
-				bot.say(nick, "--- End history for " + channel + " ---");
+				bot.say(nick, "\x031--- End history for " + channel + " ---");
+			}, function(logfile) {
+				if (fileUsed) {
+					outlines.unshift("\x031--- " + logfile + " ---");
+					fileUsed = false;
+				}
 			});
 		},
 

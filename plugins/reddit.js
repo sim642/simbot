@@ -55,7 +55,7 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookupReddit = function(rurl, callback) {
-		self.request(rurl + ".json", function(err, res, body) {
+		self.request(self.cleanUrl(rurl) + ".json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body)[0].data;
 				var results = data.children;
@@ -68,7 +68,7 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookup = function(url, callback) {
-		(url.match(self.redditRe) ? self.lookupReddit : self.lookupOther)(self.cleanUrl(url), callback);
+		(url.match(self.redditRe) ? self.lookupReddit : self.lookupOther)(url, callback);
 	};
 
 	self.events = {

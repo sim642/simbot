@@ -11,23 +11,33 @@ function PipePlugin(bot) {
 		"cmd#pipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
 			to = to.toLowerCase();
 			args[1] = args[1].toLowerCase();
-			if (to in self.pipes)
+			if (to in self.pipes && (self.pipes[to] in self.backpipes))
 				delete self.backpipes[self.pipes[to]];
 			self.pipes[to] = args[1];
 			self.backpipes[args[1]] = to;
 			bot.notice(to, "Now piping to " + args[1]);
 		}),
 
+		"cmd#owpipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
+			to = to.toLowerCase();
+			args[1] = args[1].toLowerCase();
+			if (to in self.pipes && (self.pipes[to] in self.backpipes))
+				delete self.backpipes[self.pipes[to]];
+			self.pipes[to] = args[1];
+			bot.notice(to, "Now owpiping to " + args[1]);
+		}),
+
 		"cmd#unpipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
 			to = to.toLowerCase();
-			delete self.backpipes[self.pipes[to]];
+			if (self.pipes[to] in self.backpipes)
+				delete self.backpipes[self.pipes[to]];
 			delete self.pipes[to];
 			bot.notice(to, "Not piping");
 		}),
 
 		"nocmd": function(nick, to, text, message) {
 			if (to === undefined) {
-				console.log(message);
+				console.log(message); // what's this doing here?
 				return;
 			}
 

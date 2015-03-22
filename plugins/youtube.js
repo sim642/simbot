@@ -7,7 +7,7 @@ function YoutubePlugin(bot) {
 	self.help = "Youtube plugin";
 	self.depend = ["cmd", "ignore"];
 	
-	self.vidre = new RegExp('(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})', "i");
+	self.vidre = new RegExp('(?:youtube(?:-nocookie)?\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/)([^"&?/ ]{11})(?:[?#]t=((?:\\d+[hms])+))?', "i");
 
 	self.channels = [];
 	self.ignores = [];
@@ -52,10 +52,10 @@ function YoutubePlugin(bot) {
 		return str;
 	};
 
-	self.format = function(data, callback) {
+	self.format = function(data, time, callback) {
 		var views = data["yt$statistics"] ? data["yt$statistics"].viewCount : 0;
 		var id = data.id["$t"].split(":")[3]; // hacky way to parse video id out of given result to use in link
-		var str = "\x1Fhttp://youtu.be/" + id + "\x1F : \x02" + data.title["$t"] + "\x02 [" + self.duration(data["media$group"]["yt$duration"].seconds) + "] by " + data.author[0].name["$t"] + "; " + self.thseps(views.toString()) + " views";
+		var str = "\x1Fhttps://youtu.be/" + id + (time ? "?t=" + time : "") + "\x1F : \x02" + data.title["$t"] + "\x02 [" + self.duration(data["media$group"]["yt$duration"].seconds) + "] by " + data.author[0].name["$t"] + "; " + self.thseps(views.toString()) + " views";
 		if (data["yt$rating"] !== undefined) {
 			var likes = parseFloat(data["yt$rating"].numLikes);
 			var dislikes = parseFloat(data["yt$rating"].numDislikes);
@@ -65,11 +65,11 @@ function YoutubePlugin(bot) {
 		(callback || function(){})(str);
 	};
 
-	self.lookup = function(id, callback) {
-		request("https://gdata.youtube.com/feeds/api/videos/" + id + "?v=2&alt=json", function(err, res, body) {
+	self.lookup = function(match, callback) {
+		request("https://gdata.youtube.com/feeds/api/videos/" + match[1] + "?v=2&alt=json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).entry;
-				self.format(data, callback);
+				self.format(data, match[2], callback);
 			}
 		});
 	};
@@ -79,7 +79,7 @@ function YoutubePlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).feed;
 				if (data.entry !== undefined)
-					self.format(data.entry[0], callback);
+					self.format(data.entry[0], null, callback);
 				else
 					(callback || function(){})("'\x02" + query + "\x02' returned no videos");
 			}
@@ -92,7 +92,7 @@ function YoutubePlugin(bot) {
 				var match = text.match(self.vidre);
 				if (match) {
 					bot.out.log("youtube", nick + " in " + to + ": " + match[0]);
-					self.lookup(match[1], function(str) {
+					self.lookup(match, function(str) {
 						bot.say(to, str);
 					});
 				}
@@ -103,7 +103,7 @@ function YoutubePlugin(bot) {
 			var match = text.match(self.vidre);
 			if (match) {
 				bot.out.log("youtube", nick + " in PM: " + match[0]);
-				self.lookup(match[1], function(str) {
+				self.lookup(match, function(str) {
 					bot.say(nick, str);
 				});
 			}

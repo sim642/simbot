@@ -7,7 +7,7 @@ function RedditPlugin(bot) {
 	self.help = "Reddit plugin";
 	self.depend = ["cmd", "ignore"];
 
-	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\b/i;
+	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^s]*\b/i;
 	self.redditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\//i;
 	self.urlSort = "";
 	self.urlTime = "";

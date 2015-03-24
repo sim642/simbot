@@ -38,7 +38,7 @@ function RedditPlugin(bot) {
 	self.cleanUrl = function(lurl) {
 		var obj = url.parse(lurl);
 		obj.search = obj.query = obj.hash = null;
-		return url.format(obj);
+		return encodeURI(url.format(obj));
 	};
 
 	self.lookupOther = function(lurl, callback) {

@@ -80,7 +80,7 @@ function BarcodePlugin(bot) {
 		arr = arr.concat(self.start);
 		var groups = self.first[num.charCodeAt(0) - self.code0];
 		for (var i = 1; i < 7; i++) {
-			arr = arr.concat((groups[i - 1] ?self.leftG : self.leftL)[num.charCodeAt(i) - self.code0]);
+			arr = arr.concat((groups[i - 1] ? self.leftG : self.leftL)[num.charCodeAt(i) - self.code0]);
 		}
 		arr = arr.concat(self.middle);
 		for (var i = 7; i < 13; i++) {

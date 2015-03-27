@@ -24,7 +24,7 @@ function ChoosePlugin(bot) {
 					}
 				});
 
-				request("http://qrng.anu.edu.au/form_handler.php?numofsets=1&num_per_set=1&repeats=no&min_num=0&max_num=" + (choices.length - 1) + "&time=" + (new Date()).getTime(), function(err, res, body) {
+				request("http://qrng.anu.edu.au/form_handler.php?numofsets=1&num_per_set=1&repeats=no&min_num=0&max_num=" + (choices.length - 1) + "&time=" + Date.now(), function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var re = /Set 1: (\d+)/;
 						var match = body.match(re);

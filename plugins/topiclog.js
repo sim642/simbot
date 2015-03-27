@@ -4,7 +4,7 @@ function TopicLogPlugin(bot) {
 	var self = this;
 	self.name = "topiclog";
 	self.help = "Topic logger plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "date"];
 
 	self.topiclog = {};
 
@@ -96,7 +96,7 @@ function TopicLogPlugin(bot) {
 						else
 							str = entry.topic;
 
-						bot.notice(nick, "\x02Topic in " + chan + " by " + entry.nick + " at " + entry.time.toUTCString() + ":\x02 " + str);
+						bot.notice(nick, "\x02Topic in " + chan + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
 						lastentry = entry;
 					}
 				}

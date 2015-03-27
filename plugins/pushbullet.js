@@ -5,7 +5,7 @@ function PushbulletPlugin(bot) {
 	var self = this;
 	self.name = "pushbullet";
 	self.help = "Pushbullet plugin";
-	self.depend = ["cmd", "auth", "nickserv", "bitly"];
+	self.depend = ["cmd", "auth", "nickserv", "bitly", "date"];
 
 	self.email = null;
 	self.token = null;
@@ -205,14 +205,14 @@ function PushbulletPlugin(bot) {
 
 	self.events = {
 		"pushbullet#push": function(push, live) {
-			bot.out.log("pushbullet", push.type + " push" + (live ? "" : "(" + (new Date(push.modified * 1000)).toUTCString() + ")") + " from " + push.sender_email + ": " + push.title);
+			bot.out.log("pushbullet", push.type + " push" + (live ? "" : "(" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " from " + push.sender_email + ": " + push.title);
 			bot.emit("pushbullet#push#" + push.sender_email, push, live);
 
 			if (push.title && (push.title in bot.chans)) {
 				var sender = self.getKeyByValue(self.emails, push.sender_email);
 				if (!sender)
 					sender = push.sender_email;
-				var msg = "push" + (live ? "" : "ed (" + (new Date(push.modified * 1000)).toUTCString() + ")") + " [\x02" + sender + "\x02] ";
+				var msg = "push" + (live ? "" : "ed (" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " [\x02" + sender + "\x02] ";
 
 				var text = push.body !== undefined ? push.body.replace(/\n/g, " \\ ") : "";
 
@@ -255,7 +255,7 @@ function PushbulletPlugin(bot) {
 		},
 
 		"pushbullet#subscription": function(push, live) {
-			bot.out.log("pushbullet", push.type + " subscription" + (live ? "" : " (" + (new Date(push.modified * 1000)).toUTCString() + ")") + " from " + push.sender_name + ": " + push.title);
+			bot.out.log("pushbullet", push.type + " subscription" + (live ? "" : " (" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " from " + push.sender_name + ": " + push.title);
 			bot.emit("pushbullet#subscription#" + push.sender_name, push, live);
 		},
 

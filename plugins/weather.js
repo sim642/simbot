@@ -4,11 +4,9 @@ function WeatherPlugin(bot) {
 	var self = this;
 	self.name = "weather";
 	self.help = "Weather plugin";
-	self.depend = ["cmd", "bits"];
+	self.depend = ["cmd", "bits", "date"];
 	
-	self.DateUTC = function(date) {
-		return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()));
-    };
+	self.DateUTC = bot.plugins.date.toUTC;
 
 	self.events = {
 		"cmd#weather": function(nick, to, args) {
@@ -87,7 +85,7 @@ function WeatherPlugin(bot) {
 						for (var i = 0; i < jj.cnt; i++) {
 							var j = jj.list[i];
 							if (t >= j.dt && t < (i + 1 < jj.cnt ? jj.list[i + 1].dt : j.dt + 3 * 60 * 60)) {
-								var prefix = jj.city.name + ", " + jj.city.country + " @ " + time.toUTCString();
+								var prefix = jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time);
 								var bits = [];
 
 								bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
@@ -142,7 +140,7 @@ function WeatherPlugin(bot) {
 							}
 						}
 
-						bot.say(to, "No forecast found for \x02" + jj.city.name + ", " + jj.city.country + " @ " + time.toUTCString());
+						bot.say(to, "No forecast found for \x02" + jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time));
 					}
 					else {
 						bot.say(to, "No place called \x02" + place);
@@ -163,7 +161,7 @@ function WeatherPlugin(bot) {
 						for (var i = 0; i < jj.cnt; i++) {
 							var j = jj.list[i];
 							if (t >= j.dt && t < (i + 1 < jj.cnt ? jj.list[i + 1].dt : j.dt + 24 * 60 * 60)) {
-								var prefix = jj.city.name + ", " + jj.city.country + " @ " + time.toUTCString();
+								var prefix = jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time);
 								var bits = [];
 
 								bits.push(["temperature", (j.temp.day - 273.15).toFixed(1) + "°C"]); // TODO: time of day temperature
@@ -200,7 +198,7 @@ function WeatherPlugin(bot) {
 							}
 						}
 
-						bot.say(to, "No forecast found for \x02" + jj.city.name + ", " + jj.city.country + " @ " + time.toUTCString());
+						bot.say(to, "No forecast found for \x02" + jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time));
 					}
 					else {
 						bot.say(to, "No place called \x02" + place);
@@ -221,7 +219,7 @@ function WeatherPlugin(bot) {
 						if (jj.cnt > 0) {
 							var j = jj.list[0];
 
-							var prefix = place + " @ " + time.toUTCString();
+							var prefix = place + " @ " + bot.plugins.date.printDateTime(time);
 							var bits = [];
 
 							bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
@@ -274,7 +272,7 @@ function WeatherPlugin(bot) {
 							bot.say(to, bot.plugins.bits.format(prefix, bits));
 						}
 						else {
-							bot.say(to, "No forecast found for \x02" + place + " @ " + time.toUTCString());
+							bot.say(to, "No forecast found for \x02" + place + " @ " + bot.plugins.date.printDateTime(time));
 						}
 					}
 					else {

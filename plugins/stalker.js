@@ -2,7 +2,7 @@ function StalkerPlugin(bot) {
 	var self = this;
 	self.name = "stalker";
 	self.help = "Stalker plugin";
-	self.depend = ["cmd", "auth", "info"];
+	self.depend = ["cmd", "auth", "info", "date"];
 	
 	self.db = {};
 	self.autoid = 1;
@@ -283,7 +283,7 @@ function StalkerPlugin(bot) {
 				for (var i = 0; i < tosort.length && i < 10; i++) {
 					var row = tosort[i];
 					var ago = self.ago(row.seen);
-					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + row.seen.toUTCString() + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
+					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + bot.plugins.date.printDateTime(row.seen) + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
 				}
 			}
 		},
@@ -302,7 +302,7 @@ function StalkerPlugin(bot) {
 
 				if (recent !== null) {
 					var ago = self.ago(recent.seen);
-					bot.say(to, nick2 + " seen as " + recent.nick + ": " + recent.seen.toUTCString() + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
+					bot.say(to, nick2 + " seen as " + recent.nick + ": " + bot.plugins.date.printDateTime(recent.seen) + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
 				}
 				else
 					bot.say(to, nick2 + " has been never seen");

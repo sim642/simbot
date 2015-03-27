@@ -171,22 +171,6 @@ function StalkerPlugin(bot) {
 		}
 	};
 
-	self.ago = function(date) {
-		var dt = Date.now() - date.getTime();
-		var ret = {};
-
-		ret.milliseconds = dt % 1000;
-		dt = Math.floor(dt / 1000);
-		ret.seconds = dt % 60;
-		dt = Math.floor(dt / 60);
-		ret.minutes = dt % 60;
-		dt = Math.floor(dt / 60);
-		ret.hours = dt % 24;
-		dt = Math.floor(dt / 24);
-		ret.days = dt;
-		return ret;
-	};
-
 	self.events = {
 		"raw": function(message) {
 			if (message.nick !== undefined && message.host !== undefined) {
@@ -282,8 +266,7 @@ function StalkerPlugin(bot) {
 
 				for (var i = 0; i < tosort.length && i < 10; i++) {
 					var row = tosort[i];
-					var ago = self.ago(row.seen);
-					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + bot.plugins.date.printDateTime(row.seen) + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
+					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + bot.plugins.date.printDateTime(row.seen) + " (" + bot.plugins.date.printDur(Date.now() - row.seen, "second") + " ago)");
 				}
 			}
 		},
@@ -301,8 +284,7 @@ function StalkerPlugin(bot) {
 				}
 
 				if (recent !== null) {
-					var ago = self.ago(recent.seen);
-					bot.say(to, nick2 + " seen as " + recent.nick + ": " + bot.plugins.date.printDateTime(recent.seen) + " (" + ago.days + " days, " + ago.hours + " hours, " + ago.minutes + " minutes, " + ago.seconds + " seconds, " + ago.milliseconds + " milliseconds ago)");
+					bot.say(to, nick2 + " seen as " + recent.nick + ": " + bot.plugins.date.printDateTime(recent.seen) + " (" + bot.plugins.date.printDur(Date.now() - recent.seen, "second") + " ago)");
 				}
 				else
 					bot.say(to, nick2 + " has been never seen");

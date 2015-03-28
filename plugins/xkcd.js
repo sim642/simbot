@@ -83,15 +83,18 @@ function XkcdPlugin(bot) {
 		},
 
 		"message": function(nick, to, text) {
-			var m = text.match(/xkcd\.com\/(\d+)/);
-			if (m) {
-				var uri = "http://xkcd.com/" + m[1];
-				request(uri, function(err, res, body) {
-					var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
-					var m = body.match(re);
-					if (m)
-						bot.say(to, "xkcd" + ": \x02" + m[1] + "\x02 - " + m[2]);
-				});
+			if (self.chans.indexOf(to) != -1) { // TODO: work in PMs as well
+				var m = text.match(/xkcd\.com\/(\d+)/);
+				if (m) {
+					var uri = "http://xkcd.com/" + m[1];
+					bot.out.log("xkcd", nick + " in " + to + ": " + m[0]);
+					request(uri, function(err, res, body) {
+						var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
+						var m = body.match(re);
+						if (m)
+							bot.say(to, "xkcd" + ": \x02" + m[1] + "\x02 - " + m[2]);
+					});
+				}
 			}
 		},
 

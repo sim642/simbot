@@ -10,7 +10,7 @@ function UnitsPlugin(bot) {
 		bot.out.doing("units", "updating currency.units");
 		execFile("python3", ["units_cur3"], {cwd: "./plugins/units/"}, function(error, stdout, stderr) {
 			if (error) {
-				bot.out.debug("units", error, stdout, stderr);
+				bot.out.error("units", error, stdout, stderr);
 			}
 			else
 				bot.out.ok("units", "currency.units updated");

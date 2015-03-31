@@ -6,36 +6,7 @@ function StatusPlugin(bot) {
 	var self = this;
 	self.name = "status";
 	self.help = "simbot and system status plugin";
-	self.depend = ["cmd", "bits"];
-
-	self.duration = function(dt) {
-		dt *= 1000; // seconds -> milliseconds because floating point
-
-		var ret = {};
-
-		ret.milliseconds = Math.round(dt % 1000);
-		dt = Math.floor(dt / 1000);
-		ret.seconds = dt % 60;
-		dt = Math.floor(dt / 60);
-		ret.minutes = dt % 60;
-		dt = Math.floor(dt / 60);
-		ret.hours = dt % 24;
-		dt = Math.floor(dt / 24);
-		ret.days = dt;
-		return ret;
-	};
-
-	self.durationStr = function(dt) {
-		var str = "";
-		var dur = self.duration(dt);
-
-		str += dur.days + " days, ";
-		str += dur.hours + " hours, ";
-		str += dur.minutes + " minutes, ";
-		str += dur.seconds + " seconds";
-
-		return str;
-	};
+	self.depend = ["cmd", "bits", "date"];
 
 	self.dirSize = function(dir, filter, callback) {
 		if (callback === undefined) {
@@ -77,7 +48,7 @@ function StatusPlugin(bot) {
 			bits.push(["system", os.uptime()]);
 
 			for (var i = 0; i < bits.length; i++)
-				bits[i][1] = self.durationStr(bits[i][1]);
+				bits[i][1] = bot.plugins.date.printDur(bits[i][1] * 1000, "second");
 
 			bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 		},

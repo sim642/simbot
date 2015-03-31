@@ -18,7 +18,7 @@ function RantPlugin(bot) {
 				}
 			});
 		}
-	}
+	};
 }
 
 module.exports = RantPlugin;

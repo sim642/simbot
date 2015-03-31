@@ -84,7 +84,7 @@ function PushbulletPlugin(bot) {
 				});
 			}
 		});
-	}
+	};
 
 	self.load = function(data) {
 		self.email = data.email;
@@ -284,7 +284,7 @@ function PushbulletPlugin(bot) {
 					bot.notice(nick, "must be identified for this nick to set pushbullet");
 			});
 		}
-	}
+	};
 }
 
 module.exports = PushbulletPlugin;

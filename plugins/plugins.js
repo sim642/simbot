@@ -43,7 +43,7 @@ function PluginsPlugin(bot) {
 			}
 			bot.say(to, "Plugins loaded: " + list);
 		})
-	}
+	};
 }
 
 module.exports = PluginsPlugin;

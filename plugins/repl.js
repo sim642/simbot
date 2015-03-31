@@ -41,7 +41,7 @@ function REPLPlugin(bot) {
 				bot.say(to, nick + " =>> " + err);
 			}
 		})
-	}
+	};
 }
 
 module.exports = REPLPlugin;

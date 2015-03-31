@@ -46,7 +46,7 @@ function NickServPlugin(bot) {
 				}
 			}
 		}
-	}
+	};
 }
 
 module.exports = NickServPlugin;

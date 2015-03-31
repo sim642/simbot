@@ -35,7 +35,7 @@ function CmdPlugin(bot) {
 		"cmd#": function(nick, to, cmd, args, message) {
 			//bot.notice(nick, "no such command: " + cmd);
 		}
-	}
+	};
 }
 
 module.exports = CmdPlugin;

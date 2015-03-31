@@ -60,7 +60,7 @@ function NumberPlugin(bot) {
 			self.number = 1 / self.number;
 			bot.say(to, "The number has been inverted to " + self.number);
 		},
-	}
+	};
 }
 
 module.exports = NumberPlugin;

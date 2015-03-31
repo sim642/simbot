@@ -36,7 +36,7 @@ function BitlyPlugin(bot) {
 				bot.say(to, args[1] + " -> " + shorturl);
 			});
 		})
-	}
+	};
 }
 
 module.exports = BitlyPlugin;

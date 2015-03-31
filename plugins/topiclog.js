@@ -121,7 +121,7 @@ function TopicLogPlugin(bot) {
 			else
 				bot.say(to, "No such channel on record");
 		}
-	}
+	};
 }
 
 module.exports = TopicLogPlugin;

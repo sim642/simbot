@@ -5,7 +5,7 @@ function VotePlugin(bot) {
 	self.depend = ["cmd", "auth"];
 
 	self.votes = {};
-	self.regex = /^\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)[\s,:]*(\+\+||--)\s*$/i
+	self.regex = /^\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)[\s,:]*(\+\+||--)\s*$/i;
 
 	self.voteend = function(to) {
 		var vote = self.votes[to];
@@ -108,7 +108,7 @@ function VotePlugin(bot) {
 				}
 			}
 		},
-	}
+	};
 }
 
 module.exports = VotePlugin;

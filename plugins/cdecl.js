@@ -31,7 +31,7 @@ function CDeclPlugin(bot) {
 				});
 			}).stdin.end(self.prefix(args[0]) + "\n");
 		}
-	}
+	};
 }
 
 module.exports = CDeclPlugin;

@@ -30,11 +30,11 @@ function HighlightPlugin(bot) {
 		return {
 			"highlights": self.highlights
 		};
-	}
+	};
 
 	self.stripcolors = function(text) {
 		return text.replace(/\x1f|\x02|\x12|\x0f|\x16|\x03(?:\d{1,2}(?:,\d{1,2})?)?/g, "");
-	}
+	};
 
 	self.events = {
 		"message": function(nick, to, text, message) {
@@ -110,7 +110,7 @@ function HighlightPlugin(bot) {
 					}
 					break;
 				default:
-					var user = self.highlights[lnick]
+					var user = self.highlights[lnick];
 					bot.notice(nick, "highlights set to " + user.level + (user.activity ? " (" + user.activity.toString() + "mins)": ""));
 					break;
 				}
@@ -118,7 +118,7 @@ function HighlightPlugin(bot) {
 			else
 				bot.notice(nick, "pushbullet must be set to use this feature");
 		}
-	}
+	};
 }
 
 module.exports = HighlightPlugin;

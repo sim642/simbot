@@ -75,7 +75,7 @@ function WeatherPlugin(bot) {
 
 		"cmd#forecast": function(nick, to, args) {
 			var place = args[1];
-			var time = new Date(args[2])
+			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
 			request("http://api.openweathermap.org/data/2.5/forecast?lang=en&q=" + place, function(err, res, body) {
@@ -151,7 +151,7 @@ function WeatherPlugin(bot) {
 
 		"cmd#forecast2": function(nick, to, args) {
 			var place = args[1];
-			var time = new Date(args[2])
+			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
 			request("http://api.openweathermap.org/data/2.5/forecast/daily?lang=en&q=" + place, function(err, res, body) {
@@ -209,7 +209,7 @@ function WeatherPlugin(bot) {
 
 		"cmd#whistory": function(nick, to, args) {
 			var place = args[1];
-			var time = new Date(args[2])
+			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
 			request("http://api.openweathermap.org/data/2.5/history/city/?lang=en&type=tick&cnt=1&start=" + t + "&q=" + place, function(err, res, body) {
@@ -281,7 +281,7 @@ function WeatherPlugin(bot) {
 				}
 			});
 		},
-	}
+	};
 }
 
 module.exports = WeatherPlugin;

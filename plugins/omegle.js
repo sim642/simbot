@@ -89,17 +89,17 @@ function OmeglePlugin(bot) {
 			query["topics"] = JSON.stringify(self.chats[to].topics);
 		}
 
-		if (self.chats[to].college != null) {
+		if (self.chats[to].college !== null) {
 			query["college"] = self.chats[to].college;
 			query["college_auth"] = self.colleges[self.chats[to].college];
 			query["any_college"] = self.chats[to].collegeMode == "any" ? 1 : 0;
 		}
 
-		if (self.chats[to].question != null) {
+		if (self.chats[to].question !== null) {
 			query["ask"] = self.chats[to].question;
 		}
 
-		if (self.chats[to].spyee != false) {
+		if (self.chats[to].spyee !== false) {
 			query["wantsspy"] = 1;
 		}
 
@@ -111,7 +111,7 @@ function OmeglePlugin(bot) {
 				self.chats[to].hardDisconnect = function() {
 					request.post({url: server + "disconnect", form: {"id": data}});
 					clearInterval(self.chats[to].interval);
-					if (self.chats[to].typing != null)
+					if (self.chats[to].typing !== null)
 						clearTimeout(self.chats[to].typing);
 				};
 				self.chats[to].softDisconnect = function() {
@@ -128,7 +128,7 @@ function OmeglePlugin(bot) {
 					request.post({url: server + "events", form: {"id": data}}, function(err, res, body) {
 						if (!err && res.statusCode == 200) {
 							var eventdata = JSON.parse(body);
-							if (eventdata != null) {
+							if (eventdata !== null) {
 								for (var i = 0; i < eventdata.length; i++) {
 									switch (eventdata[i][0]) {
 									case "waiting":
@@ -138,18 +138,18 @@ function OmeglePlugin(bot) {
 											bits.push("lang: " + self.chats[to].lang);
 										if (self.chats[to].topics.join(",") != "")
 											bits.push("interests: " + self.chats[to].topics.join(","));
-										if (self.chats[to].college != null)
+										if (self.chats[to].college !== null)
 											bits.push("college: " + (self.chats[to].collegeMode == "any" ? "any" : self.chats[to].college));
-										if (self.chats[to].question != null) {
+										if (self.chats[to].question !== null) {
 											bits.push("spy");
 											who += "s";
 										}
 										if (self.chats[to].spyee)
 											bits.push("spyee");
-										bot.notice(to, "waiting for " + who + (bits.length == 0 ? "" : " [" + bits.join("; ") + "]"));
+										bot.notice(to, "waiting for " + who + (bits.length === 0 ? "" : " [" + bits.join("; ") + "]"));
 										break;
 									case "connected":
-										var who = "stranger" + (self.chats[to].question != null ? "s" : "");
+										var who = "stranger" + (self.chats[to].question !== null ? "s" : "");
 										bot.out.log("omegle", who + " connected in " + to);
 										bot.notice(to, who + " connected");
 										break;
@@ -365,20 +365,20 @@ function OmeglePlugin(bot) {
 		},
 
 		"nocmd": function(nick, to, text) {
-			if (to in self.chats && self.chats[to].question == null)
+			if (to in self.chats && self.chats[to].question === null)
 			{
 				var match = text.match(self.regex);
 				if (nick == to || (match && (match[1] == ">" || match[2] == bot.nick))) {
 					var msg = nick != to ? match[3] : text;
 					bot.out.log("omegle", nick + " in " + to + ": " + msg);
 					request.post({url: self.chats[to].server + "send", form: {"id": self.chats[to].id, "msg": msg}});
-					if (self.chats[to].typing != null) {
+					if (self.chats[to].typing !== null) {
 						clearTimeout(self.chats[to].typing);
 						self.chats[to].typing = null;
 					}
 				}
 				else {
-					if (self.chats[to].typing == null)
+					if (self.chats[to].typing === null)
 						request.post({url: self.chats[to].server + "typing", form: {"id": self.chats[to].id}});
 					else
 						clearTimeout(self.chats[to].typing);
@@ -390,7 +390,7 @@ function OmeglePlugin(bot) {
 				}
 			}
 		}
-	}
+	};
 }
 
 module.exports = OmeglePlugin;

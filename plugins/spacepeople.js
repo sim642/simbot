@@ -27,7 +27,7 @@ function SpacePeoplePlugin(bot) {
 				}
 			});
 		}
-	}
+	};
 }
 
 module.exports = SpacePeoplePlugin;

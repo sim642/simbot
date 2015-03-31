@@ -129,5 +129,6 @@ function AuthPlugin(bot) {
 		}
 	};
 
-};
+}
+
 module.exports = AuthPlugin;

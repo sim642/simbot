@@ -94,7 +94,7 @@ function BarcodePlugin(bot) {
 
 	self.UPCA = function(num) {
 		return self.EAN13("0" + num);
-	}
+	};
 
 	self.events = {
 		"cmd#bmask": function(nick, to, args) {
@@ -108,7 +108,7 @@ function BarcodePlugin(bot) {
 		"cmd#b-ean": function(nick, to, args) {
 			bot.say(to, "\x0301,00" + self.barmask(self.EAN13(args[1])));
 		}
-	}
+	};
 }
 
 module.exports = BarcodePlugin;

@@ -130,7 +130,7 @@ function GithubPlugin(bot) {
 				bot.say(to, nick + ": invalid argument '\x02" + arg + "\x02'");
 			}
 		}
-	}
+	};
 }
 
 module.exports = GithubPlugin;

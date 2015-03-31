@@ -100,7 +100,7 @@ function GeoIPPlugin(bot) {
 				}
 			});
 		}
-	}
+	};
 }
 
 module.exports = GeoIPPlugin;

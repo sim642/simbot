@@ -90,7 +90,7 @@ function StatusPlugin(bot) {
 			var addSize = function(bit) {
 				todo--;
 				bits.push(bit);
-				if (todo == 0) {
+				if (todo === 0) {
 					var total = 0;
 					for (var i = 0; i < bits.length; i++)
 						total += bits[i][1];
@@ -142,7 +142,7 @@ function StatusPlugin(bot) {
 
 			bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 		}
-	}
+	};
 }
 
 module.exports = StatusPlugin;

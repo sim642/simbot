@@ -214,7 +214,7 @@ function StalkerPlugin(bot) {
 						nicks.push(row.nick);
 				}
 
-				if (nicks.length == 0)
+				if (nicks.length === 0)
 					nicks.push("no such nick found");
 				bot.say(to, nick + ": " + nicks.join(", "));
 			}
@@ -242,7 +242,7 @@ function StalkerPlugin(bot) {
 							nicks.push(row.nick);
 					}
 
-					if (nicks.length == 0)
+					if (nicks.length === 0)
 						nicks.push("no such nick found");
 					bot.say(to, nick + ": " + nicks.join(", "));
 				});
@@ -316,7 +316,7 @@ function StalkerPlugin(bot) {
 				bot.plugins.info.multiinfo(nicks, function(infos) {
 					for (var i = 0; i < nicks.length; i++) {
 						var info = infos[nicks[i]];
-						if (info.info != null)
+						if (info.info !== null)
 							bot.notice(nick, nick2 + " as " + nicks[i] + ": " + info.info);
 					}
 				});
@@ -334,7 +334,6 @@ function StalkerPlugin(bot) {
 			bot.say(to, nick + ": " + nick1 + " is " + (diff.length > 0 ? "" : "not ") + nick2);
 		},
 	};
-
 }
 
 module.exports = StalkerPlugin;

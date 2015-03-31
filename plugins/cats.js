@@ -34,7 +34,7 @@ function CatsPlugin(bot) {
 				bot.say(to, "[r/" + item.subreddit + "] \x02" + item.title + "\x02: " + item.url);
 			}
 		}
-	}
+	};
 }
 
 module.exports = CatsPlugin;

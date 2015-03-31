@@ -24,7 +24,6 @@ plugins._load = function(p) {
 };
 
 plugins.load = function(name) {
-	debugger;
 	if (!(name in this)) {
 		try {
 			var r = require.uncached("./plugins/" + name);

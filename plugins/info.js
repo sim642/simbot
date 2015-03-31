@@ -34,7 +34,7 @@ function InfoPlugin(bot) {
 				for (var i = 0; i < result.rowCount; i++) {
 					var row = result.rows[i];
 					ret[row.alias] = {
-						alias: row.nick != null && row.alias.toLowerCase() != row.nick.toLowerCase() ? row.nick : null,
+						alias: row.nick !== null && row.alias.toLowerCase() != row.nick.toLowerCase() ? row.nick : null,
 						info: row.info
 					};
 				}
@@ -56,10 +56,10 @@ function InfoPlugin(bot) {
 	self.events = {
 		"cmd#infobot": function(nick, to, args, message) {
 			self.info(args[1].split(","), function(nick, alias, info) {
-				bot.say(to, "Info of " + nick + (alias != null ? " (" + alias + ")" : "") + ": " + info);
+				bot.say(to, "Info of " + nick + (alias !== null ? " (" + alias + ")" : "") + ": " + info);
 			});
 		}
-	}
+	};
 }
 
 module.exports = InfoPlugin;

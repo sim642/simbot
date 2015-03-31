@@ -114,7 +114,7 @@ function YoutubePlugin(bot) {
 				bot.say(to, str);
 			});
 		}
-	}
+	};
 }
 
 module.exports = YoutubePlugin;

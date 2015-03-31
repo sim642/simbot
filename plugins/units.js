@@ -38,7 +38,7 @@ function UnitsPlugin(bot) {
 				}).stdin.end(inp);
 			}
 		}
-	}
+	};
 }
 
 module.exports = UnitsPlugin;

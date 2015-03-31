@@ -35,8 +35,9 @@ Process"];
 			var name = "";
 			for (var i = 0; i < self.parts.length; i++) {
 				var cnt = 1;
-				if (args[i + 1] && parseInt(args[i + 1], 10) !== NaN)
-					cnt = Math.min(parseInt(args[i + 1], 10), 10);
+				var num = parseInt(args[i + 1], 10);
+				if (args[i + 1] && !isNaN(num))
+					cnt = Math.min(num, 10);
 
 				for (var j = 0; j < cnt; j++) {
 					var a = self.parts[i].split(" ");
@@ -45,7 +46,7 @@ Process"];
 			}
 			bot.say(to, nick + ": " + name);
 		}
-	}
+	};
 }
 
 module.exports = ClassNamerPlugin;

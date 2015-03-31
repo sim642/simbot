@@ -101,7 +101,7 @@ function PipePlugin(bot) {
 			else
 				bot.notice(to, parts[0].trim());
 		}),
-	}
+	};
 }
 
 module.exports = PipePlugin;

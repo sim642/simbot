@@ -95,7 +95,7 @@ function ChannelsPlugin(bot) {
 					bot.join(channel);
 				}, self.autojoinTime);
 		}
-	}
+	};
 }
 
 module.exports = ChannelsPlugin;

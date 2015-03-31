@@ -84,7 +84,7 @@ function SedPlugin(bot) {
 				});
 			}
 		}
-	}
+	};
 }
 
 module.exports = SedPlugin;

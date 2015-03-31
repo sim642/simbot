@@ -34,7 +34,7 @@ function OeisPlugin(bot) {
 				}
 			});
 		}
-	}
+	};
 }
 
 module.exports = OeisPlugin;

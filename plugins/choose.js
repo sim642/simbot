@@ -44,7 +44,7 @@ function ChoosePlugin(bot) {
 				bot.emit("cmd#choose", nick, to, [match[1]]);
 			}
 		}
-	}
+	};
 }
 
 module.exports = ChoosePlugin;

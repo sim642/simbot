@@ -13,7 +13,7 @@ function SierpinskiPlugin(bot) {
 	};
 
 	self.sierpinski = function(N, i) {
-		if (N == 0)
+		if (N === 0)
 			return self.under + self.left + self.right + self.under;
 		else {
 			var n = 1 << N;
@@ -35,7 +35,7 @@ function SierpinskiPlugin(bot) {
 			for (var i = 0; i < n; i++)
 				bot.say(to, self.repeat(" ", n - i - 1) + self.sierpinski(N, i));
 		}
-	}
+	};
 }
 
 module.exports = SierpinskiPlugin;

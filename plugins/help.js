@@ -14,7 +14,7 @@ function HelpPlugin(bot) {
 	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
 	self.escapeRegExp = function(str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-	}
+	};
 
 	self.ircRenderer = new marked.Renderer();
 	self.ircRenderer.paragraph = function(text) {
@@ -42,9 +42,9 @@ function HelpPlugin(bot) {
 			if (n === 'gt') return '>';
 			if (n === 'quot') return '"';
 			if (n.charAt(0) === '#') {
-				return n.charAt(1) === 'x'
-				? String.fromCharCode(parseInt(n.substring(2), 16))
-				: String.fromCharCode(+n.substring(1));
+				return n.charAt(1) === 'x' ?
+					String.fromCharCode(parseInt(n.substring(2), 16)) :
+					String.fromCharCode(+n.substring(1));
 			}
 			return '';
 		});
@@ -120,7 +120,7 @@ function HelpPlugin(bot) {
 		"ctcp-version": function(from, to, message) {
 			bot.ctcp(from, "notice", "VERSION simbot by sim642: " + self.github);
 		}
-	}
+	};
 }
 
 module.exports = HelpPlugin;

@@ -40,7 +40,7 @@ function DatePlugin(bot) {
 		limit = limit || name.length;
 		var parts = [];
 		for (var i = name.length - 1; i >= 0 && parts.length < limit; i--) {
-			if (dur[i] > 0 && (i >= trim || parts.length == 0))
+			if (dur[i] > 0 && (i >= trim || parts.length === 0))
 				parts.push(dur[i] + " " + name[i] + (dur[i] == 1 ? "" : "s"));
 		}
 
@@ -49,7 +49,7 @@ function DatePlugin(bot) {
 
 	self.events = {
 
-	}
+	};
 }
 
 module.exports = DatePlugin;

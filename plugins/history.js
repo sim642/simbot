@@ -23,7 +23,7 @@ function HistoryPlugin(bot) {
 
 	self.save = function() {
 		return {basedir: self.basedir, basename: self.basename};
-	}
+	};
 
 	self.iterate = function(channel, lineCb, endCb, fileCb) {
 		fs.readdir(self.basedir, function(err, files) {
@@ -141,7 +141,7 @@ function HistoryPlugin(bot) {
 				bot.say(to, nick + ": " + cnt);
 			});
 		})
-	}
+	};
 }
 
 module.exports = HistoryPlugin;

@@ -29,7 +29,7 @@ function GreetPlugin(bot) {
 				bot.action(to, text2);
 			}
 		}
-	}
+	};
 }
 
 module.exports = GreetPlugin;

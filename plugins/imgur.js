@@ -52,7 +52,7 @@ function ImgurPlugin(bot) {
 				}
 			});
 		}
-	}
+	};
 }
 
 module.exports = ImgurPlugin;

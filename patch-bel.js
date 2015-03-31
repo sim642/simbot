@@ -2,7 +2,7 @@ var irc = require("irc");
 
 function stripBEL(str) {
 	return str.replace(/\x07/g, "");
-};
+}
 
 var _say = irc.Client.prototype.say; // copy old function
 irc.Client.prototype.say = function(target, message) {

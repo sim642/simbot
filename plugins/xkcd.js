@@ -19,7 +19,7 @@ function XkcdPlugin(bot) {
 
 	self.save = function() {
 		return {"apiKey": self.apiKey, "chans": self.chans};
-	}
+	};
 
 	self.events = {
 		"cmd#xkcd": function(nick, to, args) {
@@ -66,7 +66,7 @@ function XkcdPlugin(bot) {
 					}, function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var json = JSON.parse(body);
-						if (json.items !== undefined && json.items.length != 0) {
+						if (json.items !== undefined && json.items.length !== 0) {
 							if (i - 1 >= 0 && i - 1 < json.items.length) {
 								var item = json.items[i - 1];
 								var title = item.title.match(/^xkcd:\s+(.*)$/)[1].trim();
@@ -118,7 +118,7 @@ function XkcdPlugin(bot) {
 				bot.say(self.chans[i], text);
 			}
 		}
-	}
+	};
 }
 
 module.exports = XkcdPlugin;

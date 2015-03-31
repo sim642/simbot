@@ -93,7 +93,7 @@ function RedditPlugin(bot) {
 				});
 			}
 		},
-	}
+	};
 }
 
 module.exports = RedditPlugin;

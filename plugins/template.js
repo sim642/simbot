@@ -6,7 +6,7 @@ function TemplatePlugin(bot) {
 
 	self.events = {
 		
-	}
+	};
 }
 
 module.exports = TemplatePlugin;

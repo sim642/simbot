@@ -108,7 +108,7 @@ function WhatpulsePlugin(bot) {
 					bot.notice(nick, "must be identified for this nick to set whatpulse");
 			});
 		}
-	}
+	};
 }
 
 module.exports = WhatpulsePlugin;

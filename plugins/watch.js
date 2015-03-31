@@ -30,14 +30,14 @@ function WatchPlugin(bot) {
 	};
 
 	self.list = function(callback) {
-		if (self.listCallbacks.length == 0)
+		if (self.listCallbacks.length === 0)
 			self.watch(["l"]);
 
 		self.listCallbacks.push(callback);
 	};
 
 	self.stat = function(callback) {
-		if (self.statCallbacks.length == 0) {
+		if (self.statCallbacks.length === 0) {
 			self.watch(["s"]);
 			self.statData.list = [];
 		}
@@ -128,7 +128,7 @@ function WatchPlugin(bot) {
 				break;
 			}
 		}
-	}
+	};
 }
 
 module.exports = WatchPlugin;

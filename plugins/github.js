@@ -107,7 +107,7 @@ function GithubPlugin(bot) {
 									}
 									var curstreak = Math.max(contribs[contribs.length - 2][2], contribs[contribs.length - 1][2]);
 
-									bits.push(["commits", total]);
+									bits.push(["contributions", total]);
 									bits.push(["most daily contributions", most]);
 									bits.push(["longest streak", longstreak + " days"]);
 									bits.push(["current streak", curstreak + " days"]);

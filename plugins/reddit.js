@@ -9,8 +9,8 @@ function RedditPlugin(bot) {
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
 	self.redditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\//i;
-	self.urlSort = "";
-	self.urlTime = "";
+	self.urlSort = "hot";
+	self.urlTime = "week";
 
 	self.channels = [];
 	self.ignores = [];
@@ -42,13 +42,18 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookupOther = function(lurl, callback) {
-		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:" + lurl, "limit": 1, "sort": self.urlSort, "t": self.urlTime}}, function(err, res, body) {
+		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:'" + lurl + "'", "limit": 3, "sort": self.urlSort, "t": self.urlTime}}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).data;
 				var results = data.children;
 
-				if (results.length > 0) {
-					(callback || function(){})(self.formatPost(results[0].data));
+				for (var i = 0; i < results.length; i++) {
+					var post = results[i].data;
+
+					if (post.url.indexOf(lurl) >= 0) { // actually contains link (prevent reddit search stupidity)
+						(callback || function(){})(self.formatPost(post));
+						break;
+					}
 				}
 			}
 		});

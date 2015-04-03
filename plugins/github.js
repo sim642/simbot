@@ -83,7 +83,7 @@ function GithubPlugin(bot) {
 				self.request("https://api.github.com/users/" + arg, function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var j = JSON.parse(body);
-						prefix = j.login;
+						prefix = j.login + (realarg.toLowerCase() != j.login.toLowerCase() ? " (" + realarg + ")" : "");
 						bits.push([, j.type]);
 						if (j.bio)
 							bits.push([, j.bio, 0]);

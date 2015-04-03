@@ -15,6 +15,26 @@ function GithubPlugin(bot) {
 
 	self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
 
+	self.users = {};
+
+	self.load = function(data) {
+		if (data && data.users)
+			self.users = data.users;
+	};
+
+	self.save = function() {
+		return {
+			"users": self.users
+		};
+	};
+
+	self.parseuser = function(user) {
+		if (user in self.users)
+			return self.users[user];
+		else
+			return user;
+	};
+
 	self.graph = function(arr, minMult) {
 		var min = Math.min.apply(null, arr);
 		var max = Math.max.apply(null, arr);
@@ -30,7 +50,8 @@ function GithubPlugin(bot) {
 
 	self.events = {
 		"cmd#github": function(nick, to, args) {
-			var arg = args[1] || nick;
+			var realarg = args[1] || nick;
+			var arg = self.parseuser(realarg.toLowerCase());
 
 			var prefix = "";
 			var bits = [];
@@ -129,6 +150,23 @@ function GithubPlugin(bot) {
 			else {
 				bot.say(to, nick + ": invalid argument '\x02" + arg + "\x02'");
 			}
+		},
+
+		"cmd#setgithub": function(nick, to, args) {
+			bot.plugins.nickserv.nickIdentified(nick, function(identified) {
+				if (identified) {
+					if (args[1] !== undefined) {
+						self.users[nick.toLowerCase()] = args[1];
+						bot.notice(nick, "github set to " + args[1]);
+					}
+					else {
+						delete self.users[nick.toLowerCase()];
+						bot.notice(nick, "github unset");
+					}
+				}
+				else
+					bot.notice(nick, "must be identified for this nick to set github");
+			});
 		}
 	};
 }

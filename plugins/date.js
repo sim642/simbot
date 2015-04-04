@@ -5,6 +5,7 @@ function DatePlugin(bot) {
 	self.depend = [];
 
 	self.toUTC = function(date) {
+		// TODO: this breaks everything: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/parse#Differences_in_assumed_time-zone
 		return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()));
 	};
 
@@ -20,7 +21,7 @@ function DatePlugin(bot) {
 		return self.printDateTime(date).split(" ")[1];
 	};
 
-	self.duration = function(dt) {
+	self.durationDiff = function(dt) {
 		var size = [1000, 60, 60, 24, 30, 12];
 
 		var dur = [];
@@ -30,6 +31,41 @@ function DatePlugin(bot) {
 		}
 		dur.push(dt);
 		return dur;
+	};
+
+	self.durationReal = function(d1, d2) {
+		var vars = ["Milliseconds", "Seconds", "Minutes", "Hours", "Date", "Month", "FullYear"];
+		//bot.out.debug("date", d1, d2);
+
+		var dur = [];
+		for (var i = vars.length - 1; i >= 0; i--) {
+			var cnt = 0;
+
+			while (true) {
+				var next = new Date(d1.getTime());
+				next["setUTC" + vars[i]](next["getUTC" + vars[i]]() + 1);
+				//bot.out.debug("date", [d1, next, d2]);
+
+				if (next.getTime() <= d2.getTime()) {
+					cnt++;
+					d1 = next;
+				}
+				else
+					break;
+			}
+
+			dur.unshift(cnt);
+		}
+		return dur;
+	};
+
+	self.duration = function(dur) {
+		if (Object.prototype.toString.call(dur) === '[object Array]') // check for Array
+			return self.durationReal(dur[0], dur[1]);
+		else if (Object.prototype.toString.call(dur) === '[object Date]') // check for Date
+			return self.durationReal(dur, new Date());
+		else
+			return self.durationDiff(dur);
 	};
 
 	self.printDur = function(dt, trim, limit) {

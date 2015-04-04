@@ -266,7 +266,7 @@ function StalkerPlugin(bot) {
 
 				for (var i = 0; i < tosort.length && i < 10; i++) {
 					var row = tosort[i];
-					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + bot.plugins.date.printDateTime(row.seen) + " (" + bot.plugins.date.printDur(Date.now() - row.seen, "second") + " ago)");
+					bot.notice(nick, row.nick + "!" + row.user + "@" + row.host + " seen " + bot.plugins.date.printDateTime(row.seen) + " (" + bot.plugins.date.printDur(row.seen, "second") + " ago)");
 				}
 			}
 		},
@@ -284,7 +284,7 @@ function StalkerPlugin(bot) {
 				}
 
 				if (recent !== null) {
-					bot.say(to, nick2 + " seen as " + recent.nick + ": " + bot.plugins.date.printDateTime(recent.seen) + " (" + bot.plugins.date.printDur(Date.now() - recent.seen, "second") + " ago)");
+					bot.say(to, nick2 + " seen as " + recent.nick + ": " + bot.plugins.date.printDateTime(recent.seen) + " (" + bot.plugins.date.printDur(recent.seen, "second") + " ago)");
 				}
 				else
 					bot.say(to, nick2 + " has been never seen");

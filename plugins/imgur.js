@@ -4,10 +4,11 @@ function ImgurPlugin(bot) {
 	var self = this;
 	self.name = "imgur";
 	self.help = "Imgur subreddit galleries plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "etag"];
 
 	self.clientID = null;
 	self.request = null;
+	self.etag = null;
 
 	self.setClientID = function(clientID) {
 		self.clientID = clientID;
@@ -17,13 +18,13 @@ function ImgurPlugin(bot) {
 	self.load = function(data) {
 		if (data)
 			self.setClientID(data.clientID);
+
+		self.etag = new bot.plugins.etag.ETagWrapper();
 	};
 
 	self.save = function() {
 		return {clientID: self.clientID};
 	};
-
-	self.datas = {};
 
 	self.events = {
 		"cmd#gallery": function(nick, to, args) {
@@ -31,26 +32,18 @@ function ImgurPlugin(bot) {
 			var sort = args[2] || "time";
 			var time = args[3] || "week";
 
-			self.request({url: "https://api.imgur.com/3/gallery/r/" + sub + "/" + sort + "/" + time + "/", headers: (sub in self.datas ? {"If-None-Match": self.datas[sub].etag} : {})}, function(err, res, body) {
+			self.request(self.etag.wrap("https://api.imgur.com/3/gallery/r/" + sub + "/" + sort + "/" + time + "/"), self.etag.parse(function(err, res, body) {
 				if (!err) {
-					var data;
-					if (res.statusCode == 200) {
-						data = JSON.parse(body);
-						self.datas[sub] = data;
-						self.datas[sub].etag = res.headers["etag"];
-					}
-					else if (res.statusCode == 304) {
-						data = self.datas[sub];
-					}
+					var data = JSON.parse(body);
 
-					data = data.data;
+					data = data.data; // TODO: make sure property exists
 
 					var i = Math.floor(Math.random() * data.length);
 					var image = data[i];
 					if (image !== undefined)
 						bot.say(to, "[r/" + image.section + "] " + (image.title ? "\x02" + image.title + "\x02: " : "") + image.link + " " + (image.nsfw ? "[\x02NSFW\x02]" : ""));
 				}
-			});
+			}));
 		}
 	};
 }

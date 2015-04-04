@@ -4,28 +4,23 @@ function SpacePeoplePlugin(bot) {
 	var self = this;
 	self.name = "spacepeople";
 	self.help = "Howmanypeopelareinspacerightnow plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "etag"];
 
-	self.data = null;
 	self.etag = null;
+
+	self.load = function(data) {
+		self.etag = new bot.plugins.etag.ETagWrapper();
+	};
 
 	self.events = {
 		"cmd#peopleinspace": function(nick, to, args) {
-			request({url: "http://www.howmanypeopleareinspacerightnow.com/peopleinspace.json", headers: (self.etag ? {"If-None-Match": self.etag} : {})}, function(err, res, body) {
+			request(self.etag.wrap("http://www.howmanypeopleareinspacerightnow.com/peopleinspace.json"), self.etag.parse(function(err, res, body) {
 				if (!err) {
-					var data;
-					if (res.statusCode == 200) {
-						data = JSON.parse(body);
-						self.data = data;
-						self.etag = res.headers["etag"];
-					}
-					else if (res.statusCode == 304) {
-						data = self.data;
-					}
+					var data = JSON.parse(body);
 
 					bot.say(to, "People in space right now: \x02" + data.number + "\x02 (" + data.people.map(function(person) { return "\x02" + person.name + "\x02 [" + person.country + "]"; }).join(", ") + ")");
 				}
-			});
+			}));
 		}
 	};
 }

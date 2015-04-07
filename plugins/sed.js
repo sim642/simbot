@@ -54,7 +54,7 @@ function SedPlugin(bot) {
 		"message": function(nick, to, text) {
 			var m = text.match(self.sedRe);
 			if (m) {
-				bot.out.log("cmd", nick + " in " + to + ": " + m[0]);
+				bot.out.log("sed", nick + " in " + to + ": " + m[0]);
 
 				var sedNick = m[1] || nick;
 				var sedPrere = new RegExp(m[2] || ".*");

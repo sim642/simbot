@@ -9,7 +9,7 @@ require.uncached = function(name) {
 	return require(name);
 };
 
-plugins._load = function(p) {
+plugins._load = function(p, enable) {
 	if (p.depend) {
 		for (var i = 0; i < p.depend.length; i++)
 			this.load(p.depend[i]);
@@ -19,16 +19,24 @@ plugins._load = function(p) {
 	fs.readFile("./data/" + p.name + ".json", function(err, data) {
 		(p.load || function(){})(data ? JSON.parse(data) : undefined);
 		bot.out.ok("plugins", "loaded " + p.name);
-		self._enable(p);
+
+		if (enable !== false) // usual || doesn't work for true value
+			self._enable(p);
 	});
 };
 
 plugins.load = function(name) {
+	var enable = true;
+	if (name[0] === "*") {
+		enable = false;
+		name = name.substr(1);
+	}
+
 	if (!(name in this)) {
 		try {
 			var r = require.uncached("./plugins/" + name);
 			var p = new r(bot);
-			this._load(p);
+			this._load(p, enable);
 		}
 		catch (e) {
 			bot.out.error("plugins", "couldn't load " + name + ": " + e.stack);

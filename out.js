@@ -26,7 +26,7 @@ out.wrapper = function(type, color) {
 				message = util.inspect(message, {colors: true});
 
 			if (print)
-				console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("] ") + message);
+				console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("]") + " " + message);
 
 			out.file.write(out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
 		});

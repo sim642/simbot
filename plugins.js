@@ -18,10 +18,13 @@ plugins._load = function(p, enable) {
 	var self = this;
 	fs.readFile("./data/" + p.name + ".json", function(err, data) {
 		(p.load || function(){})(data ? JSON.parse(data) : undefined);
-		bot.out.ok("plugins", "loaded " + p.name);
 
-		if (enable !== false) // usual || doesn't work for true value
+		if (enable !== false) { // usual || doesn't work for true value
+			bot.out.ok("plugins", "loaded " + p.name);
 			self._enable(p);
+		}
+		else
+			bot.out.warn("plugins", "loaded " + p.name);
 	});
 };
 

@@ -3,7 +3,7 @@ function GreetPlugin(bot) {
 	self.name = "greet";
 	self.help = "Greet plugin";
 	
-	self.midre = /\b(yo(?:[\s-]yo)*|h[ea]l{2,}o+|h[ae]+[jiy]+[aol]*|hi+(?:-?y[ao]+)?|howdy|hola|bonjour|(?:what(?:\')?s\s|s)up|fuck(?:ing|\soff|\syou(?:\stoo|2)?)?)\b/;
+	self.midre = /\b(yo(?:[\s-]yo)*|h[ea]l{2,}o+|h[ae]+[jiy]+[ao]*|hi+(?:-?y[ao]+)?|howdy|hola|bonjour|(?:what(?:\')?s\s|s)up|fuck(?:ing|\soff|\syou(?:\stoo|2)?)?)\b/;
 
 	self.events = {
 		"message": function(nick, to, text) {

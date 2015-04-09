@@ -17,14 +17,14 @@ function GreetPlugin(bot) {
 
 			if (m) {
 				if (m[1] !== undefined)
-					bot.say(to, m[1].replace(bot.nick, nick) + m[2]);
+					bot.say(to, m[1].replace(new RegExp(bot.nick, "i"), nick) + m[2]);
 				else if (m[3] !== undefined)
-					bot.say(to, m[2] + m[3].replace(bot.nick, nick));
+					bot.say(to, m[2] + m[3].replace(new RegExp(bot.nick, "i"), nick));
 			}
 		},
 
 		"action": function(nick, to, text, message) { // undocumented event, message is undefined for no reason
-			var text2 = text.replace(bot.nick, nick);
+			var text2 = text.replace(new RegExp(bot.nick, "i"), nick);
 			if (text != text2) { // something was replaced, simbot was mentioned
 				bot.action(to, text2);
 			}

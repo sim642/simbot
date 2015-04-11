@@ -13,17 +13,32 @@ function GithubPlugin(bot) {
 	self.userRe = /^\w[\w-]+$/;
 	self.repoRe = /^(\w[\w-]+)\/(\w[\w-]+)$/;
 
-	self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
+	self.token = null;
+	self.request = null;
 
 	self.users = {};
+
+	self.setToken = function(token) {
+		if (token) {
+			self.token = token;
+			self.request = request.defaults({auth: {username: self.token}, headers: {"User-Agent": "simbot GitHub"}});
+		}
+		else {
+			self.token = null;
+			self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
+		}
+	};
 
 	self.load = function(data) {
 		if (data && data.users)
 			self.users = data.users;
+
+		self.setToken(data.token);
 	};
 
 	self.save = function() {
 		return {
+			"token": self.token,
 			"users": self.users
 		};
 	};
@@ -77,6 +92,8 @@ function GithubPlugin(bot) {
 
 						output();
 					}
+					else
+						bot.out.error("github", err, body);
 				});
 			}
 			else if (arg.match(self.userRe)) { // user/org
@@ -140,11 +157,15 @@ function GithubPlugin(bot) {
 
 									finish();
 								}
+								else
+									bot.out.error("github", err, body);
 							});
 						}
 						else
 							finish();
 					}
+					else
+						bot.out.error("github", err, body);
 				});
 			}
 			else {

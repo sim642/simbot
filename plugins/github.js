@@ -21,7 +21,7 @@ function GithubPlugin(bot) {
 	self.setToken = function(token) {
 		if (token) {
 			self.token = token;
-			self.request = request.defaults({auth: {username: self.token}, headers: {"User-Agent": "simbot GitHub"}});
+			self.request = request.defaults({auth: {username: self.token + ":x-oauth-basic"}, headers: {"User-Agent": "simbot GitHub"}});
 		}
 		else {
 			self.token = null;

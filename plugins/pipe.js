@@ -36,11 +36,6 @@ function PipePlugin(bot) {
 		}),
 
 		"nocmd": function(nick, to, text, message) {
-			if (to === undefined) {
-				console.log(message); // what's this doing here?
-				return;
-			}
-
 			to = to.toLowerCase();
 			if (to in self.pipes)
 				bot.say(self.pipes[to], text);

@@ -5,6 +5,7 @@
 		"plugins",
 		"channels",
 		"pipe",
+		"znc",
 
 		"nickserv",
 		"pushbullet",

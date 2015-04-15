@@ -36,12 +36,18 @@ function PipePlugin(bot) {
 		}),
 
 		"nocmd": function(nick, to, text, message) {
+			if (to === undefined)
+				return;
+
 			to = to.toLowerCase();
 			if (to in self.pipes)
 				bot.say(self.pipes[to], text);
 		},
 
 		"message": function(nick, to, text) {
+			if (to === undefined)
+				return;
+
 			to = to.toLowerCase();
 			if (to in self.backpipes)
 				bot.say(self.backpipes[to], text);

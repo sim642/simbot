@@ -1,3 +1,5 @@
+var fs = require("fs");
+
 function PluginsPlugin(bot) {
 	var self = this;
 	self.name = "plugins";
@@ -42,7 +44,20 @@ function PluginsPlugin(bot) {
 					list += plugin + " ";
 			}
 			bot.say(to, "Plugins loaded: " + list);
-		})
+		}),
+
+		"cmd#punlist": bot.plugins.auth.proxy(10, function(nick, to, args) {
+			var jsRe = /^(\w+)\.js$/;
+			fs.readdir("./plugins/", function(err, files) {
+				var list = "";
+				files.forEach(function(filename) {
+					var match = filename.match(jsRe);
+					if (match && !(match[1] in bot.plugins))
+						list += match[1] + " ";
+				});
+				bot.say(to, "Plugins unloaded: " + list);
+			});
+		}),
 	};
 }
 

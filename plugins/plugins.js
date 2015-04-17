@@ -38,12 +38,18 @@ function PluginsPlugin(bot) {
 		}),
 
 		"cmd#plist": bot.plugins.auth.proxy(10, function(nick, to, args) {
+			var enabled = null;
+			if (args[1] == "enabled")
+				enabled = true;
+			else if (args[1] == "disabled")
+				enabled = false;
+
 			var list = "";
 			for (var plugin in bot.plugins) {
-				if (bot.plugins[plugin].name)
+				if (bot.plugins[plugin].name && (enabled === null || bot.plugins[plugin].enabled === enabled))
 					list += plugin + " ";
 			}
-			bot.say(to, "Plugins loaded: " + list);
+			bot.say(to, "Plugins " + (enabled === null ? "loaded" : (enabled ? "enabled" : "disabled")) + ": " + list);
 		}),
 
 		"cmd#punlist": bot.plugins.auth.proxy(10, function(nick, to, args) {

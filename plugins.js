@@ -39,6 +39,7 @@ plugins.load = function(name) {
 		try {
 			var r = require.uncached("./plugins/" + name);
 			var p = new r(bot);
+			p.enabled = false;
 			this._load(p, enable);
 		}
 		catch (e) {
@@ -57,6 +58,7 @@ plugins.loadEvents = function(events) {
 plugins._enable = function(p) {
 	this.loadEvents(p.events);
 	(p.enable || function(){})();
+	p.enabled = true;
 };
 
 plugins.enable = function(name) {
@@ -95,6 +97,7 @@ plugins.unloadEvents = function(events) {
 plugins._disable = function(p) {
 	(p.disable || function(){})();
 	this.unloadEvents(p.events);
+	p.enabled = false;
 };
 
 plugins.disable = function(name) {

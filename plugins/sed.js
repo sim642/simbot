@@ -61,7 +61,7 @@ function SedPlugin(bot) {
 				var sedRe = new RegExp(m[4], m[6]);
 				var sedRepl = self.strUnescape(m[5]);
 
-				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick));
+				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick), "i");
 
 				var cnt = 0;
 				bot.plugins.history.iterate(to, function(line) {

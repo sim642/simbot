@@ -1,0 +1,10 @@
+{
+    "urlSort": "hot",
+    "urlTime": "week",
+    "channels": [
+        "#channel1"
+    ],
+    "ignores": [
+        "*!pipey@*"
+    ]
+}

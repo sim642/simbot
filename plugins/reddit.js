@@ -8,12 +8,15 @@ function RedditPlugin(bot) {
 	self.depend = ["cmd", "ignore", "date"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
-	self.redditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\//i;
+	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\//i;
 	self.urlSort = "hot";
 	self.urlTime = "week";
 
 	self.channels = [];
 	self.ignores = [];
+
+	self.tickers = {};
+	self.interval = null;
 
 	self.request = request.defaults({headers: {"User-Agent": "simbot reddit 1.0"}});
 
@@ -22,10 +25,30 @@ function RedditPlugin(bot) {
 		self.urlTime = data.urlTime;
 		self.channels = data.channels;
 		self.ignores = data.ignores;
+		self.tickers = data.tickers || {};
+	};
+
+	self.enable = function() {
+		self.tickerCheck();
+		self.interval = setInterval(self.tickerCheck, 1 * 60 * 1000);
+	};
+
+	self.disable = function() {
+		clearInterval(self.interval);
+		self.interval = null;
 	};
 
 	self.save = function() {
-		return {urlSort: self.urlSort, urlTime: self.urlTime, channels: self.channels, ignores: self.ignores};
+		var tickers = {};
+		for (var listing in self.tickers)
+			tickers[listing] = {channels: self.tickers[listing].channels};
+
+		return {
+			urlSort: self.urlSort,
+			urlTime: self.urlTime,
+			channels: self.channels,
+			ignores: self.ignores,
+			tickers: tickers};
 	};
 
 	self.formatPost = function(post) {
@@ -33,6 +56,17 @@ function RedditPlugin(bot) {
 		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + post.title + "\x02 [r/" + post.subreddit + "] by " + post.author + " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
 
 		return str;
+	};
+
+	self.formatComment = function(comment) {
+		var warning = false ? " \x034[NSFW]\x03" : "";
+		var str = "\x1F" + comment.link_url + "comments/" + comment.id + "\x1F" + warning + " : \x02" + comment.link_title + "\x02 [r/" + comment.subreddit + "] by " + comment.author + " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
+
+		return str;
+	};
+
+	self.format = function(item) {
+		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data);
 	};
 
 	self.cleanUrl = function(lurl) {
@@ -73,7 +107,52 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookup = function(url, callback) {
-		(url.match(self.redditRe) ? self.lookupReddit : self.lookupOther)(url, callback);
+		(url.match(self.urlRedditRe) ? self.lookupReddit : self.lookupOther)(url, callback);
+	};
+
+	self.tickerStart = function(listing, channels) {
+		self.tickerStop(listing);
+
+		self.tickers[listing] = {
+			channels: channels
+		};
+	};
+
+	self.tickerStop = function(listing) {
+		delete self.tickers[listing];
+	};
+
+	self.tickerCheck = function() {
+		for (var listing in self.tickers) {
+			(function(listing) {
+				self.request(listing, function(err, res, body) {
+					if (!err && res.statusCode == 200) {
+						var list = JSON.parse(body).data.children;
+						var pList = self.tickers[listing].pList;
+
+						if (pList) {
+							for (var i = list.length - 1; i >= 0; i--) {
+								var found = false;
+								for (var j = 0; j < pList.length; j++) {
+									if (pList[j].kind == list[i].kind && pList[j].data.id == list[i].data.id) {
+										found = true;
+										break;
+									}
+								}
+
+								if (!found) {
+									self.tickers[listing].channels.forEach(function(to) {
+										bot.say(to, self.format(list[i]));
+									});
+								}
+							}
+						}
+
+						self.tickers[listing].pList = list;
+					}
+				});
+			})(listing);
+		}
 	};
 
 	self.events = {

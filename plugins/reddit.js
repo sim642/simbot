@@ -125,7 +125,7 @@ function RedditPlugin(bot) {
 	self.tickerCheck = function() {
 		for (var listing in self.tickers) {
 			(function(listing) {
-				self.request(listing, function(err, res, body) {
+				self.request("https://www.reddit.com" + listing + ".json", function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var list = JSON.parse(body).data.children;
 						var pList = self.tickers[listing].pList;

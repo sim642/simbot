@@ -37,6 +37,7 @@ function HelpPlugin(bot) {
 	self.unescapeHtml = function(html) {
 		return html.replace(/&([#\w]+);/g, function(_, n) {
 			n = n.toLowerCase();
+			if (n === 'amp') return '&';
 			if (n === 'colon') return ':';
 			if (n === 'lt') return '<';
 			if (n === 'gt') return '>';

@@ -51,16 +51,33 @@ function RedditPlugin(bot) {
 			tickers: tickers};
 	};
 
+	self.unescapeHtml = function(html) {
+		return html.replace(/&([#\w]+);/g, function(_, n) {
+			n = n.toLowerCase();
+			if (n === 'amp') return '&';
+			if (n === 'colon') return ':';
+			if (n === 'lt') return '<';
+			if (n === 'gt') return '>';
+			if (n === 'quot') return '"';
+			if (n.charAt(0) === '#') {
+				return n.charAt(1) === 'x' ?
+					String.fromCharCode(parseInt(n.substring(2), 16)) :
+					String.fromCharCode(+n.substring(1));
+			}
+			return '';
+		});
+	};
+
 	self.formatPost = function(post) {
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + post.title + "\x02 [r/" + post.subreddit + "] by " + post.author + " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
+		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author + " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
 
 		return str;
 	};
 
 	self.formatComment = function(comment) {
 		var warning = false ? " \x034[NSFW]\x03" : "";
-		var str = "\x1F" + comment.link_url + "comments/" + comment.id + "\x1F" + warning + " : \x02" + comment.link_title + "\x02 [r/" + comment.subreddit + "] by " + comment.author + " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
+		var str = "\x1F" + comment.link_url + "comments/" + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(comment.link_title) + "\x02 [r/" + comment.subreddit + "] by " + comment.author + " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
 
 		return str;
 	};

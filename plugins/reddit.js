@@ -77,7 +77,7 @@ function RedditPlugin(bot) {
 
 	self.formatComment = function(comment) {
 		var warning = false ? " \x034[NSFW]\x03" : "";
-		var str = "\x1F" + comment.link_url + "comments/" + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(comment.link_title) + "\x02 [r/" + comment.subreddit + "] by " + comment.author + " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
+		var str = "\x1Fhttp://reddit.com/r/" + comment.subreddit + "/comments/" + comment.link_id + "//" + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(comment.link_title) + "\x02 [r/" + comment.subreddit + "] by " + comment.author + " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
 
 		return str;
 	};

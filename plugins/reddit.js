@@ -41,7 +41,7 @@ function RedditPlugin(bot) {
 	self.save = function() {
 		var tickers = {};
 		for (var listing in self.tickers)
-			tickers[listing] = {channels: self.tickers[listing].channels};
+			tickers[listing] = {channels: self.tickers[listing].channels, short: self.tickers[listing].short};
 
 		return {
 			urlSort: self.urlSort,
@@ -68,22 +68,32 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.formatPost = function(post) {
+	self.formatPost = function(post, short) {
+		short = short || false;
+
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author + " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
+		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
+
+		if (!short)
+			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
 
 		return str;
 	};
 
-	self.formatComment = function(comment) {
+	self.formatComment = function(comment, short) {
+		short = short || false;
+
 		var warning = false ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://reddit.com/r/" + comment.subreddit + "/comments/" + comment.link_id.replace(/^t3_/, "") + "//" + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(comment.link_title) + "\x02 [r/" + comment.subreddit + "] by " + comment.author + " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
+		var str = "\x1Fhttp://reddit.com/r/" + comment.subreddit + "/comments/" + comment.link_id.replace(/^t3_/, "") + "//" + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(comment.link_title) + "\x02 [r/" + comment.subreddit + "] by " + comment.author;
+
+		if (!short)
+			str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
 
 		return str;
 	};
 
-	self.format = function(item) {
-		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data);
+	self.format = function(item, short) {
+		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data, short || false);
 	};
 
 	self.cleanUrl = function(lurl) {
@@ -127,11 +137,12 @@ function RedditPlugin(bot) {
 		(url.match(self.urlRedditRe) ? self.lookupReddit : self.lookupOther)(url, callback);
 	};
 
-	self.tickerStart = function(listing, channels) {
+	self.tickerStart = function(listing, channels, short) {
 		self.tickerStop(listing);
 
 		self.tickers[listing] = {
-			channels: channels
+			channels: channels,
+			short: short || false
 		};
 	};
 
@@ -159,7 +170,7 @@ function RedditPlugin(bot) {
 
 								if (!found) {
 									self.tickers[listing].channels.forEach(function(to) {
-										bot.say(to, self.format(list[i]));
+										bot.say(to, self.format(list[i], self.tickers[listing].short));
 									});
 								}
 							}

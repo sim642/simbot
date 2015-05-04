@@ -68,7 +68,7 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.formatPost = function(post, short) {
+	self.formatPost = function(post, short, callback) {
 		short = short || false;
 
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
@@ -77,23 +77,29 @@ function RedditPlugin(bot) {
 		if (!short)
 			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
 
-		return str;
+		callback(str);
 	};
 
-	self.formatComment = function(comment, short) {
+	self.formatComment = function(comment, short, callback) {
 		short = short || false;
 
-		var warning = false ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://reddit.com/r/" + comment.subreddit + "/comments/" + comment.link_id.replace(/^t3_/, "") + "//" + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(comment.link_title) + "\x02 [r/" + comment.subreddit + "] by " + comment.author;
+		self.request("https://www.reddit.com/by_id/" + comment.link_id + ".json", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var post = JSON.parse(body).data.children[0].data;
 
-		if (!short)
-			str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
+				var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
+				var str = "\x1Fhttp://reddit.com/" + post.permalink + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
 
-		return str;
+				if (!short)
+					str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
+
+				callback(str);
+			}
+		});
 	};
 
-	self.format = function(item, short) {
-		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data, short || false);
+	self.format = function(item, short, callback) {
+		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data, short, callback);
 	};
 
 	self.cleanUrl = function(lurl) {
@@ -112,7 +118,9 @@ function RedditPlugin(bot) {
 					var post = results[i].data;
 
 					if (post.url.indexOf(lurl) >= 0) { // actually contains link (prevent reddit search stupidity)
-						(callback || function(){})(self.formatPost(post));
+						self.formatPost(post, false, function(str) {
+							callback(str);
+						});
 						break;
 					}
 				}
@@ -127,7 +135,9 @@ function RedditPlugin(bot) {
 				var results = data.children;
 
 				if (results.length > 0) {
-					(callback || function(){})(self.formatPost(results[0].data));
+					self.formatPost(results[0].data, false, function(str) {
+						callback(str);
+					});
 				}
 			}
 		});
@@ -170,7 +180,9 @@ function RedditPlugin(bot) {
 
 								if (!found) {
 									self.tickers[listing].channels.forEach(function(to) {
-										bot.say(to, self.format(list[i], self.tickers[listing].short));
+										self.format(list[i], self.tickers[listing].short, function(str) {
+											bot.say(to, str);
+										});
 									});
 								}
 							}

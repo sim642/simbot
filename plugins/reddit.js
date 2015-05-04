@@ -8,7 +8,7 @@ function RedditPlugin(bot) {
 	self.depend = ["cmd", "ignore", "date"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
-	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\//i;
+	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+))?/i;
 	self.urlSort = "hot";
 	self.urlTime = "week";
 
@@ -88,7 +88,7 @@ function RedditPlugin(bot) {
 				var post = JSON.parse(body).data.children[0].data;
 
 				var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-				var str = "\x1Fhttp://reddit.com/" + post.permalink + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
+				var str = "\x1Fhttp://reddit.com" + post.permalink + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
 
 				if (!short)
 					str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
@@ -129,13 +129,15 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookupReddit = function(rurl, callback) {
+		var match = rurl.match(self.urlRedditRe);
+		var isComment = match[3] !== undefined;
 		self.request(self.cleanUrl(rurl) + ".json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
-				var data = JSON.parse(body)[0].data;
+				var data = JSON.parse(body)[+isComment].data;
 				var results = data.children;
 
 				if (results.length > 0) {
-					self.formatPost(results[0].data, false, function(str) {
+					self.format(results[0], false, function(str) {
 						callback(str);
 					});
 				}

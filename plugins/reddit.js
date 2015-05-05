@@ -5,7 +5,7 @@ function RedditPlugin(bot) {
 	var self = this;
 	self.name = "reddit";
 	self.help = "Reddit plugin";
-	self.depend = ["cmd", "ignore", "date"];
+	self.depend = ["cmd", "ignore", "date", "bitly"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
 	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+))?/i;
@@ -87,13 +87,16 @@ function RedditPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var post = JSON.parse(body).data.children[0].data;
 
-				var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-				var str = "\x1Fhttp://reddit.com" + post.permalink + comment.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
+				var longurl = "http://reddit.com" + post.permalink + comment.id;
+				bot.plugins.bitly.shorten(longurl, function(shorturl) {
+					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
+					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
 
-				if (!short)
-					str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
+					if (!short)
+						str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
 
-				callback(str);
+					callback(str);
+				});
 			}
 		});
 	};

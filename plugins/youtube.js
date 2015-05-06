@@ -6,6 +6,8 @@ function YoutubePlugin(bot) {
 	self.name = "youtube";
 	self.help = "Youtube plugin";
 	self.depend = ["cmd", "ignore"];
+
+	self.apiKey = null;
 	
 	self.vidre = new RegExp('(?:youtube(?:-nocookie)?\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/)([^"&?/ ]{11})(?:[?#]t=((?:\\d+[hms])+))?', "i");
 
@@ -13,12 +15,13 @@ function YoutubePlugin(bot) {
 	self.ignores = [];
 
 	self.load = function(data) {
+		self.apiKey = data.apiKey || null;
 		self.channels = data.channels;
 		self.ignores = data.ignores;
 	};
 
 	self.save = function() {
-		return {channels: self.channels, ignores: self.ignores};
+		return {apiKey: self.apiKey, channels: self.channels, ignores: self.ignores};
 	};
 
 	// http://www.mredkj.com/javascript/numberFormat.html#addcommas
@@ -35,16 +38,22 @@ function YoutubePlugin(bot) {
 	};
 
 	self.duration = function(t) {
+		var re = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
+		var match = t.match(re);
+
+		if (!match) {
+			bot.out.warn("youtube", "weird duration: " + t);
+			return t.replace("P", "").replace("T", " ").toLowerCase();
+		}
+
 		var str = "";
-		str = ("0" + (t % 60).toString()).slice(-2);
-		t = Math.floor(t / 60);
-		if (t > 0) {
-			str = (t % 60).toString() + ":" + str;
-			t = Math.floor(t / 60);
-			if (t > 0) {
+		str = ("0" + match[3]).slice(-2);
+		if (match[2]) {
+			str = match[2] + ":" + str;
+			if (match[1]) { // BUG: might not be reached when there's exactly seconds and hours but no minutes
 				if (str.length < 5)
 					str = "0" + str;
-				str = t.toString() + ":" + str;
+				str = match[1] + ":" + str;
 			}
 		}
 		else
@@ -53,12 +62,10 @@ function YoutubePlugin(bot) {
 	};
 
 	self.format = function(data, time, callback) {
-		var views = data["yt$statistics"] ? data["yt$statistics"].viewCount : 0;
-		var id = data.id["$t"].split(":")[3]; // hacky way to parse video id out of given result to use in link
-		var str = "\x1Fhttps://youtu.be/" + id + (time ? "?t=" + time : "") + "\x1F : \x02" + data.title["$t"] + "\x02 [" + self.duration(data["media$group"]["yt$duration"].seconds) + "] by " + data.author[0].name["$t"] + "; " + self.thseps(views.toString()) + " views";
-		if (data["yt$rating"] !== undefined) {
-			var likes = parseFloat(data["yt$rating"].numLikes);
-			var dislikes = parseFloat(data["yt$rating"].numDislikes);
+		var str = "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : \x02" + data.snippet.title + "\x02 [" + self.duration(data.contentDetails.duration) + "] by " + data.snippet.channelTitle + "; " + self.thseps(data.statistics.viewCount.toString()) + " views";
+		if (data.statistics !== undefined) {
+			var likes = parseFloat(data.statistics.likeCount);
+			var dislikes = parseFloat(data.statistics.dislikeCount);
 			var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03"; 
 			str += "; " + bar;
 		}
@@ -66,20 +73,39 @@ function YoutubePlugin(bot) {
 	};
 
 	self.lookup = function(match, callback) {
-		request("https://gdata.youtube.com/feeds/api/videos/" + match[1] + "?v=2&alt=json", function(err, res, body) {
+		request({
+				uri: "https://www.googleapis.com/youtube/v3/videos",
+				qs: {
+					part: "id,snippet,contentDetails,statistics,status",
+					id: match[1],
+					key: self.apiKey
+				}
+			}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
-				var data = JSON.parse(body).entry;
-				self.format(data, match[2], callback);
+				var data = JSON.parse(body).items;
+				if (data[0] !== undefined)
+					self.format(data[0], match[2], callback);
+				else
+					(callback || function(){})("'\x02" + match[1] + "\x02' is an invalid video ID");
 			}
 		});
 	};
 
 	self.search = function(query, callback) {
-		request("https://gdata.youtube.com/feeds/api/videos/?v=2&alt=json&max-results=1&q=" + querystring.escape(query), function(err, res, body) {
+		request({
+				uri: "https://www.googleapis.com/youtube/v3/search",
+				qs: {
+					part: "id",
+					maxResults: 1,
+					type: "video",
+					q: query,
+					key: self.apiKey
+				}
+			}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
-				var data = JSON.parse(body).feed;
-				if (data.entry !== undefined)
-					self.format(data.entry[0], null, callback);
+				var data = JSON.parse(body).items;
+				if (data[0] !== undefined)
+					self.lookup([, data[0].id.videoId, ], callback); // ugly match imitating syntax
 				else
 					(callback || function(){})("'\x02" + query + "\x02' returned no videos");
 			}

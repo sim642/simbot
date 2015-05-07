@@ -15,22 +15,7 @@ function SedPlugin(bot) {
 		try {
 			return str.replace(/\\(?:([bfnrtv0])|u([0-9A-Fa-f]{4})|x([0-9A-Fa-f]{2})|([^bfnrtv0ux]))/g, function(m, s, u, x, o) {
 				if (s) {
-					switch (s) {
-					case "b":
-						return "\b";
-					case "f":
-						return "\f";
-					case "n":
-						return "\n";
-					case "r":
-						return "\r";
-					case "t":
-						return "\t";
-					case "v":
-						return "\v";
-					case "0":
-						return "\0";
-					}
+					return eval("'\\" + s + "'");
 				}
 				else if (u) {
 					return String.fromCharCode(parseInt(u, 16));

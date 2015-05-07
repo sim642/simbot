@@ -105,7 +105,7 @@ plugins.disable = function(name) {
 };
 
 plugins.reload = function(name) {
-	this.unload(name);
+	this.unload(name.replace(/^\*/, ""));
 	this.load(name);
 };
 

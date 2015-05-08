@@ -5,14 +5,17 @@ function AuthPlugin(bot) {
 	self.depend = ["cmd", "nickserv", "watch"];
 
 	self.accounts = {};
+	self.channels = {};
+
 	self.nicks = {};
 
 	self.load = function(data) {
-		self.accounts = data;
+		self.accounts = data.accounts;
+		self.channels = data.channels;
 	};
 
 	self.save = function() {
-		return self.accounts;
+		return {accounts: self.accounts, channels: self.channels};
 	};
 
 	self.match = function(cur, mask) {
@@ -58,6 +61,25 @@ function AuthPlugin(bot) {
 		return level;
 	};
 
+	self.findChannel = function(chan, nick) {
+		var level = 0;
+
+		if (nick in bot.chans[chan].users) {
+			var modes = bot.chans[chan].users[nick];
+
+			for (var key in self.channels) {
+				var channel = self.channels[key];
+				if (self.match(chan, key)) { // match channels with wildcards
+					for (var i = 0; i < modes.length; i++) {
+						level = Math.max(level, channel[bot.modeForPrefix[modes[i]]] || 0);
+					}
+				}
+			}
+		}
+
+		return level;
+	};
+
 	self.getLevel = function(message, callback) {
 		var nick = message.nick;
 		var level = 0;
@@ -84,8 +106,19 @@ function AuthPlugin(bot) {
 
 					callback(level, "nickserv");
 				}
-				else
-					callback(level, "none");
+				else {
+					if (!message.authChannel) { // fill in current channel as target
+						if (message.command == "PRIVMSG" || message.command == "NOTICE")
+							message.authChannel = message.args[0];
+					}
+
+					level = self.findChannel(message.authChannel, nick);
+
+					if (level > 0)
+						callback(level, "channel");
+					else
+						callback(level, "none");
+				}
 			});
 		}
 	};

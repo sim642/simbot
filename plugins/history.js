@@ -114,7 +114,7 @@ function HistoryPlugin(bot) {
 			});
 		},
 
-		"cmd#historycount": bot.plugins.auth.proxy(6, function(nick, to, args) {
+		"cmd#historycount": bot.plugins.auth.proxyEvent(6, function(nick, to, args) {
 			var channel = to;
 			var re = null;
 

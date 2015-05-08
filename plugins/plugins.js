@@ -7,37 +7,37 @@ function PluginsPlugin(bot) {
 	self.depend = ["cmd", "auth"];
 
 	self.events = {
-		"cmd#pload": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#pload": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.load(args[1]);
 			bot.say(to, "Plugin " + args[1] + " loaded");
 		}),
 
-		"cmd#psave": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#psave": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.save(args[1]);
 			bot.say(to, "plugin " + args[1] + " saved");
 		}),
 
-		"cmd#punload": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#punload": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.unload(args[1]);
 			bot.say(to, "plugin " + args[1] + " unloaded");
 		}),
 
-		"cmd#preload": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#preload": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.reload(args[1]);
 			bot.say(to, "Plugin " + args[1] + " reloaded");
 		}),
 
-		"cmd#penable": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#penable": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.enable(args[1]);
 			bot.say(to, "Plugin " + args[1] + " enabled");
 		}),
 
-		"cmd#pdisable": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#pdisable": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.disable(args[1]);
 			bot.say(to, "Plugin " + args[1] + " disabled");
 		}),
 
-		"cmd#plist": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#plist": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			var enabled = null;
 			if (args[1] == "enabled")
 				enabled = true;
@@ -52,7 +52,7 @@ function PluginsPlugin(bot) {
 			bot.say(to, "Plugins " + (enabled === null ? "loaded" : (enabled ? "enabled" : "disabled")) + ": " + list);
 		}),
 
-		"cmd#punlist": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#punlist": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			var jsRe = /^(\w+)\.js$/;
 			fs.readdir("./plugins/", function(err, files) {
 				var list = "";

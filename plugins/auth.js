@@ -129,12 +129,18 @@ function AuthPlugin(bot) {
 		});
 	};
 
-	self.proxy = function(reqLevel, listener) {
+	self.proxy = function(reqLevel, message, callback) {
+		self.check(reqLevel, message, function(check) {
+			if (check)
+				callback();
+		});
+	};
+
+	self.proxyEvent = function(reqLevel, listener) {
 		return function(nick, to, args, message) {
 			var args = Array.prototype.slice.call(arguments);
-			self.check(reqLevel, args[args.length - 1], function(check) {
-				if (check)
-					listener.apply(listener, args);
+			self.proxy(reqLevel, args[args.length - 1], function() {
+				listener.apply(listener, args);
 			});
 		};
 	};

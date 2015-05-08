@@ -31,7 +31,7 @@ function BitlyPlugin(bot) {
 	};
 
 	self.events = {
-		"cmd#bitly": bot.plugins.auth.proxy(6, function(nick, to, args) {
+		"cmd#bitly": bot.plugins.auth.proxyEvent(7, function(nick, to, args) {
 			self.shorten(args[1], function(shorturl) {
 				bot.say(to, args[1] + " -> " + shorturl);
 			});

@@ -32,7 +32,7 @@ function REPLPlugin(bot) {
 			}
 		},
 		
-		"cmd#>>": bot.plugins.auth.proxy(10, function(nick, to, args) {
+		"cmd#>>": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			try {
 				var ret = vm.runInContext(args[0], self.globalContext);
 				self.globalContext._ = ret;

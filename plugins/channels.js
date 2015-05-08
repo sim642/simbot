@@ -37,48 +37,57 @@ function ChannelsPlugin(bot) {
 				bot.join(args[i]);
 		},
 
-		"cmd#part": function(nick, to, args) {
-			if (args.length > 1) {
-				for (var i = 1; i < args.length; i++)
-					bot.part(args[i]);
-			}
-			else
-				bot.part(to);
+		"cmd#part": function(nick, to, args, message) {
+			var chans = args.slice(1);
+			if (chans.length == 0)
+				chans.push(to);
+
+			chans.forEach(function(chan) {
+				message.authChannel = chan;
+				bot.plugins.auth.proxy(3, message, function() {
+					bot.part(chan);
+				});
+			});
 		},
 
-		"cmd#cycle": function(nick, to, args) {
-			if (args.length > 1) {
-				for (var i = 1; i < args.length; i++) {
-					bot.part(args[i]);
-					bot.join(args[i]);
-				}
-			}
-			else {
-				bot.part(to);
-				bot.join(to);
-			}
-		},
+		"cmd#cycle": function(nick, to, args, message) {
+			var chans = args.slice(1);
+			if (chans.length == 0)
+				chans.push(to);
 
-		"cmd#autojoin": bot.plugins.auth.proxy(6, function(nick, to, args) {
-			var chan = args[1] || to;
-			var i = self.autojoins.indexOf(chan);
-			if (i != -1) {
-				self.autojoins.splice(i, 1);
-				bot.say(to, "not autojoining " + chan);
-			}
-			else {
-				self.autojoins.push(chan);
-				bot.say(to, "autojoining " + chan);
-				if (!(chan in bot.chans))
+			chans.forEach(function(chan) {
+				message.authChannel = chan;
+				bot.plugins.auth.proxy(3, message, function() {
+					bot.part(chan);
 					bot.join(chan);
-			}
-		}),
+				});
+			});
+		},
 
-		"cmd#autojoins": bot.plugins.auth.proxy(6, function(nick, to, args) {
+		"cmd#autojoin": function(nick, to, args, message) {
+			var chan = args[1] || to;
+			message.authChannel = chan;
+
+			bot.plugins.auth.proxy(3, message, function() {
+				var i = self.autojoins.indexOf(chan);
+				if (i != -1) {
+					self.autojoins.splice(i, 1);
+					bot.say(to, "not autojoining " + chan);
+				}
+				else {
+					self.autojoins.push(chan);
+					bot.say(to, "autojoining " + chan);
+					if (!(chan in bot.chans))
+						bot.join(chan);
+				}
+			});
+		},
+
+		"cmd#autojoins": bot.plugins.auth.proxyEvent(6, function(nick, to, args) {
 			bot.say(to, "autojoins: " + self.autojoins.join(", "));
 		}),
 
-		"cmd#channels": bot.plugins.auth.proxy(6, function(nick, to, args) {
+		"cmd#channels": bot.plugins.auth.proxyEvent(6, function(nick, to, args) {
 			bot.say(to, "channels: " + Object.keys(bot.chans).join(", "));
 		}),
 

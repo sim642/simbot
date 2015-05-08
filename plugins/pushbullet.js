@@ -259,7 +259,7 @@ function PushbulletPlugin(bot) {
 			bot.emit("pushbullet#subscription#" + push.sender_name, push, live);
 		},
 
-		"cmd#pushbullet": bot.plugins.auth.proxy(6, function(nick, to, args) {
+		"cmd#pushbullet": bot.plugins.auth.proxyEvent(7, function(nick, to, args) {
 			self.pushnote(args[1], args[2], args[3], function(err) {
 				if (err)
 					bot.notice(nick, "error sending pushbullet");

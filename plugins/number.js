@@ -16,7 +16,7 @@ function NumberPlugin(bot) {
 	};
 
 	self.events = {
-		"cmd#resetnumber": bot.plugins.auth.proxy(6, function(nick, to, args) {
+		"cmd#resetnumber": bot.plugins.auth.proxyEvent(6, function(nick, to, args) {
 			self.number = 0;
 			bot.say(to, "The number has been reset to " + self.number);
 		}),

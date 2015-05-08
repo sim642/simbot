@@ -60,7 +60,7 @@ function VotePlugin(bot) {
 				if (nick == self.votes[to].by)
 					self.voteend(to);
 				else {
-					bot.plugins.auth.check(5, message, function(check) {
+					bot.plugins.auth.check(2, message, function(check) {
 						if (check)
 							self.voteend(to);
 						else

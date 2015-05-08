@@ -8,7 +8,7 @@ function PipePlugin(bot) {
 	self.backpipes = {};
 
 	self.events = {
-		"cmd#pipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
+		"cmd#pipe": bot.plugins.auth.proxyEvent(8, function(nick, to, args) {
 			to = to.toLowerCase();
 			args[1] = args[1].toLowerCase();
 			if (to in self.pipes && (self.pipes[to] in self.backpipes))
@@ -18,7 +18,7 @@ function PipePlugin(bot) {
 			bot.notice(to, "Now piping to " + args[1]);
 		}),
 
-		"cmd#owpipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
+		"cmd#owpipe": bot.plugins.auth.proxyEvent(8, function(nick, to, args) {
 			to = to.toLowerCase();
 			args[1] = args[1].toLowerCase();
 			if (to in self.pipes && (self.pipes[to] in self.backpipes))
@@ -27,7 +27,7 @@ function PipePlugin(bot) {
 			bot.notice(to, "Now owpiping to " + args[1]);
 		}),
 
-		"cmd#unpipe": bot.plugins.auth.proxy(8, function(nick, to, args) {
+		"cmd#unpipe": bot.plugins.auth.proxyEvent(8, function(nick, to, args) {
 			to = to.toLowerCase();
 			if (self.pipes[to] in self.backpipes)
 				delete self.backpipes[self.pipes[to]];
@@ -79,7 +79,7 @@ function PipePlugin(bot) {
 				bot.notice(self.backpipes[to], text);
 		},
 
-		"cmd#msg": bot.plugins.auth.proxy(8, function(nick, to, args) {
+		"cmd#msg": bot.plugins.auth.proxyEvent(8, function(nick, to, args) {
 			var parts = args[0].split(":", 2);
 			if (parts.length == 2)
 				bot.say(parts[0].trim(), parts[1].trim());
@@ -87,7 +87,7 @@ function PipePlugin(bot) {
 				bot.say(to, parts[0].trim());
 		}),
 
-		"cmd#me": bot.plugins.auth.proxy(8, function(nick, to, args) {
+		"cmd#me": bot.plugins.auth.proxyEvent(8, function(nick, to, args) {
 			var parts = args[0].split(":", 2);
 			if (parts.length == 2)
 				bot.action(parts[0].trim(), parts[1].trim());
@@ -95,7 +95,7 @@ function PipePlugin(bot) {
 				bot.action(to, parts[0].trim());
 		}),
 
-		"cmd#notice": bot.plugins.auth.proxy(8, function(nick, to, args) {
+		"cmd#notice": bot.plugins.auth.proxyEvent(8, function(nick, to, args) {
 			var parts = args[0].split(":", 2);
 			if (parts.length == 2)
 				bot.notice(parts[0].trim(), parts[1].trim());

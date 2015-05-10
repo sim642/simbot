@@ -5,7 +5,7 @@ function HelpPlugin(bot) {
 	var self = this;
 	self.name = "help";
 	self.help = "Help plugin";
-	self.depend = ["cmd"];
+	self.depend = ["cmd", "util"];
 
 	self.github = "https://github.com/sim642/simbot";
 	self.githubRaw = "https://raw.githubusercontent.com/wiki/sim642/simbot";
@@ -32,23 +32,6 @@ function HelpPlugin(bot) {
 	self.ircRenderer.link = function(href, title, text) {
 		bot.out.debug("help", [href, title, text]);
 		return title;
-	};
-
-	self.unescapeHtml = function(html) {
-		return html.replace(/&([#\w]+);/g, function(_, n) {
-			n = n.toLowerCase();
-			if (n === 'amp') return '&';
-			if (n === 'colon') return ':';
-			if (n === 'lt') return '<';
-			if (n === 'gt') return '>';
-			if (n === 'quot') return '"';
-			if (n.charAt(0) === '#') {
-				return n.charAt(1) === 'x' ?
-					String.fromCharCode(parseInt(n.substring(2), 16)) :
-					String.fromCharCode(+n.substring(1));
-			}
-			return '';
-		});
 	};
 
 	self.events = {
@@ -98,7 +81,7 @@ function HelpPlugin(bot) {
 										if (listItem) {
 											var text = tokens[i].text;
 											if (text.match(re))
-												bot.notice(nick, self.unescapeHtml(marked(text, { renderer: self.ircRenderer, sanitize: true})));
+												bot.notice(nick, bot.plugins.util.unescapeHtml(marked(text, { renderer: self.ircRenderer, sanitize: true})));
 										}
 										break;
 									}

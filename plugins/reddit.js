@@ -5,7 +5,7 @@ function RedditPlugin(bot) {
 	var self = this;
 	self.name = "reddit";
 	self.help = "Reddit plugin";
-	self.depend = ["cmd", "ignore", "date", "bitly"];
+	self.depend = ["cmd", "ignore", "date", "bitly", "util"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
 	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+))?/i;
@@ -51,28 +51,12 @@ function RedditPlugin(bot) {
 			tickers: tickers};
 	};
 
-	self.unescapeHtml = function(html) {
-		return html.replace(/&([#\w]+);/g, function(_, n) {
-			n = n.toLowerCase();
-			if (n === 'amp') return '&';
-			if (n === 'colon') return ':';
-			if (n === 'lt') return '<';
-			if (n === 'gt') return '>';
-			if (n === 'quot') return '"';
-			if (n.charAt(0) === '#') {
-				return n.charAt(1) === 'x' ?
-					String.fromCharCode(parseInt(n.substring(2), 16)) :
-					String.fromCharCode(+n.substring(1));
-			}
-			return '';
-		});
-	};
 
 	self.formatPost = function(post, short, callback) {
 		short = short || false;
 
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
+		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
 
 		if (!short)
 			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
@@ -90,7 +74,7 @@ function RedditPlugin(bot) {
 				var longurl = "http://reddit.com" + post.permalink + comment.id;
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
 					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + self.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
+					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
 
 					if (!short)
 						str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";

@@ -16,5 +16,5 @@ npm-debug.log
 node_modules/
 crap/
 data/
-plugins/*/*
+plugins/units*/
 config.json

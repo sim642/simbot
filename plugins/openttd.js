@@ -4,7 +4,7 @@ function OpenTTDPlugin(bot) {
 	var self = this;
 	self.name = "openttd";
 	self.help = "OpenTTD plugin";
-	self.depend = ["cmd", "bits"];
+	self.depend = ["cmd", "bits", "util"];
 
 	self.defServer = null;
 	self.defPort = 3979;
@@ -50,7 +50,7 @@ function OpenTTDPlugin(bot) {
 				});
 
 				companies.forEach(function(company) {
-					bits.push([company.name + " \x02(" + company.performance + ")\x02", "£" + company.value]);
+					bits.push([company.name + " \x02(" + company.performance + ")\x02", "£" + bot.plugins.util.thSeps(company.value)]);
 				});
 
 				bot.say(to, bot.plugins.bits.format(prefix, bits));

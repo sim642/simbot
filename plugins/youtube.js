@@ -5,7 +5,7 @@ function YoutubePlugin(bot) {
 	var self = this;
 	self.name = "youtube";
 	self.help = "Youtube plugin";
-	self.depend = ["cmd", "ignore"];
+	self.depend = ["cmd", "ignore", "util"];
 
 	self.apiKey = null;
 	
@@ -22,19 +22,6 @@ function YoutubePlugin(bot) {
 
 	self.save = function() {
 		return {apiKey: self.apiKey, channels: self.channels, ignores: self.ignores};
-	};
-
-	// http://www.mredkj.com/javascript/numberFormat.html#addcommas
-	self.thseps = function(nStr) {
-		nStr += '';
-		x = nStr.split('.');
-		x1 = x[0];
-		x2 = x.length > 1 ? '.' + x[1] : '';
-		var rgx = /(\d+)(\d{3})/;
-		while (rgx.test(x1)) {
-			x1 = x1.replace(rgx, '$1' + ',' + '$2');
-		}
-		return x1 + x2;
 	};
 
 	self.duration = function(t) {
@@ -62,7 +49,7 @@ function YoutubePlugin(bot) {
 	};
 
 	self.format = function(data, time, callback) {
-		var str = "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : \x02" + data.snippet.title + "\x02 [" + self.duration(data.contentDetails.duration) + "] by " + data.snippet.channelTitle + "; " + self.thseps(data.statistics.viewCount.toString()) + " views";
+		var str = "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : \x02" + data.snippet.title + "\x02 [" + self.duration(data.contentDetails.duration) + "] by " + data.snippet.channelTitle + "; " + bot.plugins.util.thSeps(data.statistics.viewCount.toString()) + " views";
 		if (data.statistics !== undefined) {
 			var likes = parseFloat(data.statistics.likeCount);
 			var dislikes = parseFloat(data.statistics.dislikeCount);

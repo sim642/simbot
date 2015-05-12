@@ -96,7 +96,7 @@ function TopicLogPlugin(bot) {
 						else
 							str = entry.topic;
 
-						bot.notice(nick, "\x02Topic in " + chan + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
+						bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + chan + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
 						lastentry = entry;
 					}
 				}
@@ -120,6 +120,20 @@ function TopicLogPlugin(bot) {
 			}
 			else
 				bot.say(to, "No such channel on record");
+		},
+
+		"cmd#topicrestore": function(nick, to, args) {
+			var chan = to;
+			if (chan in self.topiclog) {
+				var chanlog = self.topiclog[chan];
+
+				var id = args[1] || (chanlog.length - 2);
+				if (id >= 0 && id < chanlog.length) {
+					bot.send("TOPIC", chan, chanlog[id].topic);
+				}
+				else
+					bot.say(to, "Invalid topic ID");
+			}
 		}
 	};
 }

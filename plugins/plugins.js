@@ -14,12 +14,12 @@ function PluginsPlugin(bot) {
 
 		"cmd#psave": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.save(args[1]);
-			bot.say(to, "plugin " + args[1] + " saved");
+			bot.say(to, "Plugin " + args[1] + " saved");
 		}),
 
 		"cmd#punload": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
 			bot.plugins.unload(args[1]);
-			bot.say(to, "plugin " + args[1] + " unloaded");
+			bot.say(to, "Plugin " + args[1] + " unloaded");
 		}),
 
 		"cmd#preload": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {

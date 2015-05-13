@@ -9,15 +9,52 @@ function OpenTTDPlugin(bot) {
 	self.defServer = null;
 	self.defPort = 3979;
 
+	self.channels = [];
+	self.pRet = null;
+	self.interval = null;
+
 	self.load = function(data) {
 		if (data) {
 			self.defServer = data.defServer;
 			self.defPort = data.defPort;
+			self.channels = data.channels || [];
 		}
 	};
 
+	self.enable = function() {
+		self.interval = setInterval(self.refresh, 60 * 1000);
+		self.refresh();
+	};
+
+	self.disable = function() {
+		clearInterval(self.interval);
+		self.interval = null;
+	};
+
 	self.save = function() {
-		return {defServer: self.defServer, defPort: self.defPort};
+		return {defServer: self.defServer, defPort: self.defPort, channels: self.channels};
+	};
+
+	self.refresh = function() {
+		openttd.query(self.defServer, self.defPort, function(ret) {
+			if (self.pRet && self.pRet[1].numClient != ret[1].numClient) {
+				var prefix = ret[1].name + " \x02(" + self.defServer + ":" + self.defPort + ")\x02";
+
+				var bits = [];
+				bits.push(["map", ret[1].map.name + " \x02(" + ret[1].map.width + "×" + ret[1].map.height + ")\x02"]);
+				bits.push(["date", ret[1].curDate.toISOString().replace(/^([\d-]+)T.*/, "$1")]);
+				bits.push(["companies", ret[1].numCompany + "/" + ret[1].maxCompany]);
+				bits.push(["clients", ret[1].numClient + "/" + ret[1].maxClient]);
+
+				var str = bot.plugins.bits.format(prefix, bits);
+
+				self.channels.forEach(function(channel) {
+					bot.say(channel, str);
+				});
+			}
+
+			self.pRet = ret;
+		});
 	};
 
 	self.events = {

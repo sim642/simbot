@@ -103,7 +103,10 @@ function HistoryPlugin(bot) {
 
 				bot.say(nick, "\x031--- Begin history for " + channel + " ---");
 				for (var i = 0; i < outlines.length; i++) {
-					bot.say(nick, outlines[i]);
+					var str = outlines[i];
+					if (re !== null)
+						str = str.replace(re, "\x16$&\x16"); // highlight matches by color reversal
+					bot.say(nick, str);
 				}
 				bot.say(nick, "\x031--- End history for " + channel + " ---");
 			}, function(logfile, date) {

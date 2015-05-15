@@ -37,7 +37,10 @@ function OpenTTDPlugin(bot) {
 
 	self.refresh = function() {
 		openttd.query(self.defServer, self.defPort, function(ret) {
-			if (self.pRet && self.pRet[1].numClient != ret[1].numClient) {
+			if (self.pRet &&
+				(self.pRet[1].numClient != ret[1].numClient ||
+				 self.pRet[1].numCompany != ret[1].numCompany ||
+				 self.pRet[1].map.name != ret[1].map.name)) {
 				var prefix = ret[1].name + " \x02(" + self.defServer + ":" + self.defPort + ")\x02";
 
 				var bits = [];

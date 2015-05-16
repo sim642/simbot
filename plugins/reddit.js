@@ -74,7 +74,7 @@ function RedditPlugin(bot) {
 				var longurl = "http://reddit.com" + post.permalink + comment.id;
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
 					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + comment.author;
+					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
 
 					if (!short)
 						str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";

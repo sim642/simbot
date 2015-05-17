@@ -136,7 +136,11 @@ function HistoryPlugin(bot) {
 
 			var cnt = 0;
 			self.iterate(channel, function(line) {
-				if (re === null || line.match(re))
+				if (re !== null) {
+					var m = line.match(re);
+					cnt += (m || []).length;
+				}
+				else
 					cnt++;
 
 				return true; // continue forever

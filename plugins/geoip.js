@@ -1,5 +1,6 @@
 var request = require("request");
 var dns = require("dns");
+var punycode = require("punycode");
 
 function GeoIPPlugin(bot) {
 	var self = this;
@@ -73,7 +74,7 @@ function GeoIPPlugin(bot) {
 
 			self.geoip(args[1], function(str) {
 				if (str === null) {
-					dns.resolve4(args[1], function(err, ips) {
+					dns.resolve4(punycode.toASCII(args[1]), function(err, ips) {
 						if (!err) {
 							var i = args[2] || 1;
 							if (i - 1 < 0 || i - 1 >= ips.length) {

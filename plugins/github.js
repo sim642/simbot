@@ -128,13 +128,13 @@ function GithubPlugin(bot) {
 									// TODO: guarantee contribs sorted by date
 
 									var longstreak = 0;
-									var total = contribs[0][1];
+									var total = 0;
 									var most = 0;
-									for (var i = 1; i < contribs.length; i++) {
+									for (var i = 0; i < contribs.length; i++) {
 										total += contribs[i][1];
 
 										if (contribs[i][1] > 0) {
-											if (contribs[i - 1][1] > 0)
+											if (i > 0 && contribs[i - 1][1] > 0)
 												contribs[i][2] = contribs[i - 1][2] + 1;
 											else
 												contribs[i][2] = 1;

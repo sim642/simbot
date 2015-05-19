@@ -1,4 +1,5 @@
 var execFile = require("child_process").execFile;
+var fs = require("fs");
 
 function FortunePlugin(bot) {
 	var self = this;
@@ -7,6 +8,7 @@ function FortunePlugin(bot) {
 	self.depend = ["cmd"];
 
 	self.quoteDir = null;
+	self.quoteAddRe = /^(?:(\w+)\s*:|<\W?(\w+)>)\s*(.*)$/;
 
 	self.load = function(data) {
 		if (data) {
@@ -16,6 +18,16 @@ function FortunePlugin(bot) {
 
 	self.save = function() {
 		return {quoteDir: self.quoteDir};
+	};
+
+	self.quoteAdd = function(name, text) {
+		var filename = self.quoteDir + name;
+		fs.appendFile(filename, text + "\n%\n", function(err) {
+			if (!err)
+				execFile("strfile", ["-c", "%", filename, filename + ".dat"]);
+			else
+				bot.out.error("fortune", err);
+		});
 	};
 
 	self.events = {
@@ -107,6 +119,15 @@ function FortunePlugin(bot) {
 
 					bot.notice(nick, "All available =quote categories: " + arr.join(", "));
 				});
+			}
+		},
+
+		"cmd#quoteadd": function(nick, to, args) {
+			if (self.quoteDir !== null) {
+				var m = args[0].match(self.quoteAddRe);
+				if (m) {
+					self.quoteAdd(m[1] || m[2], m[3]); // TODO: response to user
+				}
 			}
 		}
 	};

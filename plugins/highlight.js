@@ -2,7 +2,7 @@ function HighlightPlugin(bot) {
 	var self = this;
 	self.name = "highlight";
 	self.help = "Highlight plugin";
-	self.depend = ["cmd", "pushbullet"];
+	self.depend = ["cmd", "pushbullet", "util"];
 
 	self.highlights = {};
 	/*
@@ -32,10 +32,6 @@ function HighlightPlugin(bot) {
 		};
 	};
 
-	self.stripcolors = function(text) {
-		return text.replace(/\x1f|\x02|\x12|\x0f|\x16|\x03(?:\d{1,2}(?:,\d{1,2})?)?/g, "");
-	};
-
 	self.events = {
 		"message": function(nick, to, text, message) {
 			var tolow = to.toLowerCase();
@@ -60,7 +56,7 @@ function HighlightPlugin(bot) {
 
 				if (text.match(new RegExp("\\b" + hinick + "(?=\\b|[_|])", "i"))) {
 					if (Object.keys(bot.chans[tolow].users).map(function(elem) { return elem.toLowerCase(); }).indexOf(hinick) == -1)
-						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));
+						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + bot.plugins.util.stripColors(text));
 					else if (level != "offline") {
 						if (activity !== null || level == "away") { // needs whois
 							var hinick2 = hinick;
@@ -79,11 +75,11 @@ function HighlightPlugin(bot) {
 									bot.out.error("highlight", "no idle data in WHOIS reply", info, message);
 
 								if (good)
-									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));
+									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + op + nick + "> " + bot.plugins.util.stripColors(text));
 							});
 						}
 						else
-							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + self.stripcolors(text));
+							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + bot.plugins.util.stripColors(text));
 					}
 				}
 			}

@@ -11,11 +11,6 @@ function HelpPlugin(bot) {
 	self.githubRaw = "https://raw.githubusercontent.com/wiki/sim642/simbot";
 	self.cmdRe = /^=(\S+)$/;
 
-	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-	self.escapeRegExp = function(str) {
-		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-	};
-
 	self.ircRenderer = new marked.Renderer();
 	self.ircRenderer.paragraph = function(text) {
 		return text;
@@ -66,7 +61,7 @@ function HelpPlugin(bot) {
 							bot.say(to, nick + ": " + args[1] + " in " + names[0] + " - " + bot.plugins[names[0]].help + (!err && res.statusCode == 200 ? " - " + url : ""));
 
 							if (!err && res.statusCode == 200) {
-								var re = new RegExp("`" + self.escapeRegExp(args[1]) + "(\\s.*)?`");
+								var re = new RegExp("`" + bot.plugins.util.escapeRegExp(args[1]) + "(\\s.*)?`");
 								var tokens = marked.lexer(body);
 								var listItem = false;
 								for (var i = 0; i < tokens.length; i++) {

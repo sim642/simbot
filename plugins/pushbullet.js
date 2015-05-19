@@ -5,7 +5,7 @@ function PushbulletPlugin(bot) {
 	var self = this;
 	self.name = "pushbullet";
 	self.help = "Pushbullet plugin";
-	self.depend = ["cmd", "auth", "nickserv", "bitly", "date"];
+	self.depend = ["cmd", "auth", "nickserv", "bitly", "date", "util"];
 
 	self.email = null;
 	self.token = null;
@@ -13,17 +13,6 @@ function PushbulletPlugin(bot) {
 	self.ws = null;
 	self.wsTimeout = null;
 	self.lastTs = null;
-
-	// https://stackoverflow.com/questions/9907419/javascript-object-get-key-by-value
-	self.getKeyByValue = function(obj, value) {
-		for (var prop in obj) {
-			if(obj.hasOwnProperty(prop)) {
-				 if(obj[prop] === value)
-					 return prop;
-			}
-		}
-		return null;
-	};
 
 	self.setToken = function(token) {
 		if (self.ws)
@@ -209,7 +198,7 @@ function PushbulletPlugin(bot) {
 			bot.emit("pushbullet#push#" + push.sender_email, push, live);
 
 			if (push.title && (push.title in bot.chans)) {
-				var sender = self.getKeyByValue(self.emails, push.sender_email);
+				var sender = bot.plugins.util.getKeyByValue(self.emails, push.sender_email);
 				if (!sender)
 					sender = push.sender_email;
 				var msg = "push" + (live ? "" : "ed (" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " [\x02" + sender + "\x02] ";

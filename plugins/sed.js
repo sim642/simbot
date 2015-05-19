@@ -2,7 +2,7 @@ function SedPlugin(bot) {
 	var self = this;
 	self.name = "sed";
 	self.help = "Sed replacement plugin";
-	self.depend = ["history"];
+	self.depend = ["history", "util"];
 
 	self.sedRe = new RegExp(
 		"^(?:(\\S+)[:,]\\s)?" +
@@ -10,30 +10,6 @@ function SedPlugin(bot) {
 		"s([^\\w\\s])((?:\\\\\\3|(?!\\3).)+)" +
 		"\\3((?:\\\\\\3|(?!\\3).)*?)" +
 		"\\3([a-z])*");
-
-	self.strUnescape = function(str) {
-		try {
-			return str.replace(/\\(?:([bfnrtv0])|u([0-9A-Fa-f]{4})|x([0-9A-Fa-f]{2})|([^bfnrtv0ux]))/g, function(m, s, u, x, o) {
-				if (s) {
-					return eval("'\\" + s + "'");
-				}
-				else if (u) {
-					return String.fromCharCode(parseInt(u, 16));
-				}
-				else if (x) {
-					return String.fromCharCode(parseInt(x, 16));
-				}
-				else if (o) {
-					return o;
-				}
-
-				throw new Error("Impossible escape: " + m);
-			});
-		}
-		catch (e) {
-			bot.out.error("sed", e, str);
-		}
-	};
 
 	self.events = {
 		"message": function(nick, to, text) {
@@ -44,7 +20,7 @@ function SedPlugin(bot) {
 				var sedNick = m[1] || nick;
 				var sedPrere = new RegExp(m[2] || ".*");
 				var sedRe = new RegExp(m[4], m[6]);
-				var sedRepl = self.strUnescape(m[5]);
+				var sedRepl = bot.plugins.util.strUnescape(m[5]);
 
 				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick), "i");
 

@@ -20,13 +20,17 @@ function FortunePlugin(bot) {
 		return {quoteDir: self.quoteDir};
 	};
 
-	self.quoteAdd = function(name, text) {
+	self.quoteAdd = function(name, text, callback) {
 		var filename = self.quoteDir + name;
 		fs.appendFile(filename, text + "\n%\n", function(err) {
 			if (!err)
-				execFile("strfile", ["-c", "%", filename, filename + ".dat"]);
-			else
+				execFile("strfile", ["-c", "%", filename, filename + ".dat"], function(err, stdout, stderr) {
+					(callback || function(){})(err);
+				});
+			else {
 				bot.out.error("fortune", err);
+				(callback || function(){})(err);
+			}
 		});
 	};
 
@@ -126,7 +130,13 @@ function FortunePlugin(bot) {
 			if (self.quoteDir !== null) {
 				var m = args[0].match(self.quoteAddRe);
 				if (m) {
-					self.quoteAdd(m[1] || m[2], m[3]); // TODO: response to user
+					var person = m[1] || m[2];
+					self.quoteAdd(person, m[3], function(err) {
+						if (!err)
+							bot.notice(nick, "quote added to " + person);
+						else
+							bot.notice(nick, "error adding quote to " + person);
+					});
 				}
 			}
 		}

@@ -91,7 +91,8 @@ function HistoryPlugin(bot) {
 			var fileUsed = false;
 			self.iterate(channel, function(line) {
 				if (re === null || line.match(re)) {
-					outlines.unshift(line);
+					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
+
 					linecnt--;
 					fileUsed = true;
 				}
@@ -104,8 +105,6 @@ function HistoryPlugin(bot) {
 				bot.say(nick, "\x031--- Begin history for " + channel + " ---");
 				for (var i = 0; i < outlines.length; i++) {
 					var str = outlines[i];
-					if (re !== null)
-						str = str.replace(re, "\x16$&\x16"); // highlight matches by color reversal
 					bot.say(nick, str);
 				}
 				bot.say(nick, "\x031--- End history for " + channel + " ---");

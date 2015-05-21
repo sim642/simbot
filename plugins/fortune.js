@@ -21,7 +21,7 @@ function FortunePlugin(bot) {
 	};
 
 	self.quoteAdd = function(name, text, callback) {
-		var filename = self.quoteDir + name;
+		var filename = self.quoteDir + name.toLowerCase();
 		fs.appendFile(filename, text + "\n%\n", function(err) {
 			if (!err)
 				execFile("strfile", ["-c", "%", filename, filename + ".dat"], function(err, stdout, stderr) {
@@ -77,7 +77,7 @@ function FortunePlugin(bot) {
 			if (self.quoteDir !== null) {
 				var arr = ["-s"/*, "-c"*/, self.quoteDir]; // TODO: nice output of source fortunes file
 				if (args[1] && args[1].match(/^\w+$/))
-					arr[arr.length - 1] += args[1];
+					arr[arr.length - 1] += args[1].toLowerCase();
 				execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
 					if (error && error.killed === true)
 						bot.say(to, nick + ": no such fortune found");

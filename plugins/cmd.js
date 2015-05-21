@@ -2,9 +2,10 @@ function CmdPlugin(bot) {
 	var self = this;
 	self.name = "cmd";
 	self.help = "Commands plugin";
+	self.depend = ["util"];
 
 	self.chanRe = /^=(\S+)(?:(\s+.*))?$/;
-	self.argsRe = /\s+(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;
+	self.argsRe = /\s+(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|((?:[^"'\s\\]|\\.)+))/g;
 
 	self.events = {
 		"message": function(nick, to, text, message) {
@@ -14,7 +15,7 @@ function CmdPlugin(bot) {
 				for (var res; (res = self.argsRe.exec(m[2])) !== null;) {
 					var i;
 					for (i = 1; res[i] === undefined; i++);
-					args2.push(res[i]);
+					args2.push(bot.plugins.util.strUnescape(res[i]));
 				}
 
 				bot.emit("cmd", nick, to == bot.nick ? nick : to, m[1], args2, message);
@@ -34,6 +35,10 @@ function CmdPlugin(bot) {
 
 		"cmd#": function(nick, to, cmd, args, message) {
 			//bot.notice(nick, "no such command: " + cmd);
+		},
+
+		"cmd#args": function(nick, to, args) {
+			bot.say(to, nick + ": " + args.toString());
 		}
 	};
 }

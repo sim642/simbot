@@ -34,23 +34,40 @@ function FortunePlugin(bot) {
 		});
 	};
 
+	self.fortune = function(arr, callback) {
+		execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
+			if (error && error.killed === true)
+				callback(nick + ": no such fortune found");
+
+			stdout.split("\n").forEach(function (line) {
+				if (line != "")
+					callback("  " + line);
+			});
+			stderr.split("\n").forEach(function (line) {
+				if (line != "")
+					callback("  " + line);
+			});
+		});
+	};
+
+	self.fortunes = function(arr, callback) {
+		execFile("fortune", arr, function (error, stdout, stderr) {
+			var arr = stderr.split("\n").map(function (line) {
+				return line.trim().split(" ")[1];
+			}).slice(1, -1);
+
+			callback(arr);
+		});
+	};
+
 	self.events = {
 		"cmd#fortune" : function(nick, to, args, message) {
 			var arr = ["-s"];
 			if (args[1] && args[1].match(/^\w+$/))
 				arr.push(args[1]);
-			execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
-				if (error && error.killed === true)
-					bot.say(to, nick + ": no such fortune found");
 
-				stdout.split("\n").forEach(function (line) {
-					if (line != "")
-						bot.say(to, "  " + line);
-				});
-				stderr.split("\n").forEach(function (line) {
-					if (line != "")
-						bot.say(to, "  " + line);
-				});
+			self.fortune(arr, function(line) {
+				bot.say(to, line);
 			});
 		},
 
@@ -58,18 +75,9 @@ function FortunePlugin(bot) {
 			var arr = ["-s", "/usr/share/games/fortunes/off/"];
 			if (args[1] && args[1].match(/^\w+$/))
 				arr.push(args[1]);
-			execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
-				if (error && error.killed === true)
-					bot.say(to, nick + ": no such fortune found");
 
-				stdout.split("\n").forEach(function (line) {
-					if (line != "")
-						bot.say(to, "  " + line);
-				});
-				stderr.split("\n").forEach(function (line) {
-					if (line != "")
-						bot.say(to, "  " + line);
-				});
+			self.fortune(arr, function(line) {
+				bot.say(to, line);
 			});
 		},
 
@@ -78,49 +86,28 @@ function FortunePlugin(bot) {
 				var arr = ["-s"/*, "-c"*/, self.quoteDir]; // TODO: nice output of source fortunes file
 				if (args[1] && args[1].match(/^\w+$/))
 					arr[arr.length - 1] += args[1].toLowerCase();
-				execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
-					if (error && error.killed === true)
-						bot.say(to, nick + ": no such fortune found");
 
-					stdout.split("\n").forEach(function (line) {
-						if (line != "")
-							bot.say(to, "  " + line);
-					});
-					stderr.split("\n").forEach(function (line) {
-						if (line != "")
-							bot.say(to, "  " + line);
-					});
+				self.fortune(arr, function(line) {
+					bot.say(to, line);
 				});
 			}
 		},
 
 		"cmd#fortunes": function (nick, to, args) {
-			execFile("fortune", ["-f"], function (error, stdout, stderr) {
-				var arr = stderr.split("\n").map(function (line) {
-					return line.trim().split(" ")[1];
-				}).slice(1, -1);
-
+			self.fortunes(["-f"], function(arr) {
 				bot.notice(nick, "All available =fortune categories: " + arr.join(", "));
 			});
 		},
 
 		"cmd#fortuneso": function (nick, to, args) {
-			execFile("fortune", ["-f", "-o"], function (error, stdout, stderr) {
-				var arr = stderr.split("\n").map(function (line) {
-					return line.trim().split(" ")[1];
-				}).slice(1, -1);
-
+			self.fortunes(["-f", "-o"], function(arr) {
 				bot.notice(nick, "All available =fortuneo categories: " + arr.join(", "));
 			});
 		},
 
 		"cmd#quotes": function (nick, to, args) {
 			if (self.quoteDir !== null) {
-				execFile("fortune", ["-f", self.quoteDir], function (error, stdout, stderr) {
-					var arr = stderr.split("\n").map(function (line) {
-						return line.trim().split(" ")[1];
-					}).slice(1, -1);
-
+				self.fortunes(["-f", self.quoteDir], function(arr) {
 					bot.notice(nick, "All available =quote categories: " + arr.join(", "));
 				});
 			}

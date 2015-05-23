@@ -1,5 +1,6 @@
 var execFile = require("child_process").execFile;
 var fs = require("fs");
+var path = require("path");
 
 function FortunePlugin(bot) {
 	var self = this;
@@ -44,7 +45,9 @@ function FortunePlugin(bot) {
 			if (error && error.killed === true)
 				callback(nick + ": no such fortune found");
 
-			stdout.replace(/^\((\w+)\)\n%\n/, "\x02$1\x02: ").split("\n").forEach(lineFunc);
+			stdout.replace(/^\(([^\)]+)\)\n%\n/, function(m, p) {
+				return "\x02" + path.basename(p) + "\x02: ";
+			}).split("\n").forEach(lineFunc);
 			stderr.split("\n").forEach(lineFunc);
 		});
 	};

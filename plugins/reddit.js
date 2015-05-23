@@ -12,7 +12,7 @@ function RedditPlugin(bot) {
 	self.urlSort = "hot";
 	self.urlTime = "week";
 
-	self.channels = [];
+	self.channels = {}; /* true | {reddit: false/true, other: false/true}*/
 	self.ignores = [];
 
 	self.tickers = {};
@@ -186,11 +186,21 @@ function RedditPlugin(bot) {
 
 	self.events = {
 		"message": function(nick, to, text, message) {
-			if ((self.channels.indexOf(to) != -1) && !bot.plugins.ignore.ignored(self.ignores, message)) {
+			if ((to in self.channels) && !bot.plugins.ignore.ignored(self.ignores, message)) {
 				var match = text.match(self.urlRe);
 				if (match) {
-					self.lookup(match[0], function(str) {
-						bot.out.log("reddit", nick + " in " + to + ": " + match[0]);
+					var url = match[0];
+
+					var func = function(){};
+					if (self.channels[to] === true)
+						func = self.lookup;
+					else if (self.channels[to].reddit && url.match(self.urlRedditRe))
+						func = self.lookupReddit;
+					else if (self.channels[to].other)
+						func = self.lookupOther;
+
+					func(url, function(str) {
+						bot.out.log("reddit", nick + " in " + to + ": " + url);
 						bot.say(to, str);
 					});
 				}

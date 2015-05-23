@@ -35,18 +35,17 @@ function FortunePlugin(bot) {
 	};
 
 	self.fortune = function(arr, callback) {
+		var lineFunc = function(line) {
+			if (line != "")
+				callback("  " + line);
+		};
+
 		execFile("fortune", ["-s"].concat(arr), {timeout: 1000}, function (error, stdout, stderr) {
 			if (error && error.killed === true)
 				callback(nick + ": no such fortune found");
 
-			stdout.split("\n").forEach(function (line) {
-				if (line != "")
-					callback("  " + line);
-			});
-			stderr.split("\n").forEach(function (line) {
-				if (line != "")
-					callback("  " + line);
-			});
+			stdout.replace(/^\((\w+)\)\n%\n/, "\x02$1\x02: ").split("\n").forEach(lineFunc);
+			stderr.split("\n").forEach(lineFunc);
 		});
 	};
 
@@ -83,7 +82,7 @@ function FortunePlugin(bot) {
 
 		"cmd#quote" : function(nick, to, args, message) {
 			if (self.quoteDir !== null) {
-				var arr = [/*"-c",*/ self.quoteDir]; // TODO: nice output of source fortunes file
+				var arr = ["-c", self.quoteDir];
 				if (args[1] && args[1].match(/^\w+$/))
 					arr[arr.length - 1] += args[1].toLowerCase();
 
@@ -118,7 +117,7 @@ function FortunePlugin(bot) {
 				var m = args[0].match(self.quoteAddRe);
 				if (m) {
 					var person = m[1] || m[2];
-					self.quoteAdd(person, m[3], function(err) {
+					self.quoteAdd(person, m[3].trim(), function(err) {
 						if (!err)
 							bot.notice(nick, "quote added to " + person);
 						else

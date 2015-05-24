@@ -7,6 +7,20 @@ function CmdPlugin(bot) {
 	self.chanRe = /^=(\S+)(?:(\s+.*))?$/;
 	self.argsRe = /\s+(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;
 
+	self.correctDist = null;
+	self.suggestDist = null;
+
+	self.load = function(data) {
+		if (data) {
+			self.correctDist = data.correctDist || null;
+			self.suggestDist = data.suggestDist || null;
+		}
+	};
+
+	self.save = function() {
+		return {correctDist: self.correctDist, suggestDist: self.suggestDist};
+	};
+
 	self.getCmds = function() {
 		return Object.keys(bot._events).reduce(function(arr, ev) {
 			var m = ev.match(/^cmd#(.+)$/);
@@ -47,7 +61,7 @@ function CmdPlugin(bot) {
 				});
 				var cand = cands[0];
 
-				if (cand.dist <= 2) {
+				if (cand.dist <= self.correctDist) {
 					bot.out.log("cmd", nick + " in " + to + " called =" + cmd + " -> =" + cand.cmd + " with args: [" + args.join(", ") + "]");
 					bot.emit("cmd#" + cand.cmd, nick, to, args, message);
 					bot.notice(nick, "=" + cmd + ": autocorrected to =" + cand.cmd);
@@ -55,7 +69,7 @@ function CmdPlugin(bot) {
 				else {
 					bot.emit("cmd#", nick, to, cmd, args, message);
 
-					if (cand.dist <= 4)
+					if (cand.dist <= self.suggestDist)
 						bot.notice(nick, "=" + cmd + ": did you mean =" + cand.cmd);
 				}
 			}

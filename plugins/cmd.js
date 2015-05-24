@@ -2,9 +2,20 @@ function CmdPlugin(bot) {
 	var self = this;
 	self.name = "cmd";
 	self.help = "Commands plugin";
+	self.depends = ["editdist"];
 
 	self.chanRe = /^=(\S+)(?:(\s+.*))?$/;
 	self.argsRe = /\s+(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;
+
+	self.getCmds = function() {
+		return Object.keys(bot._events).reduce(function(arr, ev) {
+			var m = ev.match(/^cmd#(.+)$/);
+			if (m)
+				return arr.concat(m[1]);
+			else
+				return arr;
+		}, []);
+	};
 
 	self.events = {
 		"message": function(nick, to, text, message) {
@@ -28,8 +39,26 @@ function CmdPlugin(bot) {
 				bot.out.log("cmd", nick + " in " + to + " called =" + cmd + " with args: [" + args.join(", ") + "]");
 				bot.emit("cmd#" + cmd, nick, to, args, message);
 			}
-			else
-				bot.emit("cmd#", nick, to, cmd, args, message);
+			else {
+				var cands = self.getCmds().map(function(cmd2) {
+					return {"cmd": cmd2, "dist": bot.plugins.editdist.OSA(cmd, cmd2)};
+				}).sort(function(lhs, rhs) {
+					return lhs.dist - rhs.dist;
+				});
+				var cand = cands[0];
+
+				if (cand.dist <= 2) {
+					bot.out.log("cmd", nick + " in " + to + " called =" + cmd + " -> =" + cand.cmd + " with args: [" + args.join(", ") + "]");
+					bot.emit("cmd#" + cand.cmd, nick, to, args, message);
+					bot.notice(nick, "=" + cmd + ": autocorrected to =" + cand.cmd);
+				}
+				else {
+					bot.emit("cmd#", nick, to, cmd, args, message);
+
+					if (cand.dist <= 4)
+						bot.notice(nick, "=" + cmd + ": did you mean =" + cand.cmd);
+				}
+			}
 		},
 
 		"cmd#": function(nick, to, cmd, args, message) {

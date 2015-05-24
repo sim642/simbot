@@ -54,14 +54,16 @@ function CmdPlugin(bot) {
 				bot.emit("cmd#" + cmd, nick, to, args, message);
 			}
 			else {
+				var func = bot.plugins.editdist.relativize(bot.plugins.editdist.OSA);
+
 				var cands = self.getCmds().map(function(cmd2) {
-					return {"cmd": cmd2, "dist": bot.plugins.editdist.OSA(cmd, cmd2)};
+					return {"cmd": cmd2, "dist": func(cmd, cmd2)};
 				}).sort(function(lhs, rhs) {
-					return lhs.dist - rhs.dist;
+					return rhs.dist - lhs.dist;
 				});
 				var cand = cands[0];
 
-				if (cand.dist <= self.correctDist) {
+				if (cand.dist >= self.correctDist) {
 					bot.out.log("cmd", nick + " in " + to + " called =" + cmd + " -> =" + cand.cmd + " with args: [" + args.join(", ") + "]");
 					bot.emit("cmd#" + cand.cmd, nick, to, args, message);
 					bot.notice(nick, "=" + cmd + ": autocorrected to =" + cand.cmd);
@@ -69,7 +71,7 @@ function CmdPlugin(bot) {
 				else {
 					bot.emit("cmd#", nick, to, cmd, args, message);
 
-					if (cand.dist <= self.suggestDist)
+					if (cand.dist >= self.suggestDist)
 						bot.notice(nick, "=" + cmd + ": did you mean =" + cand.cmd);
 				}
 			}

@@ -83,6 +83,12 @@ function EditDistPlugin(bot) {
 		return max;
 	};
 
+	self.relativize = function(func) {
+		return function(a, b) {
+			return 1 - func(a, b) / Math.max(a.length, b.length);
+		};
+	};
+
 	self.events = {
 
 	};

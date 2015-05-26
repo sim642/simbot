@@ -21,25 +21,30 @@ function XkcdPlugin(bot) {
 		return {"apiKey": self.apiKey, "chans": self.chans};
 	};
 
+	self.xkcd = function(uri, callback) {
+		request(uri, function(err, res, body) {
+			var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
+			var m = body.match(re);
+			if (m)
+				callback(m[1], m[2]);
+			else
+				callback(null, null);
+		});
+	};
+
 	self.events = {
 		"cmd#xkcd": function(nick, to, args) {
 			if (!args[1] || /^\d+$/.test(args[1])) {
 				var uri = "http://xkcd.com/";
 				if (args[1])
 					uri += args[1] + "/";
-				request(uri, function(err, res, body) {
-					var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
-					var m = body.match(re);
-					if (m)
-						bot.say(to, "xkcd" + (args[1] ? " #" + args[1] : "") + ": \x02" + m[1] + "\x02 - " + m[2]);
+				self.xkcd(uri, function(title, url) {
+					bot.say(to, "xkcd" + (args[1] ? " #" + args[1] : "") + ": \x02" + title + "\x02 - " + url);
 				});
 			}
 			else if (args[1] == "random") {
-				request("http://c.xkcd.com/random/comic/", function(err, res, body) {
-					var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
-					var m = body.match(re);
-					if (m)
-						bot.say(to, "random xkcd: \x02" + m[1] + "\x02 - " + m[2]);
+				self.xkcd("http://c.xkcd.com/random/comic/", function(title, url) {
+					bot.say(to, "random xkcd: \x02" + title + "\x02 - " + url);
 				});
 			}
 			else {
@@ -88,11 +93,8 @@ function XkcdPlugin(bot) {
 				if (m) {
 					var uri = "http://xkcd.com/" + m[1];
 					bot.out.log("xkcd", nick + " in " + to + ": " + m[0]);
-					request(uri, function(err, res, body) {
-						var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
-						var m = body.match(re);
-						if (m)
-							bot.say(to, "xkcd" + ": \x02" + m[1] + "\x02 - " + m[2]);
+					self.xkcd(uri, function(title, url) {
+						bot.say(to, "xkcd" + ": \x02" + title + "\x02 - " + url);
 					});
 				}
 			}
@@ -103,11 +105,8 @@ function XkcdPlugin(bot) {
 			if (m) {
 				var uri = "http://xkcd.com/" + m[1];
 				bot.out.log("xkcd", nick + " in PM: " + m[0]);
-				request(uri, function(err, res, body) {
-					var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
-					var m = body.match(re);
-					if (m)
-						bot.say(nick, "xkcd" + ": \x02" + m[1] + "\x02 - " + m[2]);
+				self.xkcd(uri, function(title, url) {
+					bot.say(nick, "xkcd" + ": \x02" + title + "\x02 - " + url);
 				});
 			}
 		},

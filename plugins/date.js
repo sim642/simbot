@@ -34,6 +34,13 @@ function DatePlugin(bot) {
 	};
 
 	self.durationReal = function(d1, d2) {
+		var future = d1.getTime() > d2.getTime();
+		if (future) {
+			var tmp = d1;
+			d1 = d2;
+			d2 = tmp;
+		}
+
 		var vars = ["Milliseconds", "Seconds", "Minutes", "Hours", "Date", "Month", "FullYear"];
 		//bot.out.debug("date", d1, d2);
 
@@ -56,6 +63,12 @@ function DatePlugin(bot) {
 
 			dur.unshift(cnt);
 		}
+
+		if (future) {
+			dur = dur.map(function(cnt) {
+				return -cnt;
+			});
+		}
 		return dur;
 	};
 
@@ -76,8 +89,8 @@ function DatePlugin(bot) {
 		limit = limit || name.length;
 		var parts = [];
 		for (var i = name.length - 1; i >= 0 && parts.length < limit; i--) {
-			if (dur[i] > 0 && (i >= trim || parts.length === 0))
-				parts.push(dur[i] + " " + name[i] + (dur[i] == 1 ? "" : "s"));
+			if (Math.abs(dur[i]) > 0 && (i >= trim || parts.length === 0))
+				parts.push(dur[i] + " " + name[i] + (Math.abs(dur[i]) == 1 ? "" : "s"));
 		}
 
 		return parts.join(", ");

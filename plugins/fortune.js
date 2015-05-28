@@ -35,20 +35,22 @@ function FortunePlugin(bot) {
 		});
 	};
 
-	self.fortune = function(arr, callback) {
-		var lineFunc = function(line) {
-			if (line != "")
-				callback("  " + line);
-		};
-
-		execFile("fortune", ["-s"].concat(arr), {timeout: 1000}, function (error, stdout, stderr) {
+	self.fortune = function(arr, successCb, errorCb) {
+		execFile("fortune", arr, {timeout: 1000}, function (error, stdout, stderr) {
 			if (error && error.killed === true)
-				callback(nick + ": no such fortune found");
+				errorCb("no such fortune found");
 
 			stdout.replace(/^\(([^\)]+)\)\n%\n/, function(m, p) {
 				return "\x02" + path.basename(p) + "\x02: ";
-			}).split("\n").forEach(lineFunc);
-			stderr.split("\n").forEach(lineFunc);
+			}).split("\n").forEach(function(line) {
+				if (line != "")
+					successCb("  " + line);
+			});
+
+			stderr.split("\n").forEach(function(line) {
+				if (line != "")
+					errorCb(line);
+			});
 		});
 	};
 
@@ -64,22 +66,26 @@ function FortunePlugin(bot) {
 
 	self.events = {
 		"cmd#fortune" : function(nick, to, args, message) {
-			var arr = [];
+			var arr = ["-s"];
 			if (args[1] && args[1].match(/^\w+$/))
 				arr.push(args[1]);
 
 			self.fortune(arr, function(line) {
 				bot.say(to, line);
+			}, function(line) {
+				bot.say(to, nick + ": " + line);
 			});
 		},
 
 		"cmd#fortuneo" : function(nick, to, args, message) {
-			var arr = ["/usr/share/games/fortunes/off/"];
+			var arr = ["-s", "/usr/share/games/fortunes/off/"];
 			if (args[1] && args[1].match(/^\w+$/))
 				arr[arr.length - 1] += args[1];
 
 			self.fortune(arr, function(line) {
 				bot.say(to, line);
+			}, function(line) {
+				bot.say(to, nick + ": " + line);
 			});
 		},
 
@@ -91,6 +97,8 @@ function FortunePlugin(bot) {
 
 				self.fortune(arr, function(line) {
 					bot.say(to, line);
+				}, function(line) {
+					bot.say(to, nick + ": " + line);
 				});
 			}
 		},

@@ -34,7 +34,7 @@ function YoutubePlugin(bot) {
 		}
 
 		var str = "";
-		str = ("0" + match[3]).slice(-2);
+		str = ("0" + match[3] || 0).slice(-2);
 		if (match[2]) {
 			str = match[2] + ":" + str;
 			if (match[1]) { // BUG: might not be reached when there's exactly seconds and hours but no minutes

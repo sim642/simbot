@@ -21,6 +21,18 @@ function DatePlugin(bot) {
 		return self.printDateTime(date).split(" ")[1];
 	};
 
+	self.ISO2dt = function(str) {
+		var re = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/; // TODO: support fractional numbers
+		var size = [12, 30, 24, 60, 60];
+
+		var m = str.match(re);
+
+		var dt = parseInt(m[1]) || 0;
+		for (var i = 0; i < size.length; i++)
+			dt = size[i] * dt + (parseInt(m[i + 2]) || 0);
+		return dt * 1000; // dt in ms
+	};
+
 	self.durationDiff = function(dt) {
 		var size = [1000, 60, 60, 24, 30, 12];
 
@@ -94,6 +106,26 @@ function DatePlugin(bot) {
 		}
 
 		return parts.join(", ");
+	};
+
+	self.printDurTime = function(dt) {
+		var t = dt / 1000; // work in seconds
+
+		var str = "";
+		str = ("0" + (t % 60).toString()).slice(-2);
+		t = Math.floor(t / 60);
+		if (t > 0) {
+			str = (t % 60).toString() + ":" + str;
+			t = Math.floor(t / 60);
+			if (t > 0) {
+				if (str.length < 5)
+					str = "0" + str;
+				str = t.toString() + ":" + str;
+			}
+		}
+		else
+			str = "0:" + str;
+		return str;
 	};
 
 	self.events = {

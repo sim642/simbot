@@ -24,28 +24,20 @@ function YoutubePlugin(bot) {
 		return {apiKey: self.apiKey, channels: self.channels, ignores: self.ignores};
 	};
 
+	self.ISO2dt = function(str) {
+		var re = /^P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/; // TODO: support fractional numbers
+		var size = [7, 24, 60, 60];
+
+		var m = str.match(re);
+
+		var dt = parseInt(m[1]) || 0;
+		for (var i = 0; i < size.length; i++)
+			dt = size[i] * dt + (parseInt(m[i + 2]) || 0);
+		return dt * 1000; // dt in ms
+	};
+
 	self.duration = function(t) {
-		var re = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
-		var match = t.match(re);
-
-		if (!match) {
-			bot.out.warn("youtube", "weird duration: " + t);
-			return t.replace("P", "").replace("T", " ").toLowerCase();
-		}
-
-		var str = "";
-		str = ("0" + match[3] || 0).slice(-2);
-		if (match[2]) {
-			str = match[2] + ":" + str;
-			if (match[1]) { // BUG: might not be reached when there's exactly seconds and hours but no minutes
-				if (str.length < 5)
-					str = "0" + str;
-				str = match[1] + ":" + str;
-			}
-		}
-		else
-			str = "0:" + str;
-		return str;
+		return bot.plugins.date.printDurTime(self.ISO2dt(t));
 	};
 
 	self.format = function(data, time, callback) {

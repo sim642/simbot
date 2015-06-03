@@ -87,15 +87,40 @@ function HistoryPlugin(bot) {
 			var extra = channel == to;
 			linecnt = Math.min(linecnt || 15, 50) + extra;
 
+			var surround = 3;
+
 			var outlines = [];
+			var context = [];
+			var contextTodo = 0;
 			var fileUsed = false;
 			self.iterate(channel, function(line) {
 				if (re === null || line.match(re)) {
 					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
 
+					//contextTodo = surround;
+
 					linecnt--;
 					fileUsed = true;
 				}
+
+				if (context.length <= surround) {
+					context.unshift(line);
+
+					if (context.length > surround) // overflow -> rotate
+						context.pop();
+				}
+
+				if (contextTodo > 0) {
+					context.unshift(line);
+					contextTodo--;
+
+					if (contextTodo == 0) { // finished context
+						bot.out.debug("history", context);
+						context = [];
+					}
+				}
+
+				bot.out.debug("history", [line, context]);
 
 				return linecnt > 0;
 			}, function() {

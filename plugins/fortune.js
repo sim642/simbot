@@ -21,13 +21,18 @@ function FortunePlugin(bot) {
 		return {quoteDir: self.quoteDir};
 	};
 
+	self.quoteCompile = function(name, callback) {
+		var filename = self.quoteDir + name.toLowerCase();
+		execFile("strfile", ["-c", "%", filename, filename + ".dat"], function(err, stdout, stderr) {
+			(callback || function(){})(err);
+		});
+	};
+
 	self.quoteAdd = function(name, text, callback) {
 		var filename = self.quoteDir + name.toLowerCase();
 		fs.appendFile(filename, text + "\n%\n", function(err) {
 			if (!err)
-				execFile("strfile", ["-c", "%", filename, filename + ".dat"], function(err, stdout, stderr) {
-					(callback || function(){})(err);
-				});
+				self.quoteCompile(name, callback);
 			else {
 				bot.out.error("fortune", err);
 				(callback || function(){})(err);

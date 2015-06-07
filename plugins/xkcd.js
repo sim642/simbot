@@ -22,13 +22,13 @@ function XkcdPlugin(bot) {
 	};
 
 	self.xkcd = function(uri, callback) {
-		request(uri, function(err, res, body) {
-			var re = /<div id="ctitle">(.+)<\/div>[\s\S]*Permanent link to this comic: (http:\/\/xkcd\.com\/\d+\/)/;
-			var m = body.match(re);
-			if (m)
-				callback(m[1], m[2]);
+		request(uri + "info.0.json", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var j = JSON.parse(body);
+				callback(j.title, "http://xkcd.com/" + j.num + "/");
+			}
 			else
-				callback(null, null);
+				bot.out.error("xkcd", [err, body]);
 		});
 	};
 
@@ -91,7 +91,7 @@ function XkcdPlugin(bot) {
 			if (self.chans.indexOf(to) != -1) {
 				var m = text.match(/xkcd\.com\/(\d+)/);
 				if (m) {
-					var uri = "http://xkcd.com/" + m[1];
+					var uri = "http://xkcd.com/" + m[1] + "/";
 					bot.out.log("xkcd", nick + " in " + to + ": " + m[0]);
 					self.xkcd(uri, function(title, url) {
 						bot.say(to, "xkcd" + ": \x02" + title + "\x02 - " + url);
@@ -103,7 +103,7 @@ function XkcdPlugin(bot) {
 		"pm": function(nick, text) {
 			var m = text.match(/xkcd\.com\/(\d+)/);
 			if (m) {
-				var uri = "http://xkcd.com/" + m[1];
+				var uri = "http://xkcd.com/" + m[1] + "/";
 				bot.out.log("xkcd", nick + " in PM: " + m[0]);
 				self.xkcd(uri, function(title, url) {
 					bot.say(nick, "xkcd" + ": \x02" + title + "\x02 - " + url);

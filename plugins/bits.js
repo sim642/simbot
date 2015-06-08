@@ -9,7 +9,7 @@ function BitsPlugin(bot) {
 		if (key)
 			str += key + ": ";
 
-		var wrap = ["", "\x02", "\x1F"][data || 1];
+		var wrap = ["", "\x02", "\x1F"][data !== undefined ? data : 1];
 		str += wrap + value + wrap;
 		return str;
 	};

@@ -92,6 +92,12 @@ function GithubPlugin(bot) {
 
 						output();
 					}
+					else if (!err && res.statusCode == 404) {
+						prefix = arg;
+						bits.push([, "repo not found", 0]);
+
+						output();
+					}
 					else
 						bot.out.error("github", err, body);
 				});
@@ -163,6 +169,12 @@ function GithubPlugin(bot) {
 						}
 						else
 							finish();
+					}
+					else if (!err && res.statusCode == 404) {
+						prefix = arg;
+						bits.push([, "user/organization not found", 0]);
+
+						output();
 					}
 					else
 						bot.out.error("github", err, body);

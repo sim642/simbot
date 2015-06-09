@@ -80,6 +80,8 @@ function GithubPlugin(bot) {
 					if (!err && res.statusCode == 200) {
 						var j = JSON.parse(body);
 						prefix = j.full_name;
+						if (j.fork)
+							bits.push(["fork", j.source.full_name]);
 						if (j.description)
 							bits.push([, j.description, 0]);
 						bits.push(["stars", j.stargazers_count]);
@@ -108,9 +110,11 @@ function GithubPlugin(bot) {
 						var j = JSON.parse(body);
 						prefix = j.login + (realarg.toLowerCase() != j.login.toLowerCase() ? " (" + realarg + ")" : "");
 						bits.push([, j.type]);
+						bits.push([, j.name]);
 						if (j.bio)
 							bits.push([, j.bio, 0]);
 						bits.push(["repos", j.public_repos]);
+						bits.push(["gists", j.public_gists]);
 						bits.push(["followers", j.followers]);
 						bits.push(["following", j.following]);
 

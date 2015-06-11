@@ -110,7 +110,8 @@ function GithubPlugin(bot) {
 						var j = JSON.parse(body);
 						prefix = j.login + (realarg.toLowerCase() != j.login.toLowerCase() ? " (" + realarg + ")" : "");
 						bits.push([, j.type]);
-						bits.push([, j.name]);
+						if (j.name)
+							bits.push([, j.name]);
 						if (j.bio)
 							bits.push([, j.bio, 0]);
 						bits.push(["repos", j.public_repos]);

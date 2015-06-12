@@ -11,7 +11,7 @@ require.uncached = function(name) {
 
 plugins._load = function(p, enable) {
 	if (p.depend) {
-		for (var i = 0; i < p.depend.length; i++)
+		for (var i = 0; i < p.depend.length; i++) // TODO: async loading
 			this.load(p.depend[i]);
 	}
 	this[p.name] = p;

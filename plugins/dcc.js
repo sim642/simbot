@@ -68,10 +68,28 @@ function DCCPlugin(bot) {
 		});
 	};
 
+	self._say = null;
+	self.targetRe = /^dcc#(.*)$/;
+
+	self.enable = function() {
+		self._say = bot.say; // copy old function
+
+		bot.say = function(target, message) {
+			var m = target.match(self.targetRe);
+			if (m) // DCC say
+				return self.say(m[1], message);
+			else
+				return self._say.call(this, target, message);
+		};
+	};
+
 	self.disable = function() {
 		for (var from in self.chats) {
 			self.chats[from].end();
 		}
+
+		bot.say = self._say; // restore old function
+		self._say = null;
 	};
 
 	self.events = {

@@ -48,7 +48,7 @@ function HighlightPlugin(bot) {
 
 				var op;
 				try {
-					if (nick in bot.chans[tolow].users)
+					if ((tolow in bot.chans) && (nick in bot.chans[tolow].users))
 						op = bot.chans[tolow].users[nick].substr(0, 1);
 					else // handle out of channel messages
 						op = "";

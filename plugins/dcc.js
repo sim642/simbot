@@ -15,6 +15,10 @@ function DCCPlugin(bot) {
 
 	self.chats = {};
 
+	self.targetRe = /^dcc#(.*)$/;
+	self._say = null;
+	self._action = null;
+
 	self.chat = function(from, client) {
 		self.chats[from] = client;
 
@@ -68,18 +72,23 @@ function DCCPlugin(bot) {
 		});
 	};
 
-	self._say = null;
-	self.targetRe = /^dcc#(.*)$/;
-
 	self.enable = function() {
 		self._say = bot.say; // copy old function
-
 		bot.say = function(target, message) {
 			var m = target.match(self.targetRe);
 			if (m) // DCC say
 				return self.say(m[1], message);
 			else
 				return self._say.call(this, target, message);
+		};
+
+		self._action = bot.action; // copy old function
+		bot.action = function(target, message) {
+			var m = target.match(self.targetRe);
+			if (m) // DCC action
+				return self.action(m[1], message);
+			else
+				return self._action.call(this, target, message);
 		};
 	};
 
@@ -90,6 +99,8 @@ function DCCPlugin(bot) {
 
 		bot.say = self._say; // restore old function
 		self._say = null;
+		bot.action = self._action; // restore old function
+		self._action = null;
 	};
 
 	self.events = {
@@ -125,10 +136,14 @@ function DCCPlugin(bot) {
 		},
 
 		"dcc-chat-privmsg": function(from, text) {
+			bot.emit("message", from, "dcc#" + from, text);
+
 			self.say(from, text);
 		},
 
 		"dcc-chat-action": function(from, text) {
+			bot.emit("action", from, "dcc#" + from, text);
+
 			self.action(from, text);
 		},
 

@@ -18,6 +18,7 @@ function DCCPlugin(bot) {
 	self.targetRe = /^dcc#(.*)$/;
 	self._say = null;
 	self._action = null;
+	self._notice = null;
 
 	self.chat = function(from, client) {
 		self.chats[from] = client;
@@ -44,7 +45,7 @@ function DCCPlugin(bot) {
 		});
 
 		client.on("error", function(err) {
-			bot.out.debug("dcc", err);
+			bot.out.error("dcc", from, client, err);
 		});
 	};
 
@@ -90,6 +91,15 @@ function DCCPlugin(bot) {
 			else
 				return self._action.call(this, target, message);
 		};
+
+		self._notice = bot.notice; // copy old function
+		bot.notice = function(target, message) {
+			var m = target.match(self.targetRe);
+			if (m) // DCC notice
+				return self.action(m[1], " NOTICE: " + message);
+			else
+				return self._notice.call(this, target, message);
+		};
 	};
 
 	self.disable = function() {
@@ -101,6 +111,8 @@ function DCCPlugin(bot) {
 		self._say = null;
 		bot.action = self._action; // restore old function
 		self._action = null;
+		bot.notice = self._notice; // restore old function
+		self._notice = null;
 	};
 
 	self.events = {
@@ -118,11 +130,11 @@ function DCCPlugin(bot) {
 		},
 
 		"dcc-chat-open": function(from) {
-			bot.out.debug("dcc", "open " + from);
+			bot.out.log("dcc", from + " open");
 		},
 
 		"dcc-chat": function(from, text, type) {
-			bot.out.debug("dcc", [from, text, type]);
+			bot.out.log("dcc", from + " " + type + ": " + text);
 
 			switch (type) {
 				case "privmsg":
@@ -133,22 +145,28 @@ function DCCPlugin(bot) {
 					bot.emit("dcc-chat-action", from, text);
 					break;
 			}
+
+			var message = {
+				nick: from,
+				user: "dcc",
+				host: self.chats[from].remoteAddress,
+				command: "PRIVMSG",
+				args: ["dcc#" + from, text]
+			};
+			message.prefix = message.nick + "!" + message.user + "@" + message.host;
+			bot.emit("raw", message);
 		},
 
 		"dcc-chat-privmsg": function(from, text) {
-			bot.emit("message", from, "dcc#" + from, text);
-
-			self.say(from, text);
+			//bot.emit("message", from, "dcc#" + from, text);
 		},
 
 		"dcc-chat-action": function(from, text) {
-			bot.emit("action", from, "dcc#" + from, text);
-
-			self.action(from, text);
+			//bot.emit("action", from, "dcc#" + from, text);
 		},
 
 		"dcc-chat-close": function(from) {
-			bot.out.debug("dcc", "close " + from);
+			bot.out.log("dcc", from + " close");
 		},
 	};
 }

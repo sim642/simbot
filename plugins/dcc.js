@@ -11,7 +11,7 @@ function DCCPlugin(bot) {
 	self.ctcpChatRe = /^DCC CHAT chat (\d+) (\d+)$/i;
 	self.ctcpMsgRe = /^(\x01ACTION )?([^\x01\r\n]*)\x01?\r?\n(.*)$/i;
 
-	self.port = 36001;
+	self.port = null;
 
 	self.chats = {};
 
@@ -73,6 +73,11 @@ function DCCPlugin(bot) {
 		});
 	};
 
+	self.load = function(data) {
+		if (data && data.port)
+			self.port = data.port;
+	};
+
 	self.enable = function() {
 		self._say = bot.say; // copy old function
 		bot.say = function(target, message) {
@@ -113,6 +118,10 @@ function DCCPlugin(bot) {
 		self._action = null;
 		bot.notice = self._notice; // restore old function
 		self._notice = null;
+	};
+
+	self.save = function() {
+		return {port: self.port};
 	};
 
 	self.events = {

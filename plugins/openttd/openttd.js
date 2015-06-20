@@ -121,6 +121,10 @@ function openttdQuery(addr, port, callback) {
 		server.send(new Buffer([0x03, 0x00, type]), 0, 3, port, addr);
 	};
 
+	var timeout = setTimeout(function() {
+		server.close();
+	}, 30 * 1000);
+
 	server.on('listening', function() {
 		todo = 2;
 		send(0x00); // PACKET_UDP_CLIENT_FIND_SERVER
@@ -134,6 +138,7 @@ function openttdQuery(addr, port, callback) {
 		todo--;
 
 		if (todo == 0) {
+			clearTimeout(timeout);
 			server.close();
 			callback(ret);
 		}

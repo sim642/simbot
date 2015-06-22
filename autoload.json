@@ -2,6 +2,7 @@
 	"autoload": [
 		"cmd",
 		"auth",
+		"log",
 		"plugins",
 		"channels",
 		"pipe",

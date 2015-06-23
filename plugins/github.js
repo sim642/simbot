@@ -88,6 +88,8 @@ function GithubPlugin(bot) {
 						bits.push(["fork", j.source.full_name]);
 					if (j.description)
 						bits.push([, j.description, 0]);
+					if (j.homepage)
+						bits.push([, j.homepage, 2]);
 					bits.push(["stars", j.stargazers_count]);
 					bits.push(["watch", j.watchers_count]);
 					bits.push(["forks", j.forks_count]);

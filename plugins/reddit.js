@@ -8,7 +8,7 @@ function RedditPlugin(bot) {
 	self.depend = ["cmd", "ignore", "date", "bitly", "util"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
-	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+))?/i;
+	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+)(\?context=\d+)?)?/i;
 	self.urlSort = "hot";
 	self.urlTime = "week";
 
@@ -52,7 +52,7 @@ function RedditPlugin(bot) {
 	};
 
 
-	self.formatPost = function(post, short, callback) {
+	self.formatPost = function(post, short, callback) { // ignores extra
 		short = short || false;
 
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
@@ -64,14 +64,14 @@ function RedditPlugin(bot) {
 		callback(str);
 	};
 
-	self.formatComment = function(comment, short, callback) {
+	self.formatComment = function(comment, short, callback, extra) {
 		short = short || false;
 
 		self.request("https://www.reddit.com/by_id/" + comment.link_id + ".json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var post = JSON.parse(body).data.children[0].data;
 
-				var longurl = "http://reddit.com" + post.permalink + comment.id;
+				var longurl = "http://reddit.com" + post.permalink + comment.id + (extra || "");
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
 					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
 					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
@@ -85,8 +85,8 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.format = function(item, short, callback) {
-		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data, short, callback);
+	self.format = function(item, short, callback, extra) {
+		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data, short, callback, extra);
 	};
 
 	self.cleanUrl = function(lurl) {
@@ -126,7 +126,7 @@ function RedditPlugin(bot) {
 				if (results.length > 0) {
 					self.format(results[0], false, function(str) {
 						callback(str);
-					});
+					}, match[4]);
 				}
 			}
 		});

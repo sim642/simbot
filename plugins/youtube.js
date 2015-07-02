@@ -45,8 +45,10 @@ function YoutubePlugin(bot) {
 		if (data.statistics !== undefined) {
 			var likes = parseFloat(data.statistics.likeCount);
 			var dislikes = parseFloat(data.statistics.dislikeCount);
-			var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03"; 
-			str += "; " + bar;
+			if (likes + dislikes > 0) {
+				var bar = "\x033" + new Array(Math.round(likes / (likes + dislikes) * 10) + 1).join("+") + "\x034" + new Array(Math.round(dislikes / (likes + dislikes) * 10) + 1).join("-") + "\x03";
+				str += "; " + bar;
+			}
 		}
 		(callback || function(){})(str);
 	};

@@ -83,7 +83,7 @@ function GithubPlugin(bot) {
 			self.request("https://api.github.com/repos/" + arg, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var j = JSON.parse(body);
-					prefix = j.full_name; // TODO: use realarg if possible
+					prefix = j.full_name + (realarg.toLowerCase() != j.full_name.toLowerCase() ? " (" + realarg + ")" : "");
 					if (j.fork)
 						bits.push(["fork", j.source.full_name]);
 					if (j.description)
@@ -142,7 +142,10 @@ function GithubPlugin(bot) {
 									var count = nodes[i].getAttribute("data-count");
 									contribs.push([date, parseInt(count), 0]);
 								}
-								// TODO: guarantee contribs sorted by date
+
+								contribs.sort(function(lhs, rhs) { // guarantee sort
+									return lhs[0].localeCompare(rhs[0]);
+								});
 
 								var longstreak = 0;
 								var total = 0;

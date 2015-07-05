@@ -182,7 +182,13 @@ function OmeglePlugin(bot) {
 										var msg = eventdata[i][2];
 										bot.out.log("omegle", who + " in " + to + ": " + msg);
 										bot.say(to, "\x02<" + who + "> " + msg);
-										// TODO: maybe also check for bots
+										if (self.skips.some(function(skip) {
+											return msg.match(new RegExp(skip, "i"));
+										})) {
+											bot.out.log("omegle", "stranger is bot, skipping");
+											bot.notice(to, "bot detected, skipping");
+											self.chats[to].softDisconnect();
+										}
 										break;
 									case "strangerDisconnected":
 										bot.out.log("omegle", "stranger disconnected");

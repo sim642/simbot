@@ -1,6 +1,7 @@
 var net = require("net");
 var ip = require("ip");
 var request = require("request");
+var path = require("path");
 
 function DCCPlugin(bot) {
 	var self = this;
@@ -12,6 +13,8 @@ function DCCPlugin(bot) {
 	self.ctcpMsgRe = /^(\x01ACTION )?([^\x01\r\n]*)\x01?\r?\n(.*)$/i;
 
 	self.port = null;
+	self.blockSize = 65536;
+	self.ackCheck = true;
 
 	self.chats = {};
 
@@ -73,9 +76,67 @@ function DCCPlugin(bot) {
 		});
 	};
 
+	self.send = function(to, filename) {
+		var filepath = path.join("./data/dcc/", filename);
+
+		request("https://api.ipify.org/", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				fs.stat(filepath, function(err, stats) {
+					if (!err) {
+						bot.ctcp(to, "privmsg", "DCC SEND " + filename + " " + ip.toLong(body) + " " + self.port + " " + stats.size);
+
+						var server = net.createServer(function(client) {
+							server.close();
+
+							fs.open(filepath, "r", function(err, fd) {
+								if (!err) {
+									var func = function() {
+										var buffer = new Buffer(self.blockSize);
+
+										fs.read(fd, buffer, 0, self.blockSize, null, function(err, readsize, buffer) {
+											buffer = buffer.slice(0, readsize);
+											client.write(buffer);
+
+											if (self.ackCheck) {
+												client.once("data", function(data) {
+													var acksize = data.readUInt32BE(0);
+
+													if (readsize < self.blockSize/* || acksize < readsize*/) // EOF || error
+														client.end();
+													else
+														func();
+												});
+											}
+											else {
+												if (readsize < self.blockSize) // EOF
+													client.end();
+												else
+													func();
+											}
+										});
+									};
+
+									func();
+								}
+								else
+									bot.out.error("dcc", err);
+							});
+						});
+
+						server.listen(self.port);
+					}
+				});
+			}
+		});
+	};
+
 	self.load = function(data) {
 		if (data && data.port)
 			self.port = data.port;
+		if (data && data.blockSize)
+			self.blockSize = data.blockSize;
+		if (data && data.ackCheck)
+			self.ackCheck = data.ackCheck;
 	};
 
 	self.enable = function() {
@@ -121,7 +182,7 @@ function DCCPlugin(bot) {
 	};
 
 	self.save = function() {
-		return {port: self.port};
+		return {port: self.port, blockSize: self.blockSize, ackCheck: self.ackCheck};
 	};
 
 	self.events = {

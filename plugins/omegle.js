@@ -10,17 +10,19 @@ function OmeglePlugin(bot) {
 	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>(?![>\.]))\s*(.*)$/i;
 
 	self.skips = [];
+	self.typing = true;
 	self.colleges = {};
 
 	self.load = function(data) {
 		if (data) {
 			self.skips = data.skips;
+			self.typing = data.typing;
 			self.colleges = data.colleges;
 		}
 	};
 
 	self.save = function() {
-		return {"skips": self.skips, "colleges": self.colleges};
+		return {"skips": self.skips, "typing": self.typing, "colleges": self.colleges};
 	};
 
 	self.chats = {};
@@ -154,16 +156,20 @@ function OmeglePlugin(bot) {
 										bot.notice(to, who + " connected");
 										break;
 									case "typing":
-										bot.action(to, "is typing...");
+										if (self.typing)
+											bot.action(to, "is typing...");
 										break;
 									case "spyTyping":
-										bot.action(to, "<" + eventdata[i][1] + "> is typing...");
+										if (self.typing)
+											bot.action(to, "<" + eventdata[i][1] + "> is typing...");
 										break;
 									case "stoppedTyping": 
-										bot.action(to, "stopped typing");
+										if (self.typing)
+											bot.action(to, "stopped typing");
 										break;
 									case "spyStoppedTyping":
-										bot.action(to, "<" + eventdata[i][1] + "> stopped typing");
+										if (self.typing)
+											bot.action(to, "<" + eventdata[i][1] + "> stopped typing");
 										break;
 									case "gotMessage":
 										var msg = eventdata[i][1];

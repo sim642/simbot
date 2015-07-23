@@ -4,7 +4,13 @@ function TopicLogPlugin(bot) {
 	var self = this;
 	self.name = "topiclog";
 	self.help = "Topic logger plugin";
-	self.depend = ["cmd", "date"];
+	self.depend = ["cmd", "date", "util"];
+
+	self.sedRe = new RegExp(
+		"^(?:((?:\\\\/|[^/])+)/)?" +
+		"s([^\\w\\s])((?:\\\\\\2|(?!\\2).)+)" +
+		"\\2((?:\\\\\\2|(?!\\2).)*?)" +
+		"\\2([a-z])*$"); // simplified from sed plugin
 
 	self.topiclog = {};
 
@@ -133,6 +139,40 @@ function TopicLogPlugin(bot) {
 				}
 				else
 					bot.say(to, "Invalid topic ID");
+			}
+		},
+
+		"cmd#topicsed": function(nick, to, args) {
+			var chan = to; // TODO: allow cross-channel topicsed
+
+			// adjusted from sed plugin
+			var m = args[0].match(self.sedRe);
+			if (m) {
+				var sedPrere = m[1] ? new RegExp(m[1]) : null;
+				var sedRe = new RegExp(m[3], m[5]);
+				var sedRepl = bot.plugins.util.strUnescape(m[4]);
+
+				var chanlog = self.topiclog[chan];
+
+				for (var i = chanlog.length - 1; i >= 0; i--) {
+					var text2 = chanlog[i].topic;
+
+					var func = function() {
+						var out = text2.replace(sedRe, sedRepl).replace(/[\r\n]/g, "");
+						bot.send("TOPIC", chan, out);
+					};
+
+					if (sedPrere) {
+						if (sedPrere.test(text2)) {
+							func();
+							break;
+						}
+					}
+					else {
+						func();
+						break;
+					}
+				}
 			}
 		}
 	};

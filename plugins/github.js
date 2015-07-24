@@ -12,13 +12,14 @@ function GithubPlugin(bot) {
 
 	self.userRe = /^\w[\w-]+$/;
 	self.repoRe = /^(\w[\w-]+)\/(\w[\w-]+)$/;
+	self.gistRe = /^(?:(\w[\w-]+)\/)?([0-9a-f]{20})$/;
 
 	self.token = null;
 	self.request = null;
 
 	self.users = {};
 
-	self.urlRe = /(?:https?:\/\/|\s|^)(?:www\.)?github\.com\/(\w[\w-]+(?:\/\w[\w-]+)?)(?=\s|$)/;
+	self.urlRe = /(?:https?:\/\/|\s|^)(?:(www|gist)\.)?github\.com\/(\w[\w-]+(?:\/\w[\w-]+)?)(?=\s|$)/;
 	self.channels = [];
 
 	self.setToken = function(token) {
@@ -202,12 +203,52 @@ function GithubPlugin(bot) {
 		}
 	};
 
+	self.gist = function(arg, callback) {
+		var m = arg.match(self.gistRe);
+		if (m) {
+			self.request("https://api.github.com/gists/" + m[2], function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var j = JSON.parse(body);
+
+					var prefix = j.owner.login + "/" + j.id;
+					var bits = [];
+
+					if (j.fork_of)
+						bits.push(["fork", j.fork_of.owner.login + "/" + j.fork_of.id]);
+					if (j.description)
+						bits.push([, j.description, 0]);
+					bits.push(["files", Object.keys(j.files).length]);
+					bits.push(["revisions", j.history.length]);
+					// TODO: star count - not available in API
+					bits.push(["comments", j.comments]);
+					bits.push(["forks", j.forks.length]);
+
+					bits.push([, j.html_url, 2]);
+
+					callback(bot.plugins.bits.format(prefix, bits));
+				}
+			});
+		}
+	};
+
+	self.lookup = function(m, callback) {
+		(m[1] == "gist" ? self.gist : self.github)(m[2], callback);
+	};
+
 	self.events = {
 		"cmd#github": function(nick, to, args) {
 			var realarg = args[1] || nick;
 			var arg = self.parseuser(realarg.toLowerCase());
 
 			self.github(arg, function(str) {
+				bot.say(to, str);
+			});
+		},
+
+		"cmd#gist": function(nick, to, args) {
+			var arg = args[1];
+
+			self.gist(arg, function(str) {
 				bot.say(to, str);
 			});
 		},
@@ -233,9 +274,8 @@ function GithubPlugin(bot) {
 			if (self.channels.indexOf(to) != -1) {
 				var m = text.match(self.urlRe);
 				if (m) {
-					var arg = m[1];
 					bot.out.log("github", nick + " in " + to + ": " + m[0]);
-					self.github(arg, function(str) {
+					self.lookup(m, function(str) {
 						bot.say(to, str);
 					});
 				}
@@ -245,9 +285,8 @@ function GithubPlugin(bot) {
 		"pm": function(nick, text) {
 			var m = text.match(self.urlRe);
 			if (m) {
-				var arg = m[1];
 				bot.out.log("github", nick + " in PM: " + m[0]);
-				self.github(arg, function(str) {
+				self.lookup(m, function(str) {
 					bot.say(nick, str);
 				});
 			}

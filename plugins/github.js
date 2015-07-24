@@ -6,7 +6,7 @@ function GithubPlugin(bot) {
 	var self = this;
 	self.name = "github";
 	self.help = "Github stats plugin";
-	self.depend = ["cmd", "bits", "util"];
+	self.depend = ["cmd", "ignore", "bits", "util"];
 
 	self.blocks = "▁▂▃▄▅▆▇█";
 
@@ -21,6 +21,7 @@ function GithubPlugin(bot) {
 
 	self.urlRe = /(?:https?:\/\/|\s|^)(?:(www|gist)\.)?github\.com\/(\w[\w-]+(?:\/\w[\w-]+)?)(?=\s|$)/;
 	self.channels = [];
+	self.ignores = [];
 
 	self.setToken = function(token) {
 		if (token) {
@@ -38,6 +39,8 @@ function GithubPlugin(bot) {
 			self.users = data.users;
 		if (data && data.channels)
 			self.channels = data.channels;
+		if (data && data.ignores)
+			self.ignores = data.ignores;
 
 		self.setToken(data.token);
 	};
@@ -46,7 +49,8 @@ function GithubPlugin(bot) {
 		return {
 			"token": self.token,
 			"users": self.users,
-			"channels": self.channels
+			"channels": self.channels,
+			"ignores": self.ignores
 		};
 	};
 
@@ -270,8 +274,8 @@ function GithubPlugin(bot) {
 			});
 		},
 
-		"message": function(nick, to, text) {
-			if (self.channels.indexOf(to) != -1) {
+		"message": function(nick, to, text, message) {
+			if ((self.channels.indexOf(to) != -1) && !bot.plugins.ignore.ignored(self.ignores, message)) {
 				var m = text.match(self.urlRe);
 				if (m) {
 					bot.out.log("github", nick + " in " + to + ": " + m[0]);

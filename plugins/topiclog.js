@@ -13,6 +13,7 @@ function TopicLogPlugin(bot) {
 		"\\2([a-z])*$"); // simplified from sed plugin
 
 	self.topiclog = {};
+	self.tochange = {};
 
 	self.load = function(data) {
 		if (data) {
@@ -27,6 +28,13 @@ function TopicLogPlugin(bot) {
 
 	self.save = function() {
 		return self.topiclog;
+	};
+
+	self.topic = function(channel, topic, nick) {
+		if (!(channel in self.tochange))
+			self.tochange[channel] = [];
+		self.tochange[channel].push({"nick": nick, "topic": topic});
+		bot.send("TOPIC", channel, topic);
 	};
 
 	self.colordiff = function(str1, str2) {
@@ -76,11 +84,30 @@ function TopicLogPlugin(bot) {
 				else
 					self.topiclog[channel].push(entry);
 			}
+
+			if ((nick == bot.nick) && (channel in self.tochange)) {
+				self.tochange[channel] = self.tochange[channel].filter(function(elem) {
+					return elem.topic != topic;
+				}); // TODO: fix for multiple same topics
+			}
 		},
 
 		"join": function(channel, nick) {
 			if (nick == bot.nick)
 				bot.send("TOPIC", channel);
+		},
+
+		"raw": function(message) {
+			if (message.command == "err_chanoprivsneeded") {
+				var channel = message.args[1];
+
+				if (channel in self.tochange) {
+					var change = self.tochange[channel].pop();
+
+					if (change)
+						bot.notice(change.nick, "/topic " + channel + " " + change.topic);
+				}
+			}
 		},
 
 		"cmd#topics": function(nick, to, args) {
@@ -135,7 +162,7 @@ function TopicLogPlugin(bot) {
 
 				var id = args[1] || (chanlog.length - 2);
 				if (id >= 0 && id < chanlog.length) {
-					bot.send("TOPIC", chan, chanlog[id].topic);
+					self.topic(chan, chanlog[id].topic, nick);
 				}
 				else
 					bot.say(to, "Invalid topic ID");
@@ -159,7 +186,7 @@ function TopicLogPlugin(bot) {
 
 					var func = function() {
 						var out = text2.replace(sedRe, sedRepl).replace(/[\r\n]/g, "");
-						bot.send("TOPIC", chan, out);
+						self.topic(chan, out, nick);
 					};
 
 					if (sedPrere) {

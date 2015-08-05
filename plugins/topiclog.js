@@ -111,12 +111,23 @@ function TopicLogPlugin(bot) {
 		},
 
 		"cmd#topics": function(nick, to, args) {
-			var cnt = Math.min(Math.max(args[1], 1) || 3, 5);
-			var chan = args[2] || to;
+			var cnt;
+			var channel = to;
 
-			if (chan in self.topiclog)
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg.match(/^#/))
+					channel = arg;
+				else if (arg.match(/^\d+$/))
+					cnt = parseInt(arg);
+			}
+
+			cnt = Math.min(Math.max(cnt, 1) || 3, 10);
+
+			if (channel in self.topiclog)
 			{
-				var chanlog = self.topiclog[chan];
+				var chanlog = self.topiclog[channel];
 
 				var lastentry = chanlog[chanlog.length - cnt - 1];
 				for (var i = -cnt; i < 0; i++) {
@@ -129,7 +140,7 @@ function TopicLogPlugin(bot) {
 						else
 							str = entry.topic;
 
-						bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + chan + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
+						bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + channel + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
 						lastentry = entry;
 					}
 				}
@@ -170,23 +181,36 @@ function TopicLogPlugin(bot) {
 		},
 
 		"cmd#topicsed": function(nick, to, args) {
-			var chan = to; // TODO: allow cross-channel topicsed
+			var channel = to;
+			var sed = null;
+
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg.match(/^#/))
+					channel = arg;
+				else {
+					var m = arg.match(self.sedRe);
+					if (m)
+						sed = m;
+				}
+			}
 
 			// adjusted from sed plugin
-			var m = args[0].match(self.sedRe);
-			if (m) {
+			if (sed) {
+				var m = sed;
 				var sedPrere = m[1] ? new RegExp(m[1]) : null;
 				var sedRe = new RegExp(m[3], m[5]);
 				var sedRepl = bot.plugins.util.strUnescape(m[4]);
 
-				var chanlog = self.topiclog[chan];
+				var chanlog = self.topiclog[channel];
 
 				for (var i = chanlog.length - 1; i >= 0; i--) {
 					var text2 = chanlog[i].topic;
 
 					var func = function() {
 						var out = text2.replace(sedRe, sedRepl).replace(/[\r\n]/g, "");
-						self.topic(chan, out, nick);
+						self.topic(channel, out, nick);
 					};
 
 					if (sedPrere) {

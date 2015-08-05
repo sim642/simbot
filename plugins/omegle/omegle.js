@@ -72,6 +72,7 @@ function Omegle() {
 		case "error":
 			self.emit("error", new Error(event[1]));
 			break;
+		}
 	});
 	
 	self.on("info#status", function(status) {
@@ -107,7 +108,7 @@ Omegle.prototype.start = function() {
 			self.emit("start");
 		}
 		else {
-			self.emit("error", err);
+			self.emit("error", err ? err : body);
 		}
 	});
 };
@@ -122,7 +123,7 @@ Omegle.prototype.end = function() {
 			self.emit("end");
 		}
 		else {
-			self.emit("error", err);
+			self.emit("error", err ? err : body);
 		}
 	});
 };
@@ -138,27 +139,28 @@ Omegle.prototype.events = function() {
 
 			if (data !== null) {
 				data.forEach(function(event) {
-					self.emit.apply(self, event);
+					//self.emit.apply(self, event);
+					self.emit("event", event);
 				});
 			}
 		}
 		else {
-			self.emit("error", err);
+			self.emit("error", err ? err : body);
 		}
 	});
 };
 
-Omegle.prototype.send = function() {
+Omegle.prototype.send = function(msg) {
 	var self = this;
 
-	self.req = request.post({url: self.server + "send", form: {"id": self.id}}, function(err, res, body) {
+	self.req = request.post({url: self.server + "send", form: {"id": self.id, "msg": msg}}, function(err, res, body) {
 		self.req = null;
 
 		if (!err && res.statusCode == 200) {
 
 		}
 		else {
-			self.emit("error", err);
+			self.emit("error", err ? err : body);
 		}
 	});
 };
@@ -173,7 +175,7 @@ Omegle.prototype.typingStart = function() {
 
 		}
 		else {
-			self.emit("error", err);
+			self.emit("error", err ? err : body);
 		}
 	});
 };
@@ -188,7 +190,7 @@ Omegle.prototype.typingStop = function() {
 
 		}
 		else {
-			self.emit("error", err);
+			self.emit("error", err ? err : body);
 		}
 	});
 };

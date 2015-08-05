@@ -74,7 +74,7 @@ function HistoryPlugin(bot) {
 
 				if (arg.match(/^#/))
 					channel = arg;
-				else if (arg.match(/^\d+/))
+				else if (arg.match(/^\d+$/))
 					linecnt = parseInt(arg);
 				else {
 					var m = arg.match(self.grepRe);

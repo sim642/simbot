@@ -100,6 +100,9 @@ function Omegle2Plugin(bot) {
 			bot.out.log("omegle2", who + " disconnected");
 			bot.notice(to, who + " disconnected");
 		});
+		o.on("end", function() {
+			delete self.chats[to];
+		});
 
 		// message events
 		o.on("message", function(msg, who) {
@@ -128,7 +131,8 @@ function Omegle2Plugin(bot) {
 		});
 
 		o.on("event", function(event) {
-			bot.out.debug("omegle2", event);
+			if (self.debug)
+				bot.out.debug("omegle2", event);
 		});
 
 		// info events

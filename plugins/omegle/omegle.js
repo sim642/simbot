@@ -77,6 +77,15 @@ function Omegle(optNew) {
 			break;
 		}
 	});
+
+	self.on("disconnect", function() {
+		self.emit("end");
+	});
+
+	self.on("end", function() {
+		clearInterval(self.interval);
+		self.interval = null;
+	});
 	
 	self.on("info#status", function(status) {
 		self.servers = status.servers;

@@ -8,12 +8,16 @@ function Omegle2Plugin(bot) {
 
 	self.regex = /^(\s*([a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]*)\s*[,:]|>(?![>\.]))\s*(.*)$/i;
 
-	self.load = function(data) {
+	self.colleges = {};
 
+	self.load = function(data) {
+		if (data) {
+			self.colleges = data.colleges || {};
+		}
 	};
 
 	self.save = function() {
-
+		return {"colleges": self.colleges};
 	};
 
 	self.chats = {};
@@ -25,53 +29,118 @@ function Omegle2Plugin(bot) {
 		self.chats = {};
 	};
 
-	self.start = function(to) {
-		var o = new Omegle();
+	self.parseArgs = function(args) {
+		var opt = {};
+
+		if (args !== undefined) {
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+				if (arg == "auto")
+					opt["auto"] = true;
+				else if (arg == "my")
+					opt["collegeAny"] = false;
+				else if (arg == "any")
+					opt["collegeAny"] = true;
+				else if (arg == "spyee") {
+					opt["spyee"] = true;
+					opt["topics"] = [];
+					opt["question"] = null;
+				}
+				else if (arg.length == 2)
+					opt["lang"] = arg;
+				else if (arg in self.colleges) {
+					opt["college"] = arg;
+					opt["collegeAuth"] = self.colleges[arg];
+				}
+				else {
+					opt["topics"] = arg.split(",").map(function(elem) { return elem.trim(); }).filter(function(elem) { return elem != ""; });
+				}
+			}
+
+			var parts = args[0].split(":");
+			if (parts.length == 2) {
+				opt["question"] = parts[1].trim();
+				opt["topics"] = [];
+				opt["spyee"] = false;
+			}
+		}
+
+		return opt;
+	};
+
+	self.start = function(to, opt) {
+		var o = new Omegle(opt);
 
 		// connection events
 		o.on("waiting", function() {
-			bot.notice(to, "waiting for stranger");
+			var who = "stranger";
+			var bits = [];
+			if (o.opt["lang"] != "en")
+				bits.push("lang: " + o.opt["lang"]);
+			if (o.opt["topics"].length > 0)
+				bits.push("interests: " + o.opt["topics"].join(","));
+			if (o.opt["college"])
+				bits.push("college: " + (o.opt["collegeAny"] ? "any" : o.opt["college"]));
+			if (o.opt["question"]) {
+				bits.push("spy");
+				who += "s";
+			}
+			if (o.opt["spyee"])
+				bits.push("spyee");
+			bot.notice(to, "waiting for " + who + (bits.length === 0 ? "" : " [" + bits.join("; ") + "]"));
 		});
 		o.on("connect", function() {
-			var who = "stranger";
+			var who = "stranger" + (o.opt["question"] ? "s" : "");
 			bot.out.log("omegle2", who + " connected in " + to);
 			bot.notice(to, who + " connected");
 		});
-		o.on("disconnect", function() {
-			var who = "stranger";
+		o.on("disconnect", function(who) {
+			if (!who)
+				who = "stranger";
 			bot.out.log("omegle2", who + " disconnected");
 			bot.notice(to, who + " disconnected");
 		});
 
 		// message events
-		o.on("message", function(msg) {
-			bot.out.log("omegle2", "stranger in " + to + ": " + msg);
-			bot.say(to, "\x02" + msg);
+		o.on("message", function(msg, who) {
+			if (who) {
+				bot.out.log("omegle2", who + " in " + to + ": " + msg);
+				bot.say(to, "\x02<" + who + "> " + msg);
+			}
+			else {
+				bot.out.log("omegle2", "stranger in " + to + ": " + msg);
+				bot.say(to, "\x02" + msg);
+			}
 		});
 
 		// typing events
-		o.on("typing#start", function() {
-			bot.action(to, "is typing...");
+		o.on("typing#start", function(who) {
+			if (who)
+				bot.action(to, "<" + who + "> is typing...");
+			else
+				bot.action(to, "is typing...");
 		});
-		o.on("typing#stop", function() { 
-			bot.action(to, "stopped typing");
+		o.on("typing#stop", function(who) {
+			if (who)
+				bot.action(to, "<" + who + "> stopped typing");
+			else
+				bot.action(to, "stopped typing");
 		});
 
 		o.on("event", function(event) {
 			bot.out.debug("omegle2", event);
 		});
 
-		// TODO: info events
-		/*
-		o.on("commonLikes", function() {
-			bot.notice(to, "common likes, function() { " + eventdata[i][1].join(","));
+		// info events
+		o.on("info#likes", function(likes) {
+			bot.notice(to, "common likes: " + likes.join(","));
 		});
-		o.on("partnerCollege", function() {
-			bot.notice(to, "stranger's college, function() { " + eventdata[i][1]);
+		o.on("info#college", function(college) {
+			bot.notice(to, "stranger's college: " + college);
 		});
-		o.on("question", function() {
-			bot.notice(to, "question, function() { " + eventdata[i][1]);
-		});*/
+		o.on("info#question", function(question) {
+			bot.notice(to, "question: " + question);
+		});
 
 		// TODO: captcha events
 		/*
@@ -102,7 +171,7 @@ function Omegle2Plugin(bot) {
 		"cmd#omegle": function(nick, to, args) {
 			if (!(to in self.chats)) {
 				bot.notice(to, "omegle started");
-				self.start(to);
+				self.start(to, self.parseArgs(args));
 			}
 			else
 				bot.notice(to, "omegle already started");

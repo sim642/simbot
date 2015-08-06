@@ -4,13 +4,16 @@ var EventEmitter = require("events").EventEmitter;
 var request = require("request");
 var qs = require("querystring");
 
-function Omegle() {
+function Omegle(optNew) {
 	var self = this;
 
 	self.server = null;
 	self.req = null;
 	self.id = null;
 	self.interval = null;
+
+	self.opt = JSON.parse(JSON.stringify(optNew));
+	self.opt.__proto__ = self.optDefault;
 
 	self.on("event", function(event) {
 		switch (event[0]) {
@@ -90,9 +93,28 @@ Omegle.prototype.start = function() {
 
 	var query = {
 		"rcs": 1,
+		//"firstevents": 1,
 		"spid": "",
-		"land": "en"
+		"land": self.opt["lang"]
 	};
+
+	if (self.opt["topics"].length > 0) {
+		query["topics"] = JSON.stringify(self.opt["topics"]);
+	}
+
+	if (self.opt["college"] && self.opt["collegeAuth"]) {
+		query["college"] = self.opt["college"];
+		query["college_auth"] = self.opt["collegeAuth"];
+		query["any_college"] = self.opt["collegeAny"] ? 1 : 0;
+	}
+
+	if (self.opt["question"]) {
+		query["ask"] = self.opt["question"];
+	}
+
+	if (self.opt["spyee"]) {
+		query["wantsspy"] = 1;
+	}
 
 	self.req = request.post({url: self.server + "start?" + qs.stringify(query)}, function(err, res, body) {
 		self.req = null;
@@ -194,6 +216,15 @@ Omegle.prototype.typingStop = function() {
 		}
 	});
 };
+
 Omegle.prototype.servers = ["front1.omegle.com"]; // initial values, updated later
+Omegle.prototype.optDefault = {
+	"lang": "en",
+	"topics": [],
+	"collegeAuth": null,
+	"collegeAny": true,
+	"question": null,
+	"spyee": false
+};
 
 module.exports = Omegle;

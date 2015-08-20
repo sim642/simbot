@@ -89,7 +89,7 @@ function RedditPlugin(bot) {
 	self.formatEvent = function(event, short, callback) { // ignores extra
 		short = short || false;
 
-		var warning = false ? " \x034[NSFW]\x03" : ""; // TODO: no NSFW key in result?
+		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
 		var str = "\x1Fhttp://reddit.com/event/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
 
 		if (!short)
@@ -107,7 +107,7 @@ function RedditPlugin(bot) {
 
 				var longurl = "http://reddit.com/live/" + event.id + "/updates/" + update.id;
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
-					var warning = false ? " \x034[NSFW]\x03" : ""; // TODO: no NSFW key in result?
+					var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
 					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "/updates] by " + update.author;
 
 					if (!short)

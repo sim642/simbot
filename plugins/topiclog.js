@@ -171,7 +171,12 @@ function TopicLogPlugin(bot) {
 			if (chan in self.topiclog) {
 				var chanlog = self.topiclog[chan];
 
-				var id = args[1] || (chanlog.length - 2);
+				var id = -1;
+				if (args[1])
+					id = parseInt(args[1]);
+				if (id < 0)
+					id += chanlog.length - 1;
+
 				if (id >= 0 && id < chanlog.length) {
 					self.topic(chan, chanlog[id].topic, nick);
 				}

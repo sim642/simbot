@@ -7,9 +7,10 @@ function SedPlugin(bot) {
 	self.sedRe = new RegExp(
 		"^(?:(\\S+)[:,]\\s)?" +
 		"(?:((?:\\\\/|[^/])+)/)?" +
-		"s([^\\w\\s])((?:\\\\\\3|(?!\\3).)+)" +
-		"\\3((?:\\\\\\3|(?!\\3).)*?)" +
-		"\\3([a-z])*");
+		"(\\d+)?" +
+		"s([^\\w\\s])((?:\\\\\\4|(?!\\4).)+)" +
+		"\\4((?:\\\\\\4|(?!\\4).)*?)" +
+		"\\4([a-z])*");
 
 	self.events = {
 		"message": function(nick, to, text) {
@@ -19,8 +20,9 @@ function SedPlugin(bot) {
 
 				var sedNick = m[1] || nick;
 				var sedPrere = new RegExp(m[2] || ".*");
-				var sedRe = new RegExp(m[4], m[6]);
-				var sedRepl = bot.plugins.util.strUnescape(m[5]);
+				var sedCnt = m[3] ? parseInt(m[3]) : null;
+				var sedRe = new RegExp(m[5], m[7]);
+				var sedRepl = bot.plugins.util.strUnescape(m[6]);
 
 				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick), "i");
 
@@ -32,9 +34,21 @@ function SedPlugin(bot) {
 						var text2 = m2[2];
 						if (!self.sedRe.test(text2) && sedPrere.test(text2)) {
 							var out = text2.replace(sedRe, sedRepl).replace(/[\r\n]/g, "");
-							if (out != text2) {
-								bot.say(to, m2[1] + " " + out);
-								return false;
+
+							if (sedCnt === null) {
+								if (out != text2) {
+									bot.say(to, m2[1] + " " + out);
+									return false;
+								}
+							}
+							else {
+								sedCnt--;
+								if (sedCnt == 0) {
+									if (out != text2) {
+										bot.say(to, m2[1] + " " + out);
+									}
+									return false;
+								}
 							}
 						}
 					}

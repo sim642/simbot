@@ -4,13 +4,7 @@ function TopicLogPlugin(bot) {
 	var self = this;
 	self.name = "topiclog";
 	self.help = "Topic logger plugin";
-	self.depend = ["cmd", "date", "util"];
-
-	self.sedRe = new RegExp(
-		"^(?:((?:\\\\/|[^/])+)/)?" +
-		"s([^\\w\\s])((?:\\\\\\2|(?!\\2).)+)" +
-		"\\2((?:\\\\\\2|(?!\\2).)*?)" +
-		"\\2([a-z])*$"); // simplified from sed plugin
+	self.depend = ["cmd", "date", "util", "*sed"];
 
 	self.topiclog = {};
 	self.tochange = {};
@@ -195,37 +189,24 @@ function TopicLogPlugin(bot) {
 				if (arg.match(/^#/))
 					channel = arg;
 				else {
-					var m = arg.match(self.sedRe);
+					var m = arg.match(bot.plugins.sed.sedRe);
 					if (m)
-						sed = m;
+						sed = bot.plugins.sed.sed(arg);
 				}
 			}
 
-			// adjusted from sed plugin
 			if (sed) {
-				var m = sed;
-				var sedPrere = m[1] ? new RegExp(m[1]) : null;
-				var sedRe = new RegExp(m[3], m[5]);
-				var sedRepl = bot.plugins.util.strUnescape(m[4]);
-
 				var chanlog = self.topiclog[channel];
 
 				for (var i = chanlog.length - 1; i >= 0; i--) {
 					var text2 = chanlog[i].topic;
+					var s = sed(text2);
 
-					var func = function() {
-						var out = text2.replace(sedRe, sedRepl).replace(/[\r\n]/g, "");
-						self.topic(channel, out, nick);
-					};
-
-					if (sedPrere) {
-						if (sedPrere.test(text2)) {
-							func();
-							break;
-						}
-					}
-					else {
-						func();
+					if (s === false)
+						break;
+					else if (s !== true) // string returned
+					{
+						self.topic(channel, s, nick);
 						break;
 					}
 				}

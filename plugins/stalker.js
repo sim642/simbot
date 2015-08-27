@@ -276,15 +276,18 @@ function StalkerPlugin(bot) {
 			if (nick2) {
 				var ids = self.stalk(nick2);
 				var recent = null;
+				var first = null;
 
 				for (var i = 0; i < ids.length; i++) {
 					var row = self.db[ids[i]];
 					if (recent === null || row.seen > recent.seen)
 						recent = row;
+					if (first === null || row.added < first.added)
+						first = row;
 				}
 
-				if (recent !== null) {
-					bot.say(to, nick2 + " seen as " + recent.nick + ": " + bot.plugins.date.printDateTime(recent.seen) + " (" + bot.plugins.date.printDur(recent.seen, "second") + " ago)");
+				if (recent !== null && first !== null) {
+					bot.say(to, nick2 + " last seen as " + recent.nick + ": " + bot.plugins.date.printDateTime(recent.seen) + " (" + bot.plugins.date.printDur(recent.seen, "second") + " ago); first seen as " + first.nick + ": " + bot.plugins.date.printDateTime(first.added) + " (" + bot.plugins.date.printDur(first.added, "second") + " ago)");
 				}
 				else
 					bot.say(to, nick2 + " has been never seen");

@@ -10,11 +10,11 @@ function SedPlugin(bot) {
 
 	self.sedRe = new RegExp(
 		"^" +
-		"(?:((?:\\\\/|[^/])+)/)?" +
+		"(?:/?((?:\\\\/|[^/])+)/([a-z]*))?" +
 		"(\\d+)?" +
-		"s([^\\w\\s])((?:\\\\\\3|(?!\\3).)+)" +
-		"\\3((?:\\\\\\3|(?!\\3).)*?)" +
-		"\\3([a-z])*" +
+		"(?:s([^\\w\\s])((?:\\\\\\4|(?!\\4).)+)" +
+		"\\4((?:\\\\\\4|(?!\\4).)*?)" +
+		"\\4([a-z]*))?" +
 		"$");
 
 	self.msgSed = true;
@@ -31,28 +31,28 @@ function SedPlugin(bot) {
 	self.sed = function(expr, filter) {
 		var m = expr.match(self.sedRe);
 		if (m) {
-			var sedPrere = new RegExp(m[1] || ".*");
-			var sedCnt = m[2] ? parseInt(m[2]) : null;
-			var sedRe = new RegExp(m[4], m[6]);
-			var sedRepl = bot.plugins.util.strUnescape(m[5]);
+			var sedPrere = new RegExp(m[1] || ".*", m[2]);
+			var sedCnt = m[3] ? parseInt(m[3]) : null;
+			var sedRe = null;
+			var sedRepl = null;
+			if (m[5]) {
+				sedRe = new RegExp(m[5], m[7]);
+				sedRepl = bot.plugins.util.strUnescape(m[6]);
+			}
 
 			filter = filter || function(){ return true; };
 
 			return function(line) {
 				if (filter(line) && sedPrere.test(line)) {
-					var out = line.replace(sedRe, sedRepl).replace(/[\r\n]/g, "");
+					var out = sedRe !== null ? line.replace(sedRe, sedRepl).replace(/[\r\n]/g, "") : line;
 
 					if (sedCnt === null) {
-						if (out != line)
-							return out;
+						return out;
 					}
 					else {
 						sedCnt--;
 						if (sedCnt == 0) {
-							if (out != line)
-								return out;
-							else
-								return false;
+							return out;
 						}
 					}
 				}

@@ -47,7 +47,9 @@ function SedPlugin(bot) {
 					var out = sedRe !== null ? line.replace(sedRe, sedRepl).replace(/[\r\n]/g, "") : line;
 
 					if (sedCnt === null) {
-						return out;
+						if (sedRe === null || (sedRe !== null && sedRe.test(line))) {
+							return out;
+						}
 					}
 					else {
 						sedCnt--;

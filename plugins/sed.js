@@ -17,6 +17,11 @@ function SedPlugin(bot) {
 		"\\4([a-z]*))?" +
 		"$");
 
+	self.grepRe = new RegExp(
+		"^" +
+		"/((?:\\\\/|[^/])+)/([a-z]*)" +
+		"$");
+
 	self.msgSed = true;
 
 	self.load = function(data) {
@@ -57,6 +62,25 @@ function SedPlugin(bot) {
 							return out;
 						}
 					}
+				}
+
+				return true;
+			};
+		}
+		else
+			return null;
+	};
+
+	self.grep = function(expr, filter) {
+		var m = expr.match(self.grepRe);
+		if (m) {
+			var grepRe = new RegExp(m[1], m[2]);
+
+			filter = filter || function(){ return true; };
+
+			return function(line) {
+				if (filter(line) && grepRe.test(line)) {
+					return line;
 				}
 
 				return true;

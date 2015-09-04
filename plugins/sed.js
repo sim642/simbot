@@ -33,7 +33,7 @@ function SedPlugin(bot) {
 		return {msgSed: self.msgSed};
 	};
 
-	self.sed = function(expr, filter) {
+	self.sed = function(expr, filter, postRepl) {
 		var m = expr.match(self.sedRe);
 		if (m) {
 			var sedPrere = new RegExp(m[1] || ".*", m[2]);
@@ -46,10 +46,11 @@ function SedPlugin(bot) {
 			}
 
 			filter = filter || function(){ return true; };
+			postRepl = postRepl || function(text){ return text; };
 
 			return function(line) {
 				if (filter(line) && sedPrere.test(line)) {
-					var out = sedRe !== null ? line.replace(sedRe, sedRepl).replace(/[\r\n]/g, "") : line;
+					var out = sedRe !== null ? line.replace(sedRe, postRepl(sedRepl)).replace(/[\r\n]/g, "") : line;
 
 					if (sedCnt === null) {
 						if (sedRe === null || (sedRe !== null && sedRe.test(line))) {
@@ -103,7 +104,9 @@ function SedPlugin(bot) {
 		var m = self.sedCmd(cmd);
 		if (m) {
 			var sedNick = m[1] || nick;
-			var sed = self.sed(m[2], filter || function(){ return true; });
+			var sed = self.sed(m[2], filter || function(){ return true; }, function(text) {
+				return "\x16" + text + "\x16";
+			});
 
 			if (sed) { // possibly unneeded check due to self.sedCmd
 				bot.out.log("sed", nick + " in " + to + ": " + m[0]);

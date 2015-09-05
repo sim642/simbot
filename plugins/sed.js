@@ -72,16 +72,17 @@ function SedPlugin(bot) {
 			return null;
 	};
 
-	self.grep = function(expr, filter) {
+	self.grep = function(expr, filter, postRepl) {
 		var m = expr.match(self.grepRe);
 		if (m) {
 			var grepRe = new RegExp(m[1], m[2]);
 
 			filter = filter || function(){ return true; };
+			postRepl = postRepl || function(text){ return text; };
 
 			return function(line) {
 				if (filter(line) && grepRe.test(line)) {
-					return line;
+					return line.replace(grepRe, postRepl("$&"));
 				}
 
 				return true;
@@ -123,8 +124,7 @@ function SedPlugin(bot) {
 
 						if (s === false)
 							return false;
-						else if (s !== true) // string returned
-						{
+						else if (s !== true) { // string returned
 							bot.say(to, m2[1] + " " + s);
 							return false;
 						}

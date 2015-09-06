@@ -16,6 +16,8 @@ config.__proto__ = defcfg;
 
 var bot = new irc.Client(config.server, config.nick, config);
 
+bot.setMaxListeners(50);
+
 bot.forward = function(to) {
 	return function() {
 		var args = Array.prototype.slice.call(arguments);

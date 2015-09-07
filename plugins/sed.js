@@ -133,6 +133,8 @@ function SedPlugin(bot) {
 					return true;
 				}, function(found) {
 					//bot.out.debug("sed", "line " + cnt + " " + found);
+					if (!found)
+						bot.say(to, nick + ": no matching line found");
 				});
 			}
 		}

@@ -124,6 +124,8 @@ function GithubPlugin(bot) {
 					bits.push([, j.type]);
 					if (j.name)
 						bits.push([, j.name]);
+					if (j.company)
+						bits.push(["company", j.company]);
 					if (j.bio)
 						bits.push([, j.bio, 0]);
 					bits.push(["repos", j.public_repos]);

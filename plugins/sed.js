@@ -5,7 +5,7 @@ function SedPlugin(bot) {
 	self.depend = ["history", "util", "cmd"];
 
 	self.sedCmdRe = new RegExp(
-		"^(?:(\\S+)[:,]?\\s+)?" +
+		"^(?:(\\S+)[:,]\\s)?" +
 		"(.*)");
 
 	self.sedRe = new RegExp(

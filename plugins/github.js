@@ -81,9 +81,11 @@ function GithubPlugin(bot) {
 
 				var langs = {};
 				j.forEach(function(repo) {
-					if (!(repo.language in langs))
-						langs[repo.language] = 0;
-					langs[repo.language]++;
+					if (repo.language !== null) {
+						if (!(repo.language in langs))
+							langs[repo.language] = 0;
+						langs[repo.language]++;
+					}
 				});
 
 				var slangs = [];
@@ -167,9 +169,11 @@ function GithubPlugin(bot) {
 					};
 
 					self.getLangs(j.repos_url, function(langs) {
-						bits.push(["languages", langs.slice(0, 4).map(function(lang) {
-							return lang[0];
-						}).join(", ")]);
+						if (langs.length > 0) {
+							bits.push(["languages", langs.slice(0, 4).map(function(lang) {
+								return lang[0];
+							}).join(", ")]);
+						}
 
 						if (j.type == "User") {
 							self.request("https://github.com/users/" + j.login + "/contributions", function(err, res, body) {

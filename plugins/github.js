@@ -74,6 +74,34 @@ function GithubPlugin(bot) {
 		return str;
 	};
 
+	self.getLangs = function(reposUrl, callback) {
+		self.request(reposUrl, function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var j = JSON.parse(body);
+
+				var langs = {};
+				j.forEach(function(repo) {
+					if (!(repo.language in langs))
+						langs[repo.language] = 0;
+					langs[repo.language]++;
+				});
+
+				var slangs = [];
+				for (var lang in langs) {
+					slangs.push([lang, langs[lang]]);
+				}
+
+				slangs.sort(function(lhs, rhs) {
+					return rhs[1] - lhs[1];
+				});
+
+				callback(slangs);
+			}
+			else
+				bot.out.error("github", err, body);
+		});
+	};
+
 	self.github = function(arg, noError, callback) {
 		var realarg = bot.plugins.util.getKeyByValue(self.users, arg) || arg;
 
@@ -138,59 +166,64 @@ function GithubPlugin(bot) {
 						output();
 					};
 
+					self.getLangs(j.repos_url, function(langs) {
+						bits.push(["languages", langs.slice(0, 4).map(function(lang) {
+							return lang[0];
+						}).join(", ")]);
 
-					if (j.type == "User") {
-						self.request("https://github.com/users/" + j.login + "/contributions", function(err, res, body) {
-							if (!err && res.statusCode == 200) {
-								var doc = new dom().parseFromString(body);
-								var nodes = xpath.select("//rect[@class='day']", doc);
-								var contribs = [];
-								for (var i = 0; i < nodes.length; i++) {
-									var date = nodes[i].getAttribute("data-date");
-									var count = nodes[i].getAttribute("data-count");
-									contribs.push([date, parseInt(count), 0]);
-								}
-
-								contribs.sort(function(lhs, rhs) { // guarantee sort
-									return lhs[0].localeCompare(rhs[0]);
-								});
-
-								var longstreak = 0;
-								var total = 0;
-								var most = 0;
-								for (var i = 0; i < contribs.length; i++) {
-									total += contribs[i][1];
-
-									if (contribs[i][1] > 0) {
-										if (i > 0 && contribs[i - 1][1] > 0)
-											contribs[i][2] = contribs[i - 1][2] + 1;
-										else
-											contribs[i][2] = 1;
+						if (j.type == "User") {
+							self.request("https://github.com/users/" + j.login + "/contributions", function(err, res, body) {
+								if (!err && res.statusCode == 200) {
+									var doc = new dom().parseFromString(body);
+									var nodes = xpath.select("//rect[@class='day']", doc);
+									var contribs = [];
+									for (var i = 0; i < nodes.length; i++) {
+										var date = nodes[i].getAttribute("data-date");
+										var count = nodes[i].getAttribute("data-count");
+										contribs.push([date, parseInt(count), 0]);
 									}
 
-									longstreak = Math.max(longstreak, contribs[i][2]);
-									most = Math.max(most, contribs[i][1]);
+									contribs.sort(function(lhs, rhs) { // guarantee sort
+										return lhs[0].localeCompare(rhs[0]);
+									});
+
+									var longstreak = 0;
+									var total = 0;
+									var most = 0;
+									for (var i = 0; i < contribs.length; i++) {
+										total += contribs[i][1];
+
+										if (contribs[i][1] > 0) {
+											if (i > 0 && contribs[i - 1][1] > 0)
+												contribs[i][2] = contribs[i - 1][2] + 1;
+											else
+												contribs[i][2] = 1;
+										}
+
+										longstreak = Math.max(longstreak, contribs[i][2]);
+										most = Math.max(most, contribs[i][1]);
+									}
+									var curstreak = Math.max(contribs[contribs.length - 2][2], contribs[contribs.length - 1][2]);
+
+									bits.push(["contributions", total]);
+									bits.push(["most daily contributions", most]);
+									bits.push(["longest streak", longstreak + " days"]);
+									bits.push(["current streak", curstreak + " days"]);
+
+									var justContribs = contribs.map(function(tuple) {
+										return tuple[1];
+									});
+									bits.push(["recent contributions", self.graph(justContribs.slice(-14)), 0]);
+
+									finish();
 								}
-								var curstreak = Math.max(contribs[contribs.length - 2][2], contribs[contribs.length - 1][2]);
-
-								bits.push(["contributions", total]);
-								bits.push(["most daily contributions", most]);
-								bits.push(["longest streak", longstreak + " days"]);
-								bits.push(["current streak", curstreak + " days"]);
-
-								var justContribs = contribs.map(function(tuple) {
-									return tuple[1];
-								});
-								bits.push(["recent contributions", self.graph(justContribs.slice(-14)), 0]);
-
-								finish();
-							}
-							else
-								bot.out.error("github", err, body);
-						});
-					}
-					else
-						finish();
+								else
+									bot.out.error("github", err, body);
+							});
+						}
+						else
+							finish();
+					});
 				}
 				else if (!err && res.statusCode == 404) {
 					prefix = arg;

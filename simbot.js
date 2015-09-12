@@ -10,7 +10,7 @@ var config = JSON.parse(fs.readFileSync("config.json"));
 var defcfg = {
 	autoRejoin: false,
 	channels: [],
-	messageSplit: 300,
+	messageSplit: 400,
 };
 config.__proto__ = defcfg;
 

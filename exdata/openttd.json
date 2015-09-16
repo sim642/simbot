@@ -1,0 +1,7 @@
+{
+    "defServer": "server.addr",
+    "defPort": 1337,
+    "channels": [
+        "#openttd"
+    ]
+}

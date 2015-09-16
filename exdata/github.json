@@ -1,3 +1,9 @@
 {
-    "token": "github_personal_access_token_here"
+    "token": "github_personal_access_token_here",
+    "channels": [
+        "#channel"
+    ],
+    "ignores": [
+        "someGuy!*@*"
+    ]
 }

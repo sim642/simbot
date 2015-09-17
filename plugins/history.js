@@ -97,30 +97,34 @@ function HistoryPlugin(bot) {
 				if (re === null || line.match(re)) {
 					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
 
-					//contextTodo = surround;
+					contextTodo = surround;
 
 					linecnt--;
 					fileUsed = true;
 				}
-
-				if (context.length <= surround) {
-					context.unshift(line);
-
-					if (context.length > surround) // overflow -> rotate
-						context.pop();
-				}
-
-				if (contextTodo > 0) {
-					context.unshift(line);
-					contextTodo--;
-
-					if (contextTodo == 0) { // finished context
+				else if (re !== null) {
+					if (contextTodo > 0) {
+						bot.out.debug("history", contextTodo);
 						bot.out.debug("history", context);
-						context = [];
+
+						context.unshift(line);
+						contextTodo--;
+
+						if (contextTodo == 0) { // finished context
+							bot.out.debug("history", context);
+							context = [];
+						}
+					}
+					else if (context.length <= surround) {
+						context.unshift(line);
+
+						if (context.length > surround) // overflow -> rotate
+							context.pop();
 					}
 				}
 
-				bot.out.debug("history", [line, context]);
+
+				//bot.out.debug("history", [line, context]);
 
 				return linecnt > 0;
 			}, function() {

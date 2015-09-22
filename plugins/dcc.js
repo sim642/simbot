@@ -11,12 +11,15 @@ function DCCPlugin(bot) {
 
 	self.ctcpChatRe = /^DCC CHAT chat (\d+) (\d+)$/i;
 	self.ctcpMsgRe = /^(\x01ACTION )?([^\x01\r\n]*)\x01?\r?\n(.*)$/i;
+	self.ctcpSendRe = /^DCC SEND (\S+) (\d+) (\d+) (\d+)$/i;
 
 	self.port = null;
 	self.blockSize = 65536;
 	self.ackCheck = true;
+	self.ackSend = true;
 
 	self.chats = {};
+	self.autoReceive = false;
 
 	self.targetRe = /^dcc#(.*)$/;
 	self._say = null;
@@ -130,6 +133,62 @@ function DCCPlugin(bot) {
 		});
 	};
 
+	self.receive = function(from, filename, filesize, client) {
+		var filepath = path.join("./data/dcc/", from + "." + filename);
+
+		fs.open(filepath, "w", function(err, fd) {
+			if (!err) {
+				client.on("connect", function() {
+
+				});
+
+				client.on("end", function() {
+					bot.out.debug("dcc", "recv closed");
+				});
+
+				client.on("error", function(err) {
+					bot.out.error("dcc", from, client, err);
+				});
+
+				var func = function(data) {
+					//bot.out.debug("dcc", "recv: " + data.length);
+					fs.write(fd, data, 0, data.length, null, function(err, written, buffer) {
+						//bot.out.debug("dcc", "write: " + written);
+
+						fs.fstat(fd, function(err, stats) {
+							if (!err) {
+								var func2 = function() {
+									if (stats.size < filesize)
+										client.once("data", func);
+									else {
+										client.once("end", function() {
+											fs.close(fd);
+										});
+									}
+								};
+
+								if (self.ackSend) {
+									var ack = new Buffer(4);
+									ack.writeUInt32BE(written, 0);
+
+									client.write(ack, func2);
+								}
+								else
+									func2();
+							}
+							else
+								bot.out.error("dcc", err);
+						});
+					});
+				};
+
+				client.once("data", func);
+			}
+			else
+				bot.out.error("dcc", err);
+		});
+	};
+
 	self.load = function(data) {
 		if (data && data.port)
 			self.port = data.port;
@@ -137,6 +196,8 @@ function DCCPlugin(bot) {
 			self.blockSize = data.blockSize;
 		if (data && data.ackCheck)
 			self.ackCheck = data.ackCheck;
+		if (data && data.autoReceive)
+			self.autoReceive = data.autoReceive;
 	};
 
 	self.enable = function() {
@@ -182,7 +243,7 @@ function DCCPlugin(bot) {
 	};
 
 	self.save = function() {
-		return {port: self.port, blockSize: self.blockSize, ackCheck: self.ackCheck};
+		return {port: self.port, blockSize: self.blockSize, ackCheck: self.ackCheck, autoReceive: self.autoReceive};
 	};
 
 	self.events = {
@@ -196,6 +257,18 @@ function DCCPlugin(bot) {
 				//bot.out.debug("dcc", [host, port]);
 
 				self.chat(from, net.connect(port, host));
+			}
+
+			var m = text.match(self.ctcpSendRe);
+			if (m) {
+				var filename = m[1];
+				var host = ip.fromLong(m[2]);
+				var port = parseInt(m[3]);
+				var filesize = parseInt(m[4]);
+
+				//bot.out.debug("dcc", [filename, host, port, filesize]);
+				if (self.autoReceive)
+					self.receive(from, filename, filesize, net.connect(port, host));
 			}
 		},
 

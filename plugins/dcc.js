@@ -7,7 +7,7 @@ function DCCPlugin(bot) {
 	var self = this;
 	self.name = "dcc";
 	self.help = "DCC plugin";
-	self.depend = [];
+	self.depend = ["util"];
 
 	self.ctcpChatRe = /^DCC CHAT chat (\d+) (\d+)$/i;
 	self.ctcpMsgRe = /^(\x01ACTION )?([^\x01\r\n]*)\x01?\r?\n(.*)$/i;
@@ -20,6 +20,7 @@ function DCCPlugin(bot) {
 
 	self.chats = {};
 	self.autoReceive = false;
+	self.receives = [];
 
 	self.targetRe = /^dcc#(.*)$/;
 	self._say = null;
@@ -189,6 +190,11 @@ function DCCPlugin(bot) {
 		});
 	};
 
+	self.receive2 = function(receiveId) {
+		var receive = self.receives.splice(receiveId, 1)[0];
+		self.receive(receive.from, receive.filename, receive.filesize, net.connect(receive.port, receive.host));
+	};
+
 	self.load = function(data) {
 		if (data && data.port)
 			self.port = data.port;
@@ -267,8 +273,19 @@ function DCCPlugin(bot) {
 				var filesize = parseInt(m[4]);
 
 				//bot.out.debug("dcc", [filename, host, port, filesize]);
+
+				var receiveId = self.receives.push({
+					"from": from,
+					"filename": filename,
+					"filesize": filesize,
+					"host": host,
+					"port": port
+				}) - 1;
+
+				bot.out.log("dcc", receiveId + ": " + from + " (" + host + ":" + port + ") sending " + filename + " (" + bot.plugins.util.formatSize(filesize) + ")");
+
 				if (self.autoReceive)
-					self.receive(from, filename, filesize, net.connect(port, host));
+					self.receive2(receiveId);
 			}
 		},
 

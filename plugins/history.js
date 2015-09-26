@@ -103,6 +103,11 @@ function HistoryPlugin(bot) {
 			var contextTodo = 0;
 			var fileUsed = false;
 			self.iterate(channel, function(line) {
+				if (extra) {
+					extra = false;
+					return true;
+				}
+
 				if (linecnt > 0 && (re === null || line.match(re))) {
 					if (re !== null) {
 						//bot.out.debug("history", context);
@@ -133,9 +138,6 @@ function HistoryPlugin(bot) {
 
 				return linecnt > 0 || contextTodo > 0;
 			}, function() {
-				if (extra && (re === null || outlines[outlines.length - 1].match(re)))
-					outlines.pop();
-
 				bot.say(nick, "\x031--- Begin history for " + channel + " ---");
 				for (var i = 0; i < outlines.length; i++) {
 					var str = outlines[i];

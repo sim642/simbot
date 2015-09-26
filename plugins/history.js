@@ -68,27 +68,35 @@ function HistoryPlugin(bot) {
 			var linecnt;
 			var channel = to;
 			var re = null;
+			var preSurround;
+			var postSurround;
 
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
+				var m;
 
 				if (arg.match(/^#/))
 					channel = arg;
 				else if (arg.match(/^\d+$/))
 					linecnt = parseInt(arg);
+				else if (m = arg.match(/^-(\d+)$/))
+					preSurround = parseInt(m[1]);
+				else if (m = arg.match(/^\+(\d+)$/))
+					postSurround = parseInt(m[1]);
 				else {
-					var m = arg.match(self.grepRe);
+					m = arg.match(self.grepRe);
 					if (m) {
 						re = new RegExp(m[2], m[3]);
 					}
 				}
 			}
 
-			var extra = channel == to;
-			linecnt = Math.min(linecnt || 15, 50) + extra;
+			preSurround = Math.min(preSurround || 3, 5);
+			postSurround = Math.min(postSurround || 1, 5);
 
-			var preSurround = 3;
-			var postSurround = 1;
+			var extra = channel == to;
+			linecnt = Math.min(linecnt || 15, Math.ceil(50 / (preSurround + 1 + postSurround)));
+
 
 			var outlines = [];
 			var context = [];

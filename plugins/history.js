@@ -87,7 +87,8 @@ function HistoryPlugin(bot) {
 			var extra = channel == to;
 			linecnt = Math.min(linecnt || 15, 50) + extra;
 
-			var surround = 3;
+			var preSurround = 3;
+			var postSurround = 1;
 
 			var outlines = [];
 			var context = [];
@@ -96,7 +97,7 @@ function HistoryPlugin(bot) {
 			self.iterate(channel, function(line) {
 				if (linecnt > 0 && (re === null || line.match(re))) {
 					if (re !== null) {
-						bot.out.debug("history", context);
+						//bot.out.debug("history", context);
 						context.forEach(function(cline) {
 							outlines.unshift(cline);
 						});
@@ -104,7 +105,7 @@ function HistoryPlugin(bot) {
 					}
 					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
 
-					contextTodo = surround;
+					contextTodo = preSurround;
 
 					linecnt--;
 					fileUsed = true;
@@ -114,10 +115,10 @@ function HistoryPlugin(bot) {
 						outlines.unshift(line);
 						contextTodo--;
 					}
-					else if (context.length <= surround) {
+					else if (context.length <= postSurround) {
 						context.push(line);
 
-						if (context.length > surround) // overflow -> rotate
+						if (context.length > postSurround) // overflow -> rotate
 							context.shift();
 					}
 				}

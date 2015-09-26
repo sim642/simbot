@@ -94,7 +94,14 @@ function HistoryPlugin(bot) {
 			var contextTodo = 0;
 			var fileUsed = false;
 			self.iterate(channel, function(line) {
-				if (re === null || line.match(re)) {
+				if (linecnt > 0 && (re === null || line.match(re))) {
+					if (re !== null) {
+						bot.out.debug("history", context);
+						context.forEach(function(cline) {
+							outlines.unshift(cline);
+						});
+						context = [];
+					}
 					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
 
 					contextTodo = surround;
@@ -104,29 +111,18 @@ function HistoryPlugin(bot) {
 				}
 				else if (re !== null) {
 					if (contextTodo > 0) {
-						bot.out.debug("history", contextTodo);
-						bot.out.debug("history", context);
-
-						context.unshift(line);
+						outlines.unshift(line);
 						contextTodo--;
-
-						if (contextTodo == 0) { // finished context
-							bot.out.debug("history", context);
-							context = [];
-						}
 					}
 					else if (context.length <= surround) {
-						context.unshift(line);
+						context.push(line);
 
 						if (context.length > surround) // overflow -> rotate
-							context.pop();
+							context.shift();
 					}
 				}
 
-
-				//bot.out.debug("history", [line, context]);
-
-				return linecnt > 0;
+				return linecnt > 0 || contextTodo > 0;
 			}, function() {
 				if (extra && (re === null || outlines[outlines.length - 1].match(re)))
 					outlines.pop();

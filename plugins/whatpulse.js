@@ -4,7 +4,7 @@ function WhatpulsePlugin(bot) {
 	var self = this;
 	self.name = "whatpulse";
 	self.help = "Whatpulse plugin";
-	self.depend = ["cmd", "bits", "nickserv"];
+	self.depend = ["cmd", "bits", "nickserv", "util"];
 
 	self.users = {};
 	self.defaultTeam = null;
@@ -62,6 +62,49 @@ function WhatpulsePlugin(bot) {
 			});
 		},
 
+		"cmd#whatpulses": function(nick, to, args) {
+			var realuser = args[1] || nick;
+			var user = self.parseuser(realuser.toLowerCase());
+			var cnt = Math.min(Math.max(args[2] || 3, 1), 5);
+
+			request("http://api.whatpulse.org/pulses.php?format=json&formatted=yes&user=" + user, function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var j = JSON.parse(body);
+
+					if (!j.error) {
+						var pulses = Object.keys(j).map(function(key) {
+							return j[key];
+						}).sort(function(lhs, rhs) {
+							return parseInt(rhs.Timestamp) - parseInt(lhs.Timestamp);
+						});
+
+						for (var i = 0; i < cnt; i++) {
+							var p = pulses[i];
+
+							var prefix = p.Username + (realuser.toLowerCase() != p.Username.toLowerCase() ? " (" + realuser + ")" : "") + "/" + p.Computer + " @ " + p.Timedate;
+							var bits = [];
+
+							bits.push(["OS", p.OS]);
+							bits.push(["keys", p.Keys]);
+							bits.push(["clicks", p.Clicks]);
+							bits.push(["download", p.Download]);
+							bits.push(["upload", p.Upload]);
+							bits.push(["uptime", p.UptimeShort]);
+
+							var str = bot.plugins.bits.format(prefix, bits, ";");
+							bot.notice(nick, str);
+
+							if (i == 0)
+								bot.say(to, str);
+						}
+					}
+					else {
+						bot.say(to, nick + ": " + j.error);
+					}
+				}
+			});
+		},
+
 		"cmd#wpteam": bot.forward("cmd#whatpulseteam"),
 
 		"cmd#whatpulseteam": function(nick, to, args) {
@@ -83,6 +126,51 @@ function WhatpulsePlugin(bot) {
 							bits.push(["uptime", j.UptimeShort + " (" + j.Ranks.Uptime + ")"]);
 
 							bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
+						}
+						else {
+							bot.say(to, nick + ": " + j.error);
+						}
+					}
+				});
+			}
+		},
+
+		"cmd#whatpulsesteam": function(nick, to, args) {
+			var team = args[1] || self.defaultTeam;
+			var cnt = Math.min(Math.max(args[2] || 3, 1), 5);
+
+			if (team) {
+				request("http://api.whatpulse.org/pulses.php?format=json&formatted=yes&team=" + team, function(err, res, body) {
+					if (!err && res.statusCode == 200) {
+						var j = JSON.parse(body);
+
+						if (!j.error) {
+							var pulses = Object.keys(j).map(function(key) {
+								return j[key];
+							}).sort(function(lhs, rhs) {
+								return parseInt(rhs.Timestamp) - parseInt(lhs.Timestamp);
+							});
+
+							for (var i = 0; i < cnt; i++) {
+								var p = pulses[i];
+
+								var realuser = bot.plugins.util.getKeyByValue(self.users, p.Username.toLowerCase());
+								var prefix = p.Username + (realuser !== null ? " (" + realuser + ")" : "") + "/" + p.Computer + " @ " + p.Timedate;
+								var bits = [];
+
+								bits.push(["OS", p.OS]);
+								bits.push(["keys", p.Keys]);
+								bits.push(["clicks", p.Clicks]);
+								bits.push(["download", p.Download]);
+								bits.push(["upload", p.Upload]);
+								bits.push(["uptime", p.UptimeShort]);
+
+								var str = bot.plugins.bits.format(prefix, bits, ";");
+								bot.notice(nick, str);
+
+								if (i == 0)
+									bot.say(to, str);
+							}
 						}
 						else {
 							bot.say(to, nick + ": " + j.error);

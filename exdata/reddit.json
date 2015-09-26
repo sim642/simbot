@@ -1,9 +1,14 @@
 {
     "urlSort": "hot",
     "urlTime": "week",
-    "channels": [
-        "#channel1"
-    ],
+    "channels": {
+        "#channel1": true,
+        "#channel2": {
+            "reddit": true,
+            "live": true,
+            "other": false
+        }
+    },
     "ignores": [
         "*!pipey@*"
     ]

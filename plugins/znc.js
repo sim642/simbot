@@ -2,7 +2,7 @@ function ZNCPlugin(bot) {
 	var self = this;
 	self.name = "znc";
 	self.help = "ZNC plugin";
-	self.depend = [];
+	self.depend = ["cmd", "auth"];
 
 	self.zncRe = /^([^!\s]+)!([^@\s]+)@znc\.in$/;
 
@@ -12,7 +12,11 @@ function ZNCPlugin(bot) {
 			if (match) {
 				bot.out.log("znc", match[1] + ": " + text);
 			}
-		}
+		},
+
+		"cmd#znc": bot.plugins.auth.proxyEvent(10, function(nick, to, args) {
+			bot.say("*status", args[0]);
+		})
 	};
 }
 

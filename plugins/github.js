@@ -6,17 +6,22 @@ function GithubPlugin(bot) {
 	var self = this;
 	self.name = "github";
 	self.help = "Github stats plugin";
-	self.depend = ["cmd", "bits"];
+	self.depend = ["cmd", "ignore", "bits", "util"];
 
 	self.blocks = "▁▂▃▄▅▆▇█";
 
 	self.userRe = /^\w[\w-]+$/;
 	self.repoRe = /^(\w[\w-]+)\/(\w[\w-]+)$/;
+	self.gistRe = /^(?:(\w[\w-]+)\/)?([0-9a-f]{20})$/;
 
 	self.token = null;
 	self.request = null;
 
 	self.users = {};
+
+	self.urlRe = /(?:https?:\/\/|\s|^)(?:(www|gist)\.)?github\.com\/(\w[\w-]+(?:\/\w[\w-]+)?)(?=\s|$)/;
+	self.channels = [];
+	self.ignores = [];
 
 	self.setToken = function(token) {
 		if (token) {
@@ -32,6 +37,10 @@ function GithubPlugin(bot) {
 	self.load = function(data) {
 		if (data && data.users)
 			self.users = data.users;
+		if (data && data.channels)
+			self.channels = data.channels;
+		if (data && data.ignores)
+			self.ignores = data.ignores;
 
 		self.setToken(data.token);
 	};
@@ -39,7 +48,9 @@ function GithubPlugin(bot) {
 	self.save = function() {
 		return {
 			"token": self.token,
-			"users": self.users
+			"users": self.users,
+			"channels": self.channels,
+			"ignores": self.ignores
 		};
 	};
 
@@ -63,56 +74,106 @@ function GithubPlugin(bot) {
 		return str;
 	};
 
-	self.events = {
-		"cmd#github": function(nick, to, args) {
-			var realarg = args[1] || nick;
-			var arg = self.parseuser(realarg.toLowerCase());
+	self.getLangs = function(reposUrl, callback) {
+		self.request(reposUrl, function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var j = JSON.parse(body);
 
-			var prefix = "";
-			var bits = [];
-
-			var output = function() {
-				bot.say(to, bot.plugins.bits.format(prefix, bits));
-			};
-
-			if (arg.match(self.repoRe)) { // repo
-				self.request("https://api.github.com/repos/" + arg, function(err, res, body) {
-					if (!err && res.statusCode == 200) {
-						var j = JSON.parse(body);
-						prefix = j.full_name;
-						if (j.description)
-							bits.push([, j.description, 0]);
-						bits.push(["stars", j.stargazers_count]);
-						bits.push(["watch", j.watchers_count]);
-						bits.push(["forks", j.forks_count]);
-						if (j.language)
-							bits.push(["language", j.language]);
-						bits.push(["issues", j.open_issues_count]);
-						bits.push([, j.html_url, 2]);
-
-						output();
+				var langs = {};
+				j.forEach(function(repo) {
+					if (repo.language !== null) {
+						if (!(repo.language in langs))
+							langs[repo.language] = 0;
+						langs[repo.language]++;
 					}
-					else
-						bot.out.error("github", err, body);
 				});
+
+				var slangs = [];
+				for (var lang in langs) {
+					slangs.push([lang, langs[lang]]);
+				}
+
+				slangs.sort(function(lhs, rhs) {
+					return rhs[1] - lhs[1];
+				});
+
+				callback(slangs);
 			}
-			else if (arg.match(self.userRe)) { // user/org
-				self.request("https://api.github.com/users/" + arg, function(err, res, body) {
-					if (!err && res.statusCode == 200) {
-						var j = JSON.parse(body);
-						prefix = j.login + (realarg.toLowerCase() != j.login.toLowerCase() ? " (" + realarg + ")" : "");
-						bits.push([, j.type]);
-						if (j.bio)
-							bits.push([, j.bio, 0]);
-						bits.push(["repos", j.public_repos]);
-						bits.push(["followers", j.followers]);
-						bits.push(["following", j.following]);
+			else
+				bot.out.error("github", err, body);
+		});
+	};
 
-						var finish = function() {
-							bits.push([, j.html_url, 2]);
-							output();
-						};
+	self.github = function(arg, noError, callback) {
+		var realarg = bot.plugins.util.getKeyByValue(self.users, arg) || arg;
 
+		var prefix = "";
+		var bits = [];
+
+		var output = function() {
+			callback(bot.plugins.bits.format(prefix, bits));
+		};
+
+		if (arg.match(self.repoRe)) { // repo
+			self.request("https://api.github.com/repos/" + arg, function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var j = JSON.parse(body);
+					prefix = j.full_name + (realarg.toLowerCase() != j.full_name.toLowerCase() ? " (" + realarg + ")" : "");
+					if (j.fork)
+						bits.push(["fork", j.source.full_name]);
+					if (j.description)
+						bits.push([, j.description, 0]);
+					if (j.homepage)
+						bits.push([, j.homepage, 2]);
+					bits.push(["stars", j.stargazers_count]);
+					bits.push(["watch", j.watchers_count]);
+					bits.push(["forks", j.forks_count]);
+					if (j.language)
+						bits.push(["language", j.language]);
+					bits.push(["issues", j.open_issues_count]);
+					bits.push([, j.html_url, 2]);
+
+					output();
+				}
+				else if (!err && res.statusCode == 404) {
+					prefix = arg;
+					bits.push([, "repo not found", 0]);
+
+					if (!noError)
+						output();
+				}
+				else
+					bot.out.error("github", err, body);
+			});
+		}
+		else if (arg.match(self.userRe)) { // user/org
+			self.request("https://api.github.com/users/" + arg, function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var j = JSON.parse(body);
+					prefix = j.login + (realarg.toLowerCase() != j.login.toLowerCase() ? " (" + realarg + ")" : "");
+					bits.push([, j.type]);
+					if (j.name)
+						bits.push([, j.name]);
+					if (j.company)
+						bits.push(["company", j.company]);
+					if (j.bio)
+						bits.push([, j.bio, 0]);
+					bits.push(["repos", j.public_repos]);
+					bits.push(["gists", j.public_gists]);
+					bits.push(["followers", j.followers]);
+					bits.push(["following", j.following]);
+
+					var finish = function() {
+						bits.push([, j.html_url, 2]);
+						output();
+					};
+
+					self.getLangs(j.repos_url, function(langs) {
+						if (langs.length > 0) {
+							bits.push(["languages", langs.slice(0, 4).map(function(lang) {
+								return lang[0];
+							}).join(", ")]);
+						}
 
 						if (j.type == "User") {
 							self.request("https://github.com/users/" + j.login + "/contributions", function(err, res, body) {
@@ -125,7 +186,10 @@ function GithubPlugin(bot) {
 										var count = nodes[i].getAttribute("data-count");
 										contribs.push([date, parseInt(count), 0]);
 									}
-									// TODO: guarantee contribs sorted by date
+
+									contribs.sort(function(lhs, rhs) { // guarantee sort
+										return lhs[0].localeCompare(rhs[0]);
+									});
 
 									var longstreak = 0;
 									var total = 0;
@@ -163,14 +227,99 @@ function GithubPlugin(bot) {
 						}
 						else
 							finish();
-					}
-					else
-						bot.out.error("github", err, body);
-				});
-			}
-			else {
-				bot.say(to, nick + ": invalid argument '\x02" + arg + "\x02'");
-			}
+					});
+				}
+				else if (!err && res.statusCode == 404) {
+					prefix = arg;
+					bits.push([, "user/organization not found", 0]);
+
+					if (!noError)
+						output();
+				}
+				else
+					bot.out.error("github", err, body);
+			});
+		}
+		else {
+			prefix = arg;
+			bits.push([, "invalid argument", 0]);
+
+			if (!noError)
+				output();
+		}
+	};
+
+	self.gist = function(arg, noError, callback) {
+		var m = arg.match(self.gistRe);
+
+		var prefix = "";
+		var bits = [];
+
+		var output = function() {
+			callback(bot.plugins.bits.format(prefix, bits));
+		};
+
+		if (m) {
+			self.request("https://api.github.com/gists/" + m[2], function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var j = JSON.parse(body);
+
+					prefix = j.owner.login + "/" + j.id;
+
+					if (j.fork_of)
+						bits.push(["fork", j.fork_of.owner.login + "/" + j.fork_of.id]);
+					if (j.description)
+						bits.push([, j.description, 0]);
+					bits.push(["files", Object.keys(j.files).length]);
+					bits.push(["revisions", j.history.length]);
+					// TODO: star count - not available in API
+					bits.push(["comments", j.comments]);
+					bits.push(["forks", j.forks.length]);
+
+					bits.push([, j.html_url, 2]);
+
+					output();
+				}
+				else if (!err && res.statusCode == 404) {
+					prefix = arg;
+					bits.push([, "repo not found", 0]);
+
+					if (!noError)
+						output();
+				}
+				else
+					bot.out.error("github", err, body);
+			});
+		}
+		else {
+			prefix = arg;
+			bits.push([, "invalid argument", 0]);
+
+			if (!noError)
+				output();
+		}
+	};
+
+	self.lookup = function(m, noError, callback) {
+		(m[1] == "gist" ? self.gist : self.github)(m[2], noError, callback);
+	};
+
+	self.events = {
+		"cmd#github": function(nick, to, args) {
+			var realarg = args[1] || nick;
+			var arg = self.parseuser(realarg.toLowerCase());
+
+			self.github(arg, false, function(str) {
+				bot.say(to, str);
+			});
+		},
+
+		"cmd#gist": function(nick, to, args) {
+			var arg = args[1];
+
+			self.gist(arg, false, function(str) {
+				bot.say(to, str);
+			});
 		},
 
 		"cmd#setgithub": function(nick, to, args) {
@@ -188,6 +337,28 @@ function GithubPlugin(bot) {
 				else
 					bot.notice(nick, "must be identified for this nick to set github");
 			});
+		},
+
+		"message": function(nick, to, text, message) {
+			if ((self.channels.indexOf(to) != -1) && !bot.plugins.ignore.ignored(self.ignores, message)) {
+				var m = text.match(self.urlRe);
+				if (m) {
+					bot.out.log("github", nick + " in " + to + ": " + m[0]);
+					self.lookup(m, true, function(str) {
+						bot.say(to, str);
+					});
+				}
+			}
+		},
+
+		"pm": function(nick, text) {
+			var m = text.match(self.urlRe);
+			if (m) {
+				bot.out.log("github", nick + " in PM: " + m[0]);
+				self.lookup(m, true, function(str) {
+					bot.say(nick, str);
+				});
+			}
 		}
 	};
 }

@@ -20,7 +20,7 @@ function WeatherPlugin(bot) {
 						bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
 						bits.push(["humidity", j.main.humidity.toString() + "%"]);
 						bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
-						bits.push(["wind", j.wind.speed.toString() + "m/s " + (j.wind.gust ? "(" + j.wind.gust.toString() + "m/s)" : "") + j.wind.deg.toFixed(0).toString() + "°"]);
+						bits.push(["wind", j.wind.speed.toString() + "m/s" + (j.wind.gust ? " (" + j.wind.gust.toString() + "m/s)" : "") + (j.wind.deg ? " " + j.wind.deg.toFixed(0).toString() + "°" : "")]);
 						bits.push(["clouds", j.clouds.all.toString() + "%"]);
 						if (j.rain) {
 							var str;

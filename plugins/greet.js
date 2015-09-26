@@ -4,6 +4,7 @@ function GreetPlugin(bot) {
 	self.help = "Greet plugin";
 	
 	self.midre = /\b(yo(?:[\s-]yo)*|h[ea]l{2,}o+|h[ae]+[jiy]+[ao]*|hi+(?:-?y[ao]+)?|howdy|hola|bonjour|(?:what(?:\')?s\s|s)up|fuck(?:ing|\soff|\syou(?:\stoo|2)?)?)\b/;
+	self.bdayRe = /happy\s+b(?:irth)?day[\s,]+(\w+)/i;
 
 	self.events = {
 		"message": function(nick, to, text) {
@@ -20,6 +21,13 @@ function GreetPlugin(bot) {
 					bot.say(to, m[1].replace(new RegExp(bot.nick, "i"), nick) + m[2]);
 				else if (m[3] !== undefined)
 					bot.say(to, m[2] + m[3].replace(new RegExp(bot.nick, "i"), nick));
+			}
+		},
+
+		"message#": function(nick, to, text) {
+			var m = text.match(self.bdayRe);
+			if (m) {
+				bot.say(to, m[0]);
 			}
 		},
 

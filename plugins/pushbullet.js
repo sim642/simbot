@@ -63,8 +63,7 @@ function PushbulletPlugin(bot) {
 					if (pushes[0])
 						self.lastTs = pushes[0].modified;
 
-
-					pushes.forEach(function(push) {
+					pushes.reverse().forEach(function(push) {
 						if (push.receiver_email == self.email)
 							bot.emit("pushbullet#push", push, true);
 						else if (push.channel_iden)
@@ -101,7 +100,7 @@ function PushbulletPlugin(bot) {
 			if (pushes[0])
 				self.lastTs = pushes[0].modified;
 
-			pushes.forEach(function(push) {
+			pushes.reverse().forEach(function(push) {
 				if (push.receiver_email == self.email)
 					bot.emit("pushbullet#push", push, false);
 				else if (push.channel_iden)

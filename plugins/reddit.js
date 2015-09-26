@@ -8,7 +8,8 @@ function RedditPlugin(bot) {
 	self.depend = ["cmd", "ignore", "date", "bitly", "util"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
-	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+))?/i;
+	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+)(\?context=\d+)?)?/i;
+	self.urlLiveRe = /reddit\.com\/live\/(\w+)(?:\/updates\/([0-9a-z\-]+))?/i;
 	self.urlSort = "hot";
 	self.urlTime = "week";
 
@@ -52,7 +53,7 @@ function RedditPlugin(bot) {
 	};
 
 
-	self.formatPost = function(post, short, callback) {
+	self.formatPost = function(post, short, callback) { // ignores extra
 		short = short || false;
 
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
@@ -64,14 +65,14 @@ function RedditPlugin(bot) {
 		callback(str);
 	};
 
-	self.formatComment = function(comment, short, callback) {
+	self.formatComment = function(comment, short, callback, extra) {
 		short = short || false;
 
 		self.request("https://www.reddit.com/by_id/" + comment.link_id + ".json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var post = JSON.parse(body).data.children[0].data;
 
-				var longurl = "http://reddit.com" + post.permalink + comment.id;
+				var longurl = "http://reddit.com" + post.permalink + comment.id + (extra || "");
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
 					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
 					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
@@ -85,8 +86,48 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.format = function(item, short, callback) {
-		return (item.kind == "t1" ? self.formatComment : self.formatPost)(item.data, short, callback);
+	self.formatEvent = function(event, short, callback) { // ignores extra
+		short = short || false;
+
+		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
+		var str = "\x1Fhttp://reddit.com/event/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
+
+		if (!short)
+			str += " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers; " + bot.plugins.util.unescapeHtml(event.description);
+
+		callback(str);
+	};
+
+	self.formatUpdate = function(update, short, callback, extra) {
+		short = short || false;
+
+		self.request("https://www.reddit.com/live/" + extra + "/about.json", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var event = JSON.parse(body).data;
+
+				var longurl = "http://reddit.com/live/" + event.id + "/updates/" + update.id;
+				bot.plugins.bitly.shorten(longurl, function(shorturl) {
+					var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
+					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "/updates] by " + update.author;
+
+					if (!short)
+						str += " " + bot.plugins.date.printDur(new Date(update.created_utc * 1000), null, 1) + " ago; " + bot.plugins.util.unescapeHtml(update.body);
+
+					callback(str);
+				});
+			}
+		});
+	};
+
+	self.format = function(item, short, callback, extra) {
+		var mapping = {
+			"t3": self.formatPost,
+			"t1": self.formatComment,
+			"LiveUpdateEvent": self.formatEvent,
+			"LiveUpdate": self.formatUpdate
+		};
+
+		return mapping[item.kind](item.data, short, callback, extra);
 	};
 
 	self.cleanUrl = function(lurl) {
@@ -126,14 +167,55 @@ function RedditPlugin(bot) {
 				if (results.length > 0) {
 					self.format(results[0], false, function(str) {
 						callback(str);
-					});
+					}, match[4]);
 				}
 			}
 		});
 	};
 
+	self.lookupLive = function(lurl, callback) {
+		var match = lurl.match(self.urlLiveRe);
+		var id = match[1];
+		var uid = match[2];
+
+		if (!uid) {
+			self.request("https://www.reddit.com/live/" + id + "/about.json", function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var data = JSON.parse(body);
+
+					self.format(data, false, function(str) {
+						callback(str);
+					});
+				}
+			});
+		}
+		else {
+			self.request("https://www.reddit.com/live/" + id + "/updates/" + uid + ".json", function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var data = JSON.parse(body).data;
+					var results = data.children;
+
+					if (results.length > 0) {
+						self.format(results[0], false, function(str) {
+							callback(str);
+						}, id);
+					}
+				}
+			});
+		}
+	};
+
 	self.lookup = function(url, callback) {
-		(url.match(self.urlRedditRe) ? self.lookupReddit : self.lookupOther)(url, callback);
+		var func = null;
+
+		if (self.urlRedditRe.test(url))
+			func = self.lookupReddit;
+		else if (self.urlLiveRe.test(url))
+			func = self.lookupLive;
+		else
+			func = self.lookupOther;
+
+		func(url, callback);
 	};
 
 	self.tickerStart = function(listing, channels, short) {
@@ -196,6 +278,8 @@ function RedditPlugin(bot) {
 						func = self.lookup;
 					else if (self.channels[to].reddit && url.match(self.urlRedditRe))
 						func = self.lookupReddit;
+					else if (self.channels[to].live && url.match(self.urlLiveRe))
+						func = self.lookupLive;
 					else if (self.channels[to].other)
 						func = self.lookupOther;
 

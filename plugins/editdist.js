@@ -2,7 +2,7 @@ function EditDistPlugin(bot) {
 	var self = this;
 	self.name = "editdist";
 	self.help = "String edit distance plugin";
-	self.depend = ["cmd"];
+	self.depend = [];
 
 	// https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance#Optimal_string_alignment_distance
 	self.OSA = function(a, b) {

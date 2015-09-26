@@ -4,9 +4,10 @@ function TopicLogPlugin(bot) {
 	var self = this;
 	self.name = "topiclog";
 	self.help = "Topic logger plugin";
-	self.depend = ["cmd", "date"];
+	self.depend = ["cmd", "date", "util", "*sed"];
 
 	self.topiclog = {};
+	self.tochange = {};
 
 	self.load = function(data) {
 		if (data) {
@@ -21,6 +22,13 @@ function TopicLogPlugin(bot) {
 
 	self.save = function() {
 		return self.topiclog;
+	};
+
+	self.topic = function(channel, topic, nick) {
+		if (!(channel in self.tochange))
+			self.tochange[channel] = [];
+		self.tochange[channel].push({"nick": nick, "topic": topic});
+		bot.send("TOPIC", channel, topic);
 	};
 
 	self.colordiff = function(str1, str2) {
@@ -70,6 +78,12 @@ function TopicLogPlugin(bot) {
 				else
 					self.topiclog[channel].push(entry);
 			}
+
+			if ((nick == bot.nick) && (channel in self.tochange)) {
+				self.tochange[channel] = self.tochange[channel].filter(function(elem) {
+					return elem.topic != topic;
+				}); // TODO: fix for multiple same topics
+			}
 		},
 
 		"join": function(channel, nick) {
@@ -77,13 +91,37 @@ function TopicLogPlugin(bot) {
 				bot.send("TOPIC", channel);
 		},
 
-		"cmd#topics": function(nick, to, args) {
-			var cnt = Math.min(Math.max(args[1], 1) || 3, 5);
-			var chan = args[2] || to;
+		"raw": function(message) {
+			if (message.command == "err_chanoprivsneeded") {
+				var channel = message.args[1];
 
-			if (chan in self.topiclog)
+				if (channel in self.tochange) {
+					var change = self.tochange[channel].pop();
+
+					if (change)
+						bot.notice(change.nick, "/topic " + channel + " " + change.topic);
+				}
+			}
+		},
+
+		"cmd#topics": function(nick, to, args) {
+			var cnt;
+			var channel = to;
+
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg.match(/^#/))
+					channel = arg;
+				else if (arg.match(/^\d+$/))
+					cnt = parseInt(arg);
+			}
+
+			cnt = Math.min(Math.max(cnt, 1) || 3, 10);
+
+			if (channel in self.topiclog)
 			{
-				var chanlog = self.topiclog[chan];
+				var chanlog = self.topiclog[channel];
 
 				var lastentry = chanlog[chanlog.length - cnt - 1];
 				for (var i = -cnt; i < 0; i++) {
@@ -96,7 +134,7 @@ function TopicLogPlugin(bot) {
 						else
 							str = entry.topic;
 
-						bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + chan + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
+						bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + channel + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
 						lastentry = entry;
 					}
 				}
@@ -127,12 +165,51 @@ function TopicLogPlugin(bot) {
 			if (chan in self.topiclog) {
 				var chanlog = self.topiclog[chan];
 
-				var id = args[1] || (chanlog.length - 2);
+				var id = -1;
+				if (args[1])
+					id = parseInt(args[1]);
+				if (id < 0)
+					id += chanlog.length - 1;
+
 				if (id >= 0 && id < chanlog.length) {
-					bot.send("TOPIC", chan, chanlog[id].topic);
+					self.topic(chan, chanlog[id].topic, nick);
 				}
 				else
 					bot.say(to, "Invalid topic ID");
+			}
+		},
+
+		"cmd#topicsed": function(nick, to, args) {
+			var channel = to;
+			var sed = null;
+
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg.match(/^#/))
+					channel = arg;
+				else {
+					var m = arg.match(bot.plugins.sed.sedRe);
+					if (m)
+						sed = bot.plugins.sed.sed(arg);
+				}
+			}
+
+			if (sed) {
+				var chanlog = self.topiclog[channel];
+
+				for (var i = chanlog.length - 1; i >= 0; i--) {
+					var text2 = chanlog[i].topic;
+					var s = sed(text2);
+
+					if (s === false)
+						break;
+					else if (s !== true) // string returned
+					{
+						self.topic(channel, s, nick);
+						break;
+					}
+				}
 			}
 		}
 	};

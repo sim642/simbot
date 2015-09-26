@@ -10,11 +10,13 @@ var config = JSON.parse(fs.readFileSync("config.json"));
 var defcfg = {
 	autoRejoin: false,
 	channels: [],
-	messageSplit: 300,
+	messageSplit: 400,
 };
 config.__proto__ = defcfg;
 
 var bot = new irc.Client(config.server, config.nick, config);
+
+bot.setMaxListeners(50);
 
 bot.forward = function(to) {
 	return function() {

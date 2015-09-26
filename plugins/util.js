@@ -79,6 +79,12 @@ function UtilPlugin(bot) {
 		return null;
 	};
 
+	self.formatSize = function(size) {
+		var units = ["B", "kB", "MiB", "GiB", "TiB"];
+		var i = Math.floor(Math.log(size) / Math.log(1024));
+		return Math.round(size / Math.pow(1024, i) * 100) / 100 + " " + units[i];
+	};
+
 	self.events = {
 
 	};

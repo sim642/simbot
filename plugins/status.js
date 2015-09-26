@@ -6,7 +6,7 @@ function StatusPlugin(bot) {
 	var self = this;
 	self.name = "status";
 	self.help = "simbot and system status plugin";
-	self.depend = ["cmd", "bits", "date"];
+	self.depend = ["cmd", "bits", "date", "util"];
 
 	self.dirSize = function(dir, filter, callback) {
 		if (callback === undefined) {
@@ -31,12 +31,6 @@ function StatusPlugin(bot) {
 				});
 			}
 		});
-	};
-
-	self.formatSize = function(size) {
-		var units = ["B", "kB", "MiB", "GiB"];
-		var i = Math.floor(Math.log(size) / Math.log(1024));
-		return Math.round(size / Math.pow(1024, i) * 100) / 100 + " " + units[i];
 	};
 
 	self.events = {
@@ -68,7 +62,7 @@ function StatusPlugin(bot) {
 					bits.push(["total", total]);
 
 					for (var i = 0; i < bits.length; i++)
-						bits[i][1] = self.formatSize(bits[i][1]);
+						bits[i][1] = bot.plugins.util.formatSize(bits[i][1]);
 
 					bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 				}
@@ -107,9 +101,9 @@ function StatusPlugin(bot) {
 			var bits = [];
 
 			var total = os.totalmem(), free = os.freemem(); // free doesn't seem correct
-			bits.push(["used", self.formatSize(total - free)]);
-			bits.push(["free", self.formatSize(free)]);
-			bits.push(["total", self.formatSize(total)]);
+			bits.push(["used", bot.plugins.util.formatSize(total - free)]);
+			bits.push(["free", bot.plugins.util.formatSize(free)]);
+			bits.push(["total", bot.plugins.util.formatSize(total)]);
 
 			bot.say(to, bot.plugins.bits.format(prefix, bits, ";"));
 		}

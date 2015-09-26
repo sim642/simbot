@@ -2,7 +2,7 @@ function CmdPlugin(bot) {
 	var self = this;
 	self.name = "cmd";
 	self.help = "Commands plugin";
-	self.depends = ["editdist"];
+	self.depend = ["editdist"];
 
 	self.chanRe = /^=(\S+)(?:(\s+.*))?$/;
 	self.argsRe = /\s+(?:"([^"]*)"|'([^']+)'|([^\s'"]+))/g;

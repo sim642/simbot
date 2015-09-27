@@ -95,7 +95,7 @@ function HistoryPlugin(bot) {
 			postSurround = Math.min(postSurround !== undefined ? postSurround : 1, 5);
 
 			var extra = channel == to;
-			linecnt = Math.min(linecnt || 15, Math.ceil(50 / (preSurround + 1 + postSurround)));
+			linecnt = Math.min(linecnt || 15, re === null ? 50 : Math.ceil(50 / (preSurround + 1 + postSurround)));
 
 
 			var outlines = [];

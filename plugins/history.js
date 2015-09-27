@@ -102,6 +102,7 @@ function HistoryPlugin(bot) {
 			var context = [];
 			var contextTodo = 0;
 			var fileUsed = false;
+			var contextEnded = false;
 			self.iterate(channel, function(line) {
 				if (extra) {
 					extra = false;
@@ -110,6 +111,10 @@ function HistoryPlugin(bot) {
 
 				if (linecnt > 0 && (re === null || line.match(re))) {
 					if (re !== null) {
+						if (contextEnded) {
+							outlines.unshift("\x031 --------");
+							contextEnded = false;
+						}
 						//bot.out.debug("history", context);
 						context.forEach(function(cline) {
 							outlines.unshift(cline);
@@ -127,6 +132,9 @@ function HistoryPlugin(bot) {
 					if (contextTodo > 0) {
 						outlines.unshift(line);
 						contextTodo--;
+
+						if (contextTodo == 0)
+							contextEnded = true;
 					}
 					else if (context.length <= postSurround) {
 						context.push(line);
@@ -148,6 +156,7 @@ function HistoryPlugin(bot) {
 				if (fileUsed) {
 					outlines.unshift("\x031--- " + date.join("-") + " ---");
 					fileUsed = false;
+					contextEnded = false;
 				}
 			});
 		},

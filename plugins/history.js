@@ -102,6 +102,7 @@ function HistoryPlugin(bot) {
 				argStr += "/" + re.source + "/" + re.toString().match(/[gimuy]*$/)[0]; // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags
 				argStr += " -" + preSurround.toString() + " +" + postSurround.toString();
 			}
+			argStr += (argStr ? " " : "") + linecnt.toString();
 
 			var outlines = [];
 			var context = [];

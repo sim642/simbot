@@ -91,8 +91,8 @@ function HistoryPlugin(bot) {
 				}
 			}
 
-			preSurround = Math.min(preSurround !== undefined ? preSurround : 3, 5);
-			postSurround = Math.min(postSurround !== undefined ? postSurround : 1, 5);
+			preSurround = Math.min(preSurround !== undefined ? preSurround : 3, 10);
+			postSurround = Math.min(postSurround !== undefined ? postSurround : 1, 10);
 
 			var extra = channel == to;
 			linecnt = Math.min(linecnt || 15, re === null ? 50 : Math.ceil(50 / (preSurround + 1 + postSurround)));

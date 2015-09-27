@@ -97,6 +97,11 @@ function HistoryPlugin(bot) {
 			var extra = channel == to;
 			linecnt = Math.min(linecnt || 15, re === null ? 50 : Math.ceil(50 / (preSurround + 1 + postSurround)));
 
+			var argStr = "";
+			if (re !== null) {
+				argStr += "/" + re.source + "/" + re.toString().match(/[gimuy]*$/)[0]; // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags
+				argStr += " -" + preSurround.toString() + " +" + postSurround.toString();
+			}
 
 			var outlines = [];
 			var context = [];
@@ -146,12 +151,12 @@ function HistoryPlugin(bot) {
 
 				return linecnt > 0 || contextTodo > 0;
 			}, function() {
-				bot.say(nick, "\x031--- Begin history for " + channel + " ---");
+				bot.say(nick, "\x031--- Begin history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
 				for (var i = 0; i < outlines.length; i++) {
 					var str = outlines[i];
 					bot.say(nick, str);
 				}
-				bot.say(nick, "\x031--- End history for " + channel + " ---");
+				bot.say(nick, "\x031--- End history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
 			}, function(logfile, date) {
 				if (fileUsed) {
 					outlines.unshift("\x031--- " + date.join("-") + " ---");

@@ -68,50 +68,101 @@ function HistoryPlugin(bot) {
 			var linecnt;
 			var channel = to;
 			var re = null;
+			var preSurround;
+			var postSurround;
 
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
+				var m;
 
 				if (arg.match(/^#/))
 					channel = arg;
 				else if (arg.match(/^\d+$/))
 					linecnt = parseInt(arg);
+				else if (m = arg.match(/^-(\d+)$/))
+					preSurround = parseInt(m[1]);
+				else if (m = arg.match(/^\+(\d+)$/))
+					postSurround = parseInt(m[1]);
 				else {
-					var m = arg.match(self.grepRe);
+					m = arg.match(self.grepRe);
 					if (m) {
 						re = new RegExp(m[2], m[3]);
 					}
 				}
 			}
 
+			preSurround = Math.min(preSurround !== undefined ? preSurround : 3, 10);
+			postSurround = Math.min(postSurround !== undefined ? postSurround : 1, 10);
+
 			var extra = channel == to;
-			linecnt = Math.min(linecnt || 15, 50) + extra;
+			linecnt = Math.min(linecnt || 15, re === null ? 50 : Math.ceil(50 / (preSurround + 1 + postSurround)));
+
+			var argStr = "";
+			if (re !== null) {
+				argStr += "/" + re.source + "/" + re.toString().match(/[gimuy]*$/)[0]; // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags
+				argStr += " -" + preSurround.toString() + " +" + postSurround.toString();
+			}
+			argStr += (argStr ? " " : "") + linecnt.toString();
 
 			var outlines = [];
+			var context = [];
+			var contextTodo = 0;
 			var fileUsed = false;
+			var contextEnded = false;
 			self.iterate(channel, function(line) {
-				if (re === null || line.match(re)) {
+				if (extra) {
+					extra = false;
+					return true;
+				}
+
+				if (linecnt > 0 && (re === null || line.match(re))) {
+					if (re !== null) {
+						if (contextEnded) {
+							outlines.unshift("\x031 --------");
+							contextEnded = false;
+						}
+						//bot.out.debug("history", context);
+						context.forEach(function(cline) {
+							outlines.unshift(cline);
+						});
+						context = [];
+					}
 					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
+
+					contextTodo = preSurround;
 
 					linecnt--;
 					fileUsed = true;
 				}
+				else if (re !== null) {
+					if (contextTodo > 0) {
+						outlines.unshift(line);
+						contextTodo--;
 
-				return linecnt > 0;
+						if (contextTodo == 0)
+							contextEnded = true;
+					}
+					else if (context.length <= postSurround) {
+						context.push(line);
+
+						if (context.length > postSurround) // overflow -> rotate
+							context.shift();
+					}
+				}
+
+				return linecnt > 0 || contextTodo > 0;
 			}, function() {
-				if (extra && (re === null || outlines[outlines.length - 1].match(re)))
-					outlines.pop();
-
-				bot.say(nick, "\x031--- Begin history for " + channel + " ---");
+				bot.say(nick, "\x031--- Begin history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
 				for (var i = 0; i < outlines.length; i++) {
 					var str = outlines[i];
 					bot.say(nick, str);
 				}
-				bot.say(nick, "\x031--- End history for " + channel + " ---");
+				bot.say(nick, "\x031--- End history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
 			}, function(logfile, date) {
 				if (fileUsed) {
 					outlines.unshift("\x031--- " + date.join("-") + " ---");
 					fileUsed = false;
+					contextEnded = false;
 				}
 			});
 		},

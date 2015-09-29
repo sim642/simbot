@@ -193,16 +193,18 @@ function PushbulletPlugin(bot) {
 
 	self.events = {
 		"pushbullet#push": function(push, live) {
-			bot.out.log("pushbullet", push.type + " push" + (live ? "" : "(" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " from " + push.sender_email + ": " + push.title);
+			bot.out.log("pushbullet", push.type + " push" + (live ? "" : "(" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " from " + push.sender_email + ": " + push.title + " - " + push.body);
 			bot.emit("pushbullet#push#" + push.sender_email, push, live);
 
-			if (push.title && (push.title in bot.chans)) {
+			var to = push.title || push.body;
+
+			if (to && (to in bot.chans)) {
 				var sender = bot.plugins.util.getKeyByValue(self.emails, push.sender_email);
 				if (!sender)
 					sender = push.sender_email;
 				var msg = "push" + (live ? "" : "ed (" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " [\x02" + sender + "\x02] ";
 
-				var text = push.body !== undefined ? push.body.replace(/\n/g, " \\ ") : "";
+				var text = push.body !== undefined && push.body != to ? push.body.replace(/\n/g, " \\ ") : "";
 
 				switch (push.type) {
 				case "note":
@@ -222,28 +224,28 @@ function PushbulletPlugin(bot) {
 					if (push.url.length > 50) {
 						bot.plugins.bitly.shorten(push.url, function(shortened) {
 							msg += shortened;
-							bot.say(push.title, msg);
+							bot.say(to, msg);
 						});
 					}
 					else {
 						msg += push.url;
-						bot.say(push.title, msg);
+						bot.say(to, msg);
 					}
 				}
 				else if (push.type == "file") {
 					bot.plugins.bitly.shorten(push.file_url, function(shortened) {
 						msg += shortened;
-						bot.say(push.title, msg);
+						bot.say(to, msg);
 					});
 				}
 				else {
-					bot.say(push.title, msg);
+					bot.say(to, msg);
 				}
 			}
 		},
 
 		"pushbullet#subscription": function(push, live) {
-			bot.out.log("pushbullet", push.type + " subscription" + (live ? "" : " (" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " from " + push.sender_name + ": " + push.title);
+			bot.out.log("pushbullet", push.type + " subscription" + (live ? "" : " (" + bot.plugins.date.printDateTime(new Date(push.modified * 1000)) + ")") + " from " + push.sender_name + ": " + push.title + " - " + push.body);
 			bot.emit("pushbullet#subscription#" + push.sender_name, push, live);
 		},
 

@@ -49,8 +49,12 @@ function OmeglePlugin(bot) {
 			};
 		}
 		if (args !== undefined) {
+			var extra = false; // colon seen
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
+				if (arg.indexOf(":") >= 0)
+					extra = true;
+
 				if (arg == "auto")
 					self.chats[to].auto = true;
 				else if (arg == "my" || arg == "any")
@@ -60,7 +64,7 @@ function OmeglePlugin(bot) {
 					self.chats[to].topics = [];
 					self.chats[to].question = null;
 				}
-				else if (arg.length == 2)
+				else if (!extra && arg.length == 2)
 					self.chats[to].lang = arg;
 				else if (arg in self.colleges)
 					self.chats[to].college = arg;

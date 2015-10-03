@@ -42,7 +42,7 @@ function RedditPlugin(bot) {
 	self.save = function() {
 		var tickers = {};
 		for (var listing in self.tickers)
-			tickers[listing] = {channels: self.tickers[listing].channels, short: self.tickers[listing].short};
+			tickers[listing] = {channels: self.tickers[listing].channels, short: self.tickers[listing].short, extra: self.tickers[listing].extra};
 
 		return {
 			urlSort: self.urlSort,
@@ -218,12 +218,13 @@ function RedditPlugin(bot) {
 		func(url, callback);
 	};
 
-	self.tickerStart = function(listing, channels, short) {
+	self.tickerStart = function(listing, channels, short, extra) {
 		self.tickerStop(listing);
 
 		self.tickers[listing] = {
 			channels: channels,
-			short: short || false
+			short: short || false,
+			extra: extra || null
 		};
 	};
 
@@ -253,7 +254,7 @@ function RedditPlugin(bot) {
 									self.tickers[listing].channels.forEach(function(to) {
 										self.format(list[i], self.tickers[listing].short, function(str) {
 											bot.say(to, str);
-										});
+										}, self.tickers[listing].extra);
 									});
 								}
 							}

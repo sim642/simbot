@@ -301,6 +301,67 @@ function RedditPlugin(bot) {
 				});
 			}
 		},
+
+		"cmd#tickerstart": bot.plugins.auth.proxyEvent(6, function(nick, to, args) {
+			var listing = null;
+			var channels = [];
+			var extra = null;
+			var short = false;
+
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg == "short")
+					short = true;
+				else if (arg.match(/^#/))
+					channels.push(arg);
+				else if (arg.match(/^\//))
+					listing = arg;
+				else
+					extra = arg;
+			}
+
+			if (channels.length == 0) {
+				channels.push(to);
+			}
+
+			if (listing in self.tickers) {
+				self.tickers[listing].channels = self.tickers[listing].channels.concat(channels);
+			}
+			else {
+				self.tickerStart(listing, channels, short, extra);
+			}
+		}),
+
+		"cmd#tickerstop": bot.plugins.auth.proxyEvent(6, function(nick, to, args) {
+			var listing = null;
+			var channels = [];
+			var all = false;
+
+			for (var i = 1; i < args.length; i++) {
+				var arg = args[i];
+
+				if (arg == "*")
+					all = true;
+				else if (arg.match(/^#/))
+					channels.push(arg);
+				else if (arg.match(/^\//))
+					listing = arg;
+			}
+
+			if (channels.length == 0) {
+				channels.push(to);
+			}
+
+			if (all) {
+				self.tickerStop(listing);
+			}
+			else {
+				self.tickers[listing].channels = self.tickers[listing].channels.filter(function(channel) {
+					return channels.indexOf(channel) < 0;
+				});
+			}
+		}),
 	};
 }
 

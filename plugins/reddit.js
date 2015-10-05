@@ -72,7 +72,7 @@ function RedditPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var post = JSON.parse(body).data.children[0].data;
 
-				var longurl = "http://reddit.com" + post.permalink + comment.id + (extra || "");
+				var longurl = "https://reddit.com" + post.permalink + comment.id + (extra || "");
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
 					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
 					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
@@ -90,7 +90,7 @@ function RedditPlugin(bot) {
 		short = short || false;
 
 		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://reddit.com/event/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
+		var str = "\x1Fhttps://reddit.com/event/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
 
 		if (!short)
 			str += " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers; " + bot.plugins.util.unescapeHtml(event.description);
@@ -105,7 +105,7 @@ function RedditPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var event = JSON.parse(body).data;
 
-				var longurl = "http://reddit.com/live/" + event.id + "/updates/" + update.id;
+				var longurl = "https://reddit.com/live/" + event.id + "/updates/" + update.id;
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
 					var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
 					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "/updates] by " + update.author;

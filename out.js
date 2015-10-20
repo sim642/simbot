@@ -10,14 +10,19 @@ out.time = function() {
 	return new Date().toISOString();
 };
 
-out.ignores = [];
+out.printIgnores = [];
+out.writeIgnores = [];
 
 out.wrapper = function(type, color) {
 	return function() {
 		var args = Array.prototype.slice.call(arguments);
 		var module = args.shift();
 
-		var print = !out.ignores.some(function(re) {
+		var print = !out.printIgnores.some(function(re) {
+			return type.match(re);
+		});
+
+		var write = !out.writeIgnores.some(function(re) {
 			return type.match(re);
 		});
 
@@ -28,7 +33,8 @@ out.wrapper = function(type, color) {
 			if (print)
 				console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("]") + " " + message);
 
-			out.file.write(out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
+			if (write)
+				out.file.write(out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
 		});
 	};
 };

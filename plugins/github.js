@@ -264,7 +264,7 @@ function GithubPlugin(bot) {
 				if (!err && res.statusCode == 200) {
 					var j = JSON.parse(body);
 
-					prefix = j.owner.login + "/" + j.id;
+					prefix = (j.owner ? j.owner.login : "anonymous") + "/" + j.id;
 
 					if (j.fork_of)
 						bits.push(["fork", j.fork_of.owner.login + "/" + j.fork_of.id]);

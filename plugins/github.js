@@ -14,6 +14,7 @@ function GithubPlugin(bot) {
 	self.repoRe = /^(\w[\w-]+)\/(\w[\w-]+)$/;
 	self.gistRe = /^(?:(\w[\w-]+)\/)?([0-9a-f]{20})$/;
 
+	self.arequest = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
 	self.token = null;
 	self.request = null;
 
@@ -30,7 +31,7 @@ function GithubPlugin(bot) {
 		}
 		else {
 			self.token = null;
-			self.request = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
+			self.request = self.arequest;
 		}
 	};
 

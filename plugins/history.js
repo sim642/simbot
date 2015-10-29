@@ -5,7 +5,7 @@ function HistoryPlugin(bot) {
 	var self = this;
 	self.name = "history";
 	self.help = "History plugin";
-	self.depend = ["cmd", "auth"];
+	self.depend = ["cmd", "auth", "gist", "util"];
 	
 	self.basedir = null;
 	self.basename = null;
@@ -70,12 +70,15 @@ function HistoryPlugin(bot) {
 			var re = null;
 			var preSurround;
 			var postSurround;
+			var gist = false;
 
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
 				var m;
 
-				if (arg.match(/^#/))
+				if (arg == "gist")
+					gist = true;
+				else if (arg.match(/^#/))
 					channel = arg;
 				else if (arg.match(/^\d+$/))
 					linecnt = parseInt(arg);
@@ -91,11 +94,11 @@ function HistoryPlugin(bot) {
 				}
 			}
 
-			preSurround = Math.min(preSurround !== undefined ? preSurround : 3, 10);
-			postSurround = Math.min(postSurround !== undefined ? postSurround : 1, 10);
+			preSurround = Math.min(preSurround !== undefined ? preSurround : (gist ? 5 : 3), gist ? 20 : 10);
+			postSurround = Math.min(postSurround !== undefined ? postSurround : (gist ? 2 : 1), gist ? 20 : 10);
 
 			var extra = channel == to;
-			linecnt = Math.min(linecnt || 15, re === null ? 50 : Math.ceil(50 / (preSurround + 1 + postSurround)));
+			linecnt = Math.min(linecnt || (gist ? 50 : 15), re === null ? (gist ? 1000 : 50) : Math.ceil((gist ? 1000 : 50) / (preSurround + 1 + postSurround)));
 
 			var argStr = "";
 			if (re !== null) {
@@ -152,12 +155,21 @@ function HistoryPlugin(bot) {
 
 				return linecnt > 0 || contextTodo > 0;
 			}, function() {
-				bot.say(nick, "\x031--- Begin history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
-				for (var i = 0; i < outlines.length; i++) {
-					var str = outlines[i];
-					bot.say(nick, str);
+				if (gist) {
+					bot.plugins.gist.create({
+						"history.txt": outlines.map(bot.plugins.util.stripColors).join("\n")
+					}, false, "History for " + channel + (argStr ? " (" + argStr + ")" : ""), function(data) {
+						bot.say(to, nick + ": " + data.html_url);
+					});
 				}
-				bot.say(nick, "\x031--- End history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
+				else {
+					bot.say(nick, "\x031--- Begin history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
+					for (var i = 0; i < outlines.length; i++) {
+						var str = outlines[i];
+						bot.say(nick, str);
+					}
+					bot.say(nick, "\x031--- End history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
+				}
 			}, function(logfile, date) {
 				if (fileUsed) {
 					outlines.unshift("\x031--- " + date.join("-") + " ---");

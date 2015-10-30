@@ -159,12 +159,12 @@ function DCCPlugin(bot) {
 						fs.fstat(fd, function(err, stats) {
 							if (!err) {
 								var func2 = function() {
-									if (stats.size < filesize)
-										client.once("data", func);
+									if (stats.size < filesize) {
+										bot.out.debug("dcc", [stats.size, filesize]);
+									}
 									else {
-										client.once("end", function() {
-											fs.close(fd);
-										});
+										bot.out.debug("dcc", [stats.size, filesize, "done"]);
+										fs.close(fd);
 									}
 								};
 
@@ -183,7 +183,7 @@ function DCCPlugin(bot) {
 					});
 				};
 
-				client.once("data", func);
+				client.on("data", func);
 			}
 			else
 				bot.out.error("dcc", err);

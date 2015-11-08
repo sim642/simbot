@@ -71,6 +71,7 @@ function HistoryPlugin(bot) {
 			var preSurround;
 			var postSurround;
 			var gist = false;
+			var strip = false;
 
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
@@ -78,6 +79,8 @@ function HistoryPlugin(bot) {
 
 				if (arg == "gist")
 					gist = true;
+				else if (arg == "strip")
+					strip = true;
 				else if (arg.match(/^#/))
 					channel = arg;
 				else if (arg.match(/^\d+$/))
@@ -86,12 +89,8 @@ function HistoryPlugin(bot) {
 					preSurround = parseInt(m[1]);
 				else if (m = arg.match(/^\+(\d+)$/))
 					postSurround = parseInt(m[1]);
-				else {
-					m = arg.match(self.grepRe);
-					if (m) {
-						re = new RegExp(m[2], m[3]);
-					}
-				}
+				else if (m = arg.match(self.grepRe))
+					re = new RegExp(m[2], m[3]);
 			}
 
 			preSurround = Math.min(preSurround !== undefined ? preSurround : (gist ? 5 : 3), gist ? 20 : 10);
@@ -117,6 +116,9 @@ function HistoryPlugin(bot) {
 					extra = false;
 					return true;
 				}
+
+				if (strip)
+					line = bot.plugins.util.stripColors(line);
 
 				if (linecnt > 0 && (re === null || line.match(re))) {
 					if (re !== null) {

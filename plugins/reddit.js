@@ -1,5 +1,6 @@
 var request = require("request");
 var url = require("url");
+var WebSocket = require("ws");
 
 function RedditPlugin(bot) {
 	var self = this;
@@ -12,6 +13,7 @@ function RedditPlugin(bot) {
 	self.urlLiveRe = /reddit\.com\/live\/(\w+)(?:\/updates\/([0-9a-z\-]+))?/i;
 	self.urlSort = "hot";
 	self.urlTime = "week";
+	self.listingLive = /^\/live\/(\w+)/i;
 
 	self.channels = {}; /* true | {reddit: false/true, other: false/true}*/
 	self.ignores = [];
@@ -32,11 +34,20 @@ function RedditPlugin(bot) {
 	self.enable = function() {
 		self.tickerCheck();
 		self.interval = setInterval(self.tickerCheck, 1 * 60 * 1000);
+
+		for (var listing in self.tickers) {
+			self.wsGuarantee(listing);
+		}
 	};
 
 	self.disable = function() {
 		clearInterval(self.interval);
 		self.interval = null;
+
+		for (var listing in self.tickers) {
+			if (self.tickers[listing].ws)
+				self.tickers[listing].ws.close();
+		}
 	};
 
 	self.save = function() {
@@ -57,7 +68,7 @@ function RedditPlugin(bot) {
 		short = short || false;
 
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttp://redd.it/" + post.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
+		var str = "\x1Fhttps://redd.it/" + post.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
 
 		if (!short)
 			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
@@ -226,6 +237,13 @@ function RedditPlugin(bot) {
 			short: short || false,
 			extra: extra || null
 		};
+
+		var m = listing.match(self.listingLive);
+		if (m) {
+			extra = m[1];
+		}
+
+		self.wsGuarantee(listing);
 	};
 
 	self.tickerStop = function(listing) {
@@ -234,38 +252,102 @@ function RedditPlugin(bot) {
 
 	self.tickerCheck = function() {
 		for (var listing in self.tickers) {
-			(function(listing) {
-				self.request("https://www.reddit.com" + listing + ".json", function(err, res, body) {
-					if (!err && res.statusCode == 200) {
-						var list = JSON.parse(body).data.children;
-						var pList = self.tickers[listing].pList;
+			if (!self.tickers[listing].ws) {
+				(function(listing) {
+					self.request("https://www.reddit.com" + listing + ".json", function(err, res, body) {
+						if (!err && res.statusCode == 200) {
+							var list = JSON.parse(body).data.children;
+							var pList = self.tickers[listing].pList;
 
-						if (pList) {
-							for (var i = list.length - 1; i >= 0; i--) {
-								var found = false;
-								for (var j = 0; j < pList.length; j++) {
-									if (pList[j].kind == list[i].kind && pList[j].data.id == list[i].data.id) {
-										found = true;
-										break;
+							if (pList) {
+								for (var i = list.length - 1; i >= 0; i--) {
+									var found = false;
+									for (var j = 0; j < pList.length; j++) {
+										if (pList[j].kind == list[i].kind && pList[j].data.id == list[i].data.id) {
+											found = true;
+											break;
+										}
+									}
+
+									if (!found) {
+										self.tickers[listing].channels.forEach(function(to) {
+											self.format(list[i], self.tickers[listing].short, function(str) {
+												bot.say(to, str);
+											}, self.tickers[listing].extra);
+										});
 									}
 								}
-
-								if (!found) {
-									self.tickers[listing].channels.forEach(function(to) {
-										self.format(list[i], self.tickers[listing].short, function(str) {
-											bot.say(to, str);
-										}, self.tickers[listing].extra);
-									});
-								}
 							}
-						}
 
-						self.tickers[listing].pList = list;
-					}
-				});
-			})(listing);
+							self.tickers[listing].pList = list;
+						}
+						else
+							bot.out.error("reddit", err, body);
+					});
+				})(listing);
+			}
 		}
 	};
+
+	self.wsUrl = function(listing, callback) {
+		self.request("https://www.reddit.com" + listing + "/about.json", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var data = JSON.parse(body);
+
+				if (data.data.websocket_url)
+					callback(bot.plugins.util.unescapeHtml(data.data.websocket_url));
+			}
+		});
+	}
+
+	self.wsGuarantee = function(listing) {
+		var m = listing.match(self.listingLive);
+		if (m) {
+			self.wsUrl(listing, function(wsUrl) {
+				self.wsStart(listing, wsUrl);
+			});
+		}
+	};
+
+	self.wsStart = function(listing, url) {
+		bot.out.doing("reddit", "WS for " + listing + " connecting...");
+
+		self.tickers[listing].ws = new WebSocket(url);
+
+		self.tickers[listing].ws.on("open", function() {
+			bot.out.ok("reddit", "WS for " + listing + " connected");
+		});
+
+		self.tickers[listing].ws.on("error", function(code, message) {
+			bot.out.error("reddit", "WS for " + listing + " errored (" + code + "): " + message);
+			delete self.tickers[listing].ws;
+		});
+
+		self.tickers[listing].ws.on("close", function(code, message) {
+			bot.out.error("reddit", "WS for " + listing + " closed (" + code + "): " + message);
+			delete self.tickers[listing].ws;
+
+			if (code != 1000)
+				self.wsGuarantee(listing);
+		});
+
+		self.tickers[listing].ws.on("message", function(message) {
+			var data = JSON.parse(message);
+			if (data.type == "update")
+				self.wsTick(listing, data.payload);
+			/*else
+				bot.out.debug("reddit", data.payload);*/
+		});
+	};
+
+	self.wsTick = function(listing, payload) {
+		self.format(payload, self.tickers[listing].short, function(str) {
+			self.tickers[listing].channels.forEach(function(to) {
+				bot.say(to, str);
+			});
+		}, self.tickers[listing].extra);
+	};
+
 
 	self.events = {
 		"message": function(nick, to, text, message) {

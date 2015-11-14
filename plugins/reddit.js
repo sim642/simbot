@@ -64,20 +64,22 @@ function RedditPlugin(bot) {
 	};
 
 
-	self.formatPost = function(post, short, callback) { // ignores extra
+	self.formatPost = function(post, short, callback, extra, realtime) {
 		short = short || false;
+		realtime = realtime || false;
 
 		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
 		var str = "\x1Fhttps://redd.it/" + post.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
 
-		if (!short)
+		if (!short && !realtime)
 			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
 
 		callback(str);
 	};
 
-	self.formatComment = function(comment, short, callback, extra) {
+	self.formatComment = function(comment, short, callback, extra, realtime) {
 		short = short || false;
+		realtime = realtime || false;
 
 		self.request("https://www.reddit.com/by_id/" + comment.link_id + ".json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
@@ -88,7 +90,7 @@ function RedditPlugin(bot) {
 					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
 					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
 
-					if (!short)
+					if (!short && !realtime)
 						str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
 
 					callback(str);
@@ -97,20 +99,22 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.formatEvent = function(event, short, callback) { // ignores extra
+	self.formatEvent = function(event, short, callback, extra, realtime) {
 		short = short || false;
+		realtime = realtime || false;
 
 		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
 		var str = "\x1Fhttps://reddit.com/event/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
 
-		if (!short)
-			str += " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers; " + bot.plugins.util.unescapeHtml(event.description);
+		if (!short && !realtime)
+			str += " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers; " + bot.plugins.util.unescapeHtml(event.description).replace(/[\r\n]/g, " \\ ");
 
 		callback(str);
 	};
 
-	self.formatUpdate = function(update, short, callback, extra) {
+	self.formatUpdate = function(update, short, callback, extra, realtime) {
 		short = short || false;
+		realtime = realtime || false;
 
 		self.request("https://www.reddit.com/live/" + extra + "/about.json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
@@ -122,7 +126,7 @@ function RedditPlugin(bot) {
 					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "/updates] by " + update.author;
 
 					if (!short)
-						str += " " + bot.plugins.date.printDur(new Date(update.created_utc * 1000), null, 1) + " ago; " + bot.plugins.util.unescapeHtml(update.body);
+						str += (!realtime ? " " + bot.plugins.date.printDur(new Date(update.created_utc * 1000), null, 1) + " ago" : "") + "; " + bot.plugins.util.unescapeHtml(update.body).replace(/[\r\n]/g, " \\ ");
 
 					callback(str);
 				});
@@ -130,7 +134,7 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.format = function(item, short, callback, extra) {
+	self.format = function(item, short, callback, extra, realtime) {
 		var mapping = {
 			"t3": self.formatPost,
 			"t1": self.formatComment,
@@ -138,7 +142,7 @@ function RedditPlugin(bot) {
 			"LiveUpdate": self.formatUpdate
 		};
 
-		return mapping[item.kind](item.data, short, callback, extra);
+		return mapping[item.kind](item.data, short, callback, extra, realtime);
 	};
 
 	self.cleanUrl = function(lurl) {
@@ -273,7 +277,7 @@ function RedditPlugin(bot) {
 										self.tickers[listing].channels.forEach(function(to) {
 											self.format(list[i], self.tickers[listing].short, function(str) {
 												bot.say(to, str);
-											}, self.tickers[listing].extra);
+											}, self.tickers[listing].extra, true);
 										});
 									}
 								}
@@ -345,7 +349,7 @@ function RedditPlugin(bot) {
 			self.tickers[listing].channels.forEach(function(to) {
 				bot.say(to, str);
 			});
-		}, self.tickers[listing].extra);
+		}, self.tickers[listing].extra, true);
 	};
 
 

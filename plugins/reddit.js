@@ -106,8 +106,8 @@ function RedditPlugin(bot) {
 		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
 		var str = "\x1Fhttps://reddit.com/event/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
 
-		if (!short && !realtime)
-			str += " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers; " + bot.plugins.util.unescapeHtml(event.description).replace(/[\r\n]/g, " \\ ");
+		if (!short)
+			str += (!realtime ? " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers" : "" ) + "; " + bot.plugins.util.unescapeHtml(event.description).replace(/[\r\n]/g, " \\ ");
 
 		callback(str);
 	};
@@ -299,7 +299,7 @@ function RedditPlugin(bot) {
 				var data = JSON.parse(body);
 
 				if (data.data.websocket_url)
-					callback(bot.plugins.util.unescapeHtml(data.data.websocket_url));
+					callback(bot.plugins.util.unescapeHtml(data.data.websocket_url), data.data);
 			}
 		});
 	}
@@ -307,15 +307,16 @@ function RedditPlugin(bot) {
 	self.wsGuarantee = function(listing) {
 		var m = listing.match(self.listingLive);
 		if (m) {
-			self.wsUrl(listing, function(wsUrl) {
-				self.wsStart(listing, wsUrl);
+			self.wsUrl(listing, function(wsUrl, data) {
+				self.wsStart(listing, wsUrl, data);
 			});
 		}
 	};
 
-	self.wsStart = function(listing, url) {
-		bot.out.doing("reddit", "WS for " + listing + " connecting...");
+	self.wsStart = function(listing, url, data) {
+		self.tickers[listing].eventData = data;
 
+		bot.out.doing("reddit", "WS for " + listing + " connecting...");
 		self.tickers[listing].ws = new WebSocket(url);
 
 		self.tickers[listing].ws.on("open", function() {
@@ -337,15 +338,36 @@ function RedditPlugin(bot) {
 
 		self.tickers[listing].ws.on("message", function(message) {
 			var data = JSON.parse(message);
-			if (data.type == "update")
-				self.wsTick(listing, data.payload);
-			/*else
-				bot.out.debug("reddit", data.payload);*/
+			switch (data.type) {
+				case "update":
+					self.wsTick(listing, data.payload);
+					break;
+
+				case "settings":
+					for (var key in data.payload) {
+						self.tickers[listing].eventData[key] = data.payload[key];
+					}
+					self.wsEventUpdate(listing);
+					break;
+
+				case "complete":
+					self.tickers[listing].eventData.state = "complete";
+					self.wsEventUpdate(listing);
+					break;
+			}
 		});
 	};
 
+	self.wsEventUpdate = function(listing) {
+		self.formatEvent(self.tickers[listing].eventData, self.tickers[listing].short, function(str) {
+			self.tickers[listing].channels.forEach(function(to) {
+				bot.say(to, str);
+			});
+		}, self.tickers[listing].extra, true);
+	};
+
 	self.wsTick = function(listing, payload) {
-		self.format(payload, self.tickers[listing].short, function(str) {
+		self.formatUpdate(payload, self.tickers[listing].short, function(str) {
 			self.tickers[listing].channels.forEach(function(to) {
 				bot.say(to, str);
 			});

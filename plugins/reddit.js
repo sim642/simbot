@@ -21,9 +21,15 @@ function RedditPlugin(bot) {
 	self.tickers = {};
 	self.interval = null;
 
-	self.request = request.defaults({headers: {"User-Agent": "simbot reddit 1.0"}});
+	self.userAgent = "simbot reddit 2.0 (/u/sim642)";
+	self.clientId = null;
+	self.clientSecret = null;
+	self.tokenTimeout = null;
+	self.baseUrl = "https://www.reddit.com";
+	self.request = request.defaults({headers: {"User-Agent": self.userAgent}});
 
 	self.load = function(data) {
+		self.setOAuth(data.clientId || null, data.clientSecret || null);
 		self.urlSort = data.urlSort;
 		self.urlTime = data.urlTime;
 		self.channels = data.channels;
@@ -41,6 +47,8 @@ function RedditPlugin(bot) {
 	};
 
 	self.disable = function() {
+		clearTimeout(self.tokenTimeout);
+		self.tokenTimeout = null;
 		clearInterval(self.interval);
 		self.interval = null;
 
@@ -56,6 +64,8 @@ function RedditPlugin(bot) {
 			tickers[listing] = {channels: self.tickers[listing].channels, short: self.tickers[listing].short, extra: self.tickers[listing].extra};
 
 		return {
+			clientId: self.clientId,
+			clientSecret: self.clientSecret,
 			urlSort: self.urlSort,
 			urlTime: self.urlTime,
 			channels: self.channels,
@@ -63,6 +73,39 @@ function RedditPlugin(bot) {
 			tickers: tickers};
 	};
 
+	self.setOAuth = function(clientId, clientSecret) {
+		self.clientId = clientId;
+		self.clientSecret = clientSecret;
+
+		clearTimeout(self.tokenTimeout);
+		self.tokenTimeout = null;
+
+		var fail = function() {
+			self.baseUrl = "https://www.reddit.com";
+			self.request = request.defaults({headers: {"User-Agent": self.userAgent}});
+		};
+
+		if (self.clientId && self.clientSecret) {
+			self.request.post({url: "https://www.reddit.com/api/v1/access_token", auth: {user: clientId, pass: clientSecret}, form: {"grant_type": "client_credentials"}}, function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var data = JSON.parse(body);
+
+					self.baseUrl = "https://oauth.reddit.com";
+					self.request = request.defaults({headers: {"Authorization": data.token_type + " " + data.access_token, "User-Agent": self.userAgent}});
+
+					self.tokenTimeout = setTimeout(function() {
+						self.setOAuth(clientId, clientSecret);
+					}, data.expires_in * 1000);
+				}
+				else {
+					bot.out.error("reddit", "couldn't get token: " + body);
+					fail();
+				}
+			});
+		}
+		else
+			fail();
+	};
 
 	self.formatPost = function(post, short, callback, extra, realtime) {
 		short = short || false;
@@ -81,7 +124,7 @@ function RedditPlugin(bot) {
 		short = short || false;
 		realtime = realtime || false;
 
-		self.request("https://www.reddit.com/by_id/" + comment.link_id + ".json", function(err, res, body) {
+		self.request(self.baseUrl + "/by_id/" + comment.link_id + ".json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var post = JSON.parse(body).data.children[0].data;
 
@@ -116,7 +159,7 @@ function RedditPlugin(bot) {
 		short = short || false;
 		realtime = realtime || false;
 
-		self.request("https://www.reddit.com/live/" + extra + "/about.json", function(err, res, body) {
+		self.request(self.baseUrl + "/live/" + extra + "/about.json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var event = JSON.parse(body).data;
 
@@ -152,7 +195,7 @@ function RedditPlugin(bot) {
 	};
 
 	self.lookupOther = function(lurl, callback) {
-		self.request({uri: "https://www.reddit.com/search.json", qs: {"q": "url:'" + lurl + "'", "limit": 3, "sort": self.urlSort, "t": self.urlTime}}, function(err, res, body) {
+		self.request({uri: self.baseUrl + "/search.json", qs: {"q": "url:'" + lurl + "'", "limit": 3, "sort": self.urlSort, "t": self.urlTime}}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).data;
 				var results = data.children;
@@ -174,7 +217,8 @@ function RedditPlugin(bot) {
 	self.lookupReddit = function(rurl, callback) {
 		var match = rurl.match(self.urlRedditRe);
 		var isComment = match[3] !== undefined;
-		self.request(self.cleanUrl(rurl) + ".json", function(err, res, body) {
+		var url = self.cleanUrl(rurl.replace(/(https?:\/\/)?(\w+\.)?reddit\.com/i, self.baseUrl)) + ".json";
+		self.request(url, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body)[+isComment].data;
 				var results = data.children;
@@ -194,7 +238,7 @@ function RedditPlugin(bot) {
 		var uid = match[2];
 
 		if (!uid) {
-			self.request("https://www.reddit.com/live/" + id + "/about.json", function(err, res, body) {
+			self.request(self.baseUrl + "/live/" + id + "/about.json", function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var data = JSON.parse(body);
 
@@ -205,7 +249,7 @@ function RedditPlugin(bot) {
 			});
 		}
 		else {
-			self.request("https://www.reddit.com/live/" + id + "/updates/" + uid + ".json", function(err, res, body) {
+			self.request(self.baseUrl + "/live/" + id + "/updates/" + uid + ".json", function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var data = JSON.parse(body).data;
 					var results = data.children;
@@ -258,7 +302,7 @@ function RedditPlugin(bot) {
 		for (var listing in self.tickers) {
 			if (!self.tickers[listing].ws) {
 				(function(listing) {
-					self.request("https://www.reddit.com" + listing + ".json", function(err, res, body) {
+					self.request(self.baseUrl + listing + ".json", function(err, res, body) {
 						if (!err && res.statusCode == 200) {
 							var list = JSON.parse(body).data.children;
 							var pList = self.tickers[listing].pList;
@@ -294,7 +338,7 @@ function RedditPlugin(bot) {
 	};
 
 	self.wsUrl = function(listing, callback) {
-		self.request("https://www.reddit.com" + listing + "/about.json", function(err, res, body) {
+		self.request(self.baseUrl + listing + "/about.json", function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
 

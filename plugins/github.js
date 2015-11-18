@@ -391,6 +391,26 @@ function GithubPlugin(bot) {
 					}
 					break;
 
+				case "issues":
+					switch (payload.action) {
+						case "opened":
+						case "closed":
+						case "reopened":
+							var prefix = payload.repository.full_name;
+							var bits = [];
+							bits.push([payload.sender.login + " " + payload.action + " issue #" + payload.issue.number, payload.issue.title]);
+							var str = bot.plugins.bits.format(prefix, bits);
+
+							self.hookChannels.forEach(function(channel) {
+								bot.say(channel, str);
+							});
+							break;
+
+						default:
+							break;
+					}
+					break;
+
 				default:
 					bot.out.debug("github", [event, payload]);
 			}

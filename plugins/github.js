@@ -6,7 +6,7 @@ function GithubPlugin(bot) {
 	var self = this;
 	self.name = "github";
 	self.help = "Github stats plugin";
-	self.depend = ["cmd", "ignore", "bits", "util"];
+	self.depend = ["cmd", "ignore", "bits", "util", "*web"];
 
 	self.blocks = "▁▂▃▄▅▆▇█";
 
@@ -23,6 +23,8 @@ function GithubPlugin(bot) {
 	self.urlRe = /(?:https?:\/\/|\s|^)(?:(www|gist)\.)?github\.com\/(\w[\w-]+(?:\/\w[\w-]+)?)(?=\s|$)/;
 	self.channels = [];
 	self.ignores = [];
+
+	self.hookChannels = [];
 
 	self.setToken = function(token) {
 		if (token) {
@@ -42,6 +44,8 @@ function GithubPlugin(bot) {
 			self.channels = data.channels;
 		if (data && data.ignores)
 			self.ignores = data.ignores;
+		if (data && data.hookChannels)
+			self.hookChannels = data.hookChannels;
 
 		self.setToken(data.token);
 	};
@@ -51,7 +55,8 @@ function GithubPlugin(bot) {
 			"token": self.token,
 			"users": self.users,
 			"channels": self.channels,
-			"ignores": self.ignores
+			"ignores": self.ignores,
+			"hookChannels": self.hookChannels
 		};
 	};
 
@@ -359,6 +364,33 @@ function GithubPlugin(bot) {
 				self.lookup(m, true, function(str) {
 					bot.say(nick, str);
 				});
+			}
+		},
+
+		"web#github": function(req, qs, body, res) {
+			res.end();
+
+			var event = req.headers["X-Github-Event".toLowerCase()];
+			var payload = JSON.parse(body);
+
+			switch (event) {
+				case "push":
+					var branch = payload.ref.replace("refs/heads/", "");
+
+					payload.commits.forEach(function(commit) {
+						var prefix = payload.repository.full_name + "/" + branch;
+						var bits = [];
+						bits.push([commit.author.username + " committed", commit.message]);
+						var str = bot.plugins.bits.format(prefix, bits);
+
+						self.hookChannels.forEach(function(channel) {
+							bot.say(channel, str);
+						});
+					});
+					break;
+
+				default:
+					bot.out.debug("github", [event, payload]);
 			}
 		}
 	};

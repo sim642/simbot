@@ -377,16 +377,18 @@ function GithubPlugin(bot) {
 				case "push":
 					var branch = payload.ref.replace("refs/heads/", "");
 
-					payload.commits.forEach(function(commit) {
-						var prefix = payload.repository.full_name + "/" + branch;
-						var bits = [];
-						bits.push([commit.author.username + " committed", commit.message]);
-						var str = bot.plugins.bits.format(prefix, bits);
+					if (branch == "master") {
+						payload.commits.forEach(function(commit) {
+							var prefix = payload.repository.full_name;
+							var bits = [];
+							bits.push([commit.author.username + " committed", commit.message]);
+							var str = bot.plugins.bits.format(prefix, bits);
 
-						self.hookChannels.forEach(function(channel) {
-							bot.say(channel, str);
+							self.hookChannels.forEach(function(channel) {
+								bot.say(channel, str);
+							});
 						});
-					});
+					}
 					break;
 
 				default:

@@ -80,34 +80,64 @@ function GithubPlugin(bot) {
 		return str;
 	};
 
-	self.getLangs = function(reposUrl, callback) {
-		self.request(reposUrl, function(err, res, body) {
+	self.getRepoLangs = function(repo, callback) {
+		self.request(repo.languages_url, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var j = JSON.parse(body);
-
-				var langs = {};
-				j.forEach(function(repo) {
-					if (repo.language !== null) {
-						if (!(repo.language in langs))
-							langs[repo.language] = 0;
-						langs[repo.language]++;
-					}
-				});
-
-				var slangs = [];
-				for (var lang in langs) {
-					slangs.push([lang, langs[lang]]);
-				}
-
-				slangs.sort(function(lhs, rhs) {
-					return rhs[1] - lhs[1];
-				});
-
-				callback(slangs);
+				callback(j);
 			}
 			else
 				bot.out.error("github", err, body);
 		});
+	};
+
+	self.getUserLangs = function(user, callback) {
+		self.request(user.repos_url, function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var j = JSON.parse(body);
+
+				var rets = [];
+				var done = function() {
+					var langs = {};
+					rets.forEach(function(ret) {
+						var sum = 0;
+						for (var lang in ret)
+							sum += ret[lang];
+
+						for (var lang in ret) {
+							if (!(lang in langs))
+								langs[lang] = 0;
+							langs[lang] += ret[lang] / sum;
+						}
+					});
+
+					callback(langs);
+				};
+
+				j.forEach(function(repo) {
+					self.getRepoLangs(repo, function(langs) {
+						rets.push(langs);
+
+						if (rets.length == j.length)
+							done();
+					});
+				});
+			}
+			else
+				bot.out.error("github", err, body);
+		});
+	};
+
+	self.sortLangs = function(langs) {
+		var slangs = [];
+		for (var lang in langs) {
+			slangs.push([lang, langs[lang]]);
+		}
+
+		slangs.sort(function(lhs, rhs) {
+			return rhs[1] - lhs[1];
+		});
+		return slangs;
 	};
 
 	self.github = function(arg, noError, callback) {
@@ -134,12 +164,23 @@ function GithubPlugin(bot) {
 					bits.push(["stars", j.stargazers_count]);
 					bits.push(["watch", j.watchers_count]);
 					bits.push(["forks", j.forks_count]);
-					if (j.language)
-						bits.push(["language", j.language]);
-					bits.push(["issues", j.open_issues_count]);
-					bits.push([, j.html_url, 2]);
 
-					output();
+					var finish = function() {
+						bits.push([, j.html_url, 2]);
+						output();
+					};
+
+					self.getRepoLangs(j, function(langs) {
+						var slangs = self.sortLangs(langs);
+						if (slangs.length > 0) {
+							bits.push(["languages", slangs.slice(0, 4).map(function(lang) {
+								return lang[0];
+							}).join(", ")]);
+						}
+						bits.push(["issues", j.open_issues_count]);
+
+						finish();
+					});
 				}
 				else if (!err && res.statusCode == 404) {
 					prefix = arg;
@@ -174,9 +215,10 @@ function GithubPlugin(bot) {
 						output();
 					};
 
-					self.getLangs(j.repos_url, function(langs) {
-						if (langs.length > 0) {
-							bits.push(["languages", langs.slice(0, 4).map(function(lang) {
+					self.getUserLangs(j, function(langs) {
+						var slangs = self.sortLangs(langs);
+						if (slangs.length > 0) {
+							bits.push(["languages", slangs.slice(0, 4).map(function(lang) {
 								return lang[0];
 							}).join(", ")]);
 						}

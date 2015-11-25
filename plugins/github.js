@@ -6,7 +6,7 @@ function GithubPlugin(bot) {
 	var self = this;
 	self.name = "github";
 	self.help = "Github stats plugin";
-	self.depend = ["cmd", "ignore", "bits", "util", "*web"];
+	self.depend = ["cmd", "ignore", "bits", "util", "gitio"];
 
 	self.blocks = "▁▂▃▄▅▆▇█";
 
@@ -431,11 +431,13 @@ function GithubPlugin(bot) {
 								var prefix = payload.repository.full_name;
 								var bits = [];
 								bits.push([commit.author.username + " committed", commit.message]);
-								bits.push([, commit.url, 2]);
-								var str = bot.plugins.bits.format(prefix, bits);
+								bot.plugins.gitio.shorten(commit.url, function(shorturl) {
+									bits.push([, shorturl, 2]);
+									var str = bot.plugins.bits.format(prefix, bits);
 
-								self.hookChannels.forEach(function(channel) {
-									bot.say(channel, str);
+									self.hookChannels.forEach(function(channel) {
+										bot.say(channel, str);
+									});
 								});
 							}
 						});
@@ -450,11 +452,13 @@ function GithubPlugin(bot) {
 							var prefix = payload.repository.full_name;
 							var bits = [];
 							bits.push([payload.sender.login + " " + payload.action + " issue #" + payload.issue.number, payload.issue.title]);
-							bits.push([, payload.issue.html_url, 2]);
-							var str = bot.plugins.bits.format(prefix, bits);
+							bot.plugins.gitio.shorten(payload.issue.html_url, function(shorturl) {
+								bits.push([, shorturl, 2]);
+								var str = bot.plugins.bits.format(prefix, bits);
 
-							self.hookChannels.forEach(function(channel) {
-								bot.say(channel, str);
+								self.hookChannels.forEach(function(channel) {
+									bot.say(channel, str);
+								});
 							});
 							break;
 

@@ -15,6 +15,8 @@ function RedditPlugin(bot) {
 	self.urlTime = "week";
 	self.listingLive = /^\/live\/(\w+)/i;
 
+	self.subUserRe = /\/([ru])\/([^\s\/]+)/i;
+
 	self.channels = {}; /* true | {reddit: false/true, other: false/true}*/
 	self.ignores = [];
 
@@ -177,12 +179,48 @@ function RedditPlugin(bot) {
 		});
 	};
 
+	self.formatSubreddit = function(subreddit, short, callback, extra, realtime) {
+		short = short || false;
+		realtime = realtime || false;
+
+		var warning = subreddit.over18 ? " \x034[NSFW]\x03" : "";
+		var private = subreddit.subreddit_type != "public" ? " [" + subreddit.subreddit_type + "]" : "";
+		var str = "\x1Fhttps://reddit.com" + subreddit.url + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(subreddit.title) + "\x02" + private;
+
+		if (!short && !realtime)
+			str += "; " + bot.plugins.util.thSeps(subreddit.subscribers) + " subscribers; " + bot.plugins.util.thSeps(subreddit.accounts_active) + " active";
+
+		callback(str);
+	};
+
+	self.formatUser = function(user, short, callback, extra, realtime) {
+		short = short || false;
+		realtime = realtime || false;
+
+		var flags = "";
+		if (user.over18)
+			flags += " \x034[18+]\x03";
+		if (user.is_gold)
+			flags += " \x038[GOLD]\x03";
+		if (user.is_mod)
+			flags +=" \x033[MOD]\x03";
+
+		var str = "\x1Fhttps://reddit.com/u/" + user.name + "\x1F : \x02" + user.name + "\x02; " + bot.plugins.util.thSeps(user.link_karma) + " link karma; " + bot.plugins.util.thSeps(user.comment_karma) + " comment karma";
+
+		if (!short && !realtime)
+			str += "; redditor for " + bot.plugins.date.printDur(new Date(user.created_utc * 1000), null, 1) + (flags != "" ? ";" + flags : "");
+
+		callback(str);
+	};
+
 	self.format = function(item, short, callback, extra, realtime) {
 		var mapping = {
 			"t3": self.formatPost,
 			"t1": self.formatComment,
 			"LiveUpdateEvent": self.formatEvent,
-			"LiveUpdate": self.formatUpdate
+			"LiveUpdate": self.formatUpdate,
+			"t5": self.formatSubreddit,
+			"t2": self.formatUser
 		};
 
 		return mapping[item.kind](item.data, short, callback, extra, realtime);
@@ -264,6 +302,20 @@ function RedditPlugin(bot) {
 		}
 	};
 
+	self.lookupSubUser = function(suurl, callback) {
+		var match = suurl.match(self.subUserRe);
+		var url = self.baseUrl + match[0] + "/about.json";
+		self.request(url, function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var data = JSON.parse(body);
+
+				self.format(data, false, function(str) {
+					callback(str);
+				});
+			}
+		});
+	};
+
 	self.lookup = function(url, callback) {
 		var func = null;
 
@@ -271,6 +323,8 @@ function RedditPlugin(bot) {
 			func = self.lookupReddit;
 		else if (self.urlLiveRe.test(url))
 			func = self.lookupLive;
+		else if (self.urlSubredditRe.test(url))
+			func = self.lookupSubreddit;
 		else
 			func = self.lookupOther;
 
@@ -441,6 +495,22 @@ function RedditPlugin(bot) {
 						bot.say(to, str);
 					});
 				}
+				else {
+					var match = text.match(self.subUserRe);
+					if (match) {
+						var url = match[0];
+
+						if (self.channels[to] === true ||
+							(self.channels[to].subreddit && match[1] == "r") ||
+							(self.channels[to].user && match[1] == "u"))
+						{
+							self.lookupSubUser(url, function(str) {
+								bot.out.log("reddit", nick + " in " + to + ": " + url);
+								bot.say(to, str);
+							});
+						}
+					}
+				}
 			}
 		},
 
@@ -451,6 +521,15 @@ function RedditPlugin(bot) {
 					bot.out.log("reddit", nick + " in PM: " + match[0]);
 					bot.say(nick, str);
 				});
+			}
+			else {
+				var match = text.match(self.subUserRe);
+				if (match) {
+					self.lookupSubUser(match[0], function(str) {
+						bot.out.log("reddit", nick + " in " + to + ": " + match[0]);
+						bot.say(to, str);
+					});
+				}
 			}
 		},
 

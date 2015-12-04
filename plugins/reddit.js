@@ -323,8 +323,8 @@ function RedditPlugin(bot) {
 			func = self.lookupReddit;
 		else if (self.urlLiveRe.test(url))
 			func = self.lookupLive;
-		else if (self.urlSubredditRe.test(url))
-			func = self.lookupSubreddit;
+		else if (self.subUserRe.test(url))
+			func = self.lookupSubUser;
 		else
 			func = self.lookupOther;
 
@@ -465,7 +465,7 @@ function RedditPlugin(bot) {
 	};
 
 	self.wsTick = function(listing, payload) {
-		self.formatUpdate(payload, self.tickers[listing].short, function(str) {
+		self.formatUpdate(payload.data, self.tickers[listing].short, function(str) {
 			self.tickers[listing].channels.forEach(function(to) {
 				bot.say(to, str);
 			});

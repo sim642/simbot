@@ -176,6 +176,8 @@ function RedditPlugin(bot) {
 					callback(str);
 				});
 			}
+			else
+				bot.out.error("reddit", self.baseUrl + "/live/" + extra + "/about.json", res, body);
 		});
 	};
 
@@ -383,8 +385,10 @@ function RedditPlugin(bot) {
 
 							self.tickers[listing].pList = list;
 						}
+						else if (res.statusCode == 503)
+							bot.out.warn("reddit", "servers are busy (" + self.baseUrl + listing + ".json)");
 						else
-							bot.out.error("reddit", err, body);
+							bot.out.error("reddit", self.baseUrl + listing + ".json", res.statusCode, res, body);
 					});
 				})(listing);
 			}
@@ -399,6 +403,8 @@ function RedditPlugin(bot) {
 				if (data.data.websocket_url)
 					callback(bot.plugins.util.unescapeHtml(data.data.websocket_url), data.data);
 			}
+			else
+				bot.out.error("reddit", self.baseUrl + listing + "/about.json", res, body);
 		});
 	}
 
@@ -422,7 +428,7 @@ function RedditPlugin(bot) {
 		});
 
 		self.tickers[listing].ws.on("error", function(code, message) {
-			bot.out.error("reddit", "WS for " + listing + " errored (" + code + "): " + message);
+			bot.out.error("reddit", "WS (" + url + ") for " + listing + " errored (" + code + "): " + message);
 			delete self.tickers[listing].ws;
 		});
 

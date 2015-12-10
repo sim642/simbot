@@ -1,0 +1,17 @@
+{
+  "name": "simbot",
+  "version": "0.0.0",
+  "description": "A plugin powered IRC bot written in node.js",
+  "main": "simbot.js",
+  "repository": "sim642/simbot",
+  "keywords": [
+    "irc",
+    "bot",
+    "plugins"
+  ],
+  "author": "Simmo Saan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sim642/simbot/issues"
+  }
+}

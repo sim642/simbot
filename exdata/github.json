@@ -5,5 +5,8 @@
     ],
     "ignores": [
         "someGuy!*@*"
+    ],
+    "hookChannels": [
+        "#sim"
     ]
 }

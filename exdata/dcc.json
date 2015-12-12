@@ -1,0 +1,6 @@
+{
+    "port": 36001,
+    "blockSize": 65536,
+    "ackCheck": true,
+    "autoReceive": false
+}

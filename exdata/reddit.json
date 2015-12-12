@@ -1,4 +1,6 @@
 {
+    "clientId": "oauth_client_id_here",
+    "clientSecret": "oauth_client_secret_here",
     "urlSort": "hot",
     "urlTime": "week",
     "channels": {

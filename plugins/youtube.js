@@ -43,7 +43,7 @@ function YoutubePlugin(bot) {
 	self.format = function(data, time, callback) {
 		var live = data.snippet.liveBroadcastContent != "none";
 		var dur = live ? data.snippet.liveBroadcastContent : self.duration(data.contentDetails.duration);
-		var views = live ? bot.plugins.util.thSeps(data.liveStreamingDetails.concurrentViewers.toString()) + " viewers" : bot.plugins.util.thSeps(data.statistics.viewCount.toString()) + " views";
+		var views = live && data.liveStreamingDetails.concurrentViewers ? bot.plugins.util.thSeps(data.liveStreamingDetails.concurrentViewers.toString()) + " viewers" : bot.plugins.util.thSeps(data.statistics.viewCount.toString()) + " views";
 		var str = "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : \x02" + data.snippet.title + "\x02 [" + dur + "] by " + data.snippet.channelTitle + "; " + views;
 		if (data.statistics !== undefined) {
 			var likes = parseFloat(data.statistics.likeCount);

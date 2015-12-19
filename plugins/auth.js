@@ -162,8 +162,11 @@ function AuthPlugin(bot) {
 		},
 
 		"cmd#myauth": function(nick, to, args, message) {
+			if (args[1])
+				message.authChannel = args[1];
+
 			self.getLevel(message, function(level, method) {
-				bot.say(to, nick + ": your auth level is " + level + " (" + method + ")");
+				bot.say(to, nick + ": your auth level for " + (args[1] ? args[1] : to) + " is " + level + " (" + method + ")");
 			});
 		}
 	};

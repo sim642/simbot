@@ -153,7 +153,7 @@ function SedPlugin(bot) {
 		"cmd#sed": function(nick, to, args) {
 			self.chanSed(nick, to, args[0], function(line) {
 				var m = line.match(bot.plugins.cmd.chanRe);
-				return !m || m[1] != "sed";
+				return !m || bot.plugins.cmd.cmdChars.indexOf(m[1]) < 0 || m[2] != "sed";
 			});
 		}
 	};

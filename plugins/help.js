@@ -39,15 +39,15 @@ function HelpPlugin(bot) {
 				});
 			}
 			else if (args[1]) {
-				var m = args[1].match(self.cmdRe);
-				if (m) {
+				var m = args[1].match(bot.plugins.cmd.chanRe);
+				if (m && bot.plugins.cmd.cmdChars.indexOf(m[1]) >= 0) {
 					var names = [];
 
 					for (var name in bot.plugins) {
 						if (bot.plugins[name].name) {
 							var plugin = bot.plugins[name];
 							for (var ev in plugin.events) {
-								if (ev == "cmd#" + m[1]) {
+								if (ev == "cmd#" + m[2]) {
 									names.push(name);
 								}
 							}

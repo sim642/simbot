@@ -467,6 +467,37 @@ function GithubPlugin(bot) {
 					}
 					break;
 
+				case "pull_request":
+					switch (payload.action) {
+						case "opened":
+						case "closed":
+						case "reopened":
+						case "synchronize":
+							var prefix = payload.repository.full_name;
+							var bits = [];
+
+							var action = payload.action;
+							if (action == "synchronize")
+								action = "updated";
+							else if (action == "closed" && payload.pull_request.merged)
+								action = "merged";
+
+							bits.push([payload.sender.login + " " + action + " pull request #" + payload.pull_request.number, payload.pull_request.title]);
+							bot.plugins.gitio.shorten(payload.pull_request.html_url, function(shorturl) {
+								bits.push([, shorturl, 2]);
+								var str = bot.plugins.bits.format(prefix, bits);
+
+								self.hookChannels.forEach(function(channel) {
+									bot.say(channel, str);
+								});
+							});
+							break;
+
+						default:
+							break;
+					}
+					break;
+
 				default:
 					bot.out.debug("github", [event, payload]);
 			}

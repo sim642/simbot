@@ -498,6 +498,20 @@ function GithubPlugin(bot) {
 					}
 					break;
 
+				case "fork":
+					var prefix = payload.repository.full_name;
+					var bits = [];
+					bits.push([payload.sender.login + " forked", payload.forkee.full_name]);
+					bot.plugins.gitio.shorten(payload.forkee.html_url, function(shorturl) {
+						bits.push([, shorturl, 2]);
+						var str = bot.plugins.bits.format(prefix, bits);
+
+						self.hookChannels.forEach(function(channel) {
+							bot.say(channel, str);
+						});
+					});
+					break;
+
 				default:
 					bot.out.debug("github", [event, payload]);
 			}

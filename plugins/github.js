@@ -321,9 +321,10 @@ function GithubPlugin(bot) {
 					prefix = (j.owner ? j.owner.login : "anonymous") + "/" + j.id;
 
 					if (j.fork_of)
-						bits.push(["fork", j.fork_of.owner.login + "/" + j.fork_of.id]);
+						bits.push(["fork", (j.fork_of.owner ? j.fork_of.owner.login : "anonymous") + "/" + j.fork_of.id]);
 					if (j.description)
 						bits.push([, j.description, 0]);
+					bits.push([, j.public ? "public" : "private"]);
 					bits.push(["files", Object.keys(j.files).length]);
 					bits.push(["revisions", j.history.length]);
 					// TODO: star count - not available in API

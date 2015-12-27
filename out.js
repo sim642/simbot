@@ -27,14 +27,17 @@ out.wrapper = function(type, color) {
 		});
 
 		args.forEach(function(message) {
-			if (!(typeof(message) === "string" || message instanceof String))
+			var messageWrite = message;
+			if (!(typeof(message) === "string" || message instanceof String)) {
+				messageWrite = util.inspect(message, {colors: false});
 				message = util.inspect(message, {colors: true});
+			}
 
 			if (print)
 				console.log(clc.blackBright(out.time()) + " " + color("[" + type + ":") + color.bold(module) + color("]") + " " + message);
 
 			if (write)
-				out.file.write(out.time() + " [" + type + ":" + module + "] " + message + "\n", 'utf8');
+				out.file.write(out.time() + " [" + type + ":" + module + "] " + messageWrite + "\n", 'utf8');
 		});
 	};
 };

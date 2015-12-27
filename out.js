@@ -39,7 +39,7 @@ out.wrapper = function(type, color) {
 	};
 };
 
-out.log = out.wrapper("LOG", clc.cyan);
+out.log = out.wrapper("LOG", clc.blue);
 out.doing = out.wrapper("DOING", clc.cyanBright);
 out.ok = out.wrapper("OK", clc.greenBright);
 out.debug = out.wrapper("DEBUG", clc.magentaBright);

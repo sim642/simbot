@@ -24,8 +24,6 @@ function GithubPlugin(bot) {
 	self.channels = [];
 	self.ignores = [];
 
-	self.hookChannels = [];
-
 	self.setToken = function(token) {
 		if (token) {
 			self.token = token;
@@ -44,8 +42,6 @@ function GithubPlugin(bot) {
 			self.channels = data.channels;
 		if (data && data.ignores)
 			self.ignores = data.ignores;
-		if (data && data.hookChannels)
-			self.hookChannels = data.hookChannels;
 
 		self.setToken(data.token);
 	};
@@ -56,7 +52,6 @@ function GithubPlugin(bot) {
 			"users": self.users,
 			"channels": self.channels,
 			"ignores": self.ignores,
-			"hookChannels": self.hookChannels
 		};
 	};
 
@@ -419,6 +414,10 @@ function GithubPlugin(bot) {
 		"web#github": function(req, qs, body, res) {
 			res.end();
 
+			var channels = [];
+			if (qs.channels)
+				channels = qs.channels.split(",");
+
 			var event = req.headers["X-Github-Event".toLowerCase()];
 			var payload = JSON.parse(body);
 
@@ -436,7 +435,7 @@ function GithubPlugin(bot) {
 									bits.push([, shorturl, 2]);
 									var str = bot.plugins.bits.format(prefix, bits);
 
-									self.hookChannels.forEach(function(channel) {
+									channels.forEach(function(channel) {
 										bot.say(channel, str);
 									});
 								});
@@ -457,7 +456,7 @@ function GithubPlugin(bot) {
 								bits.push([, shorturl, 2]);
 								var str = bot.plugins.bits.format(prefix, bits);
 
-								self.hookChannels.forEach(function(channel) {
+								channels.forEach(function(channel) {
 									bot.say(channel, str);
 								});
 							});
@@ -488,7 +487,7 @@ function GithubPlugin(bot) {
 								bits.push([, shorturl, 2]);
 								var str = bot.plugins.bits.format(prefix, bits);
 
-								self.hookChannels.forEach(function(channel) {
+								channels.forEach(function(channel) {
 									bot.say(channel, str);
 								});
 							});
@@ -507,14 +506,14 @@ function GithubPlugin(bot) {
 						bits.push([, shorturl, 2]);
 						var str = bot.plugins.bits.format(prefix, bits);
 
-						self.hookChannels.forEach(function(channel) {
+						channels.forEach(function(channel) {
 							bot.say(channel, str);
 						});
 					});
 					break;
 
 				default:
-					bot.out.debug("github", [event, payload]);
+					bot.out.debug("github", [qs, event, payload]);
 			}
 		}
 	};

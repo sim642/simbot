@@ -425,7 +425,7 @@ function GithubPlugin(bot) {
 				case "push":
 					var branch = payload.ref.replace("refs/heads/", "");
 
-					if (branch == "master") {
+					if (branch == payload.repository.default_branch) {
 						payload.commits.forEach(function(commit) {
 							if (commit.distinct) {
 								var prefix = payload.repository.full_name;

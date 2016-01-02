@@ -1,6 +1,6 @@
 {
   "name": "simbot",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A plugin powered IRC bot written in node.js",
   "main": "simbot.js",
   "repository": "sim642/simbot",
@@ -13,5 +13,21 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/sim642/simbot/issues"
+  },
+  "engines": {
+    "node": "~0.10.13"
+  },
+  "dependencies": {
+    "buffer-reader": "^0.1.0",
+    "cli-color": "^0.2.3",
+    "diff": "^1.0.8",
+    "ip": "^0.3.2",
+    "irc": "^0.3.6",
+    "marked": "^0.3.2",
+    "pg": "^3.4.0",
+    "request": "2.39.0",
+    "ws": "^0.6.3",
+    "xmldom": "^0.1.19",
+    "xpath": "^0.0.9"
   }
 }

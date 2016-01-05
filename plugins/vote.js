@@ -9,6 +9,7 @@ function VotePlugin(bot) {
 
 	self.voteend = function(to) {
 		var vote = self.votes[to];
+		bot.out.log("vote", "vote ended in " + to + ": " + vote.question + " (+" + vote.agree.length + " -" + vote.disagree.length + ")");
 		bot.say(to, "Vote by " + vote.by + " over: " + vote.question);
 		bot.say(to, "Agreed: " + vote.agree.length + ", disagreed: " + vote.disagree.length);
 		clearTimeout(vote.timeout);
@@ -46,6 +47,7 @@ function VotePlugin(bot) {
 					disagree: [],
 					timeout: null
 				};
+				bot.out.log("vote", "vote started in " + to + " by " + vote.by + ": " + vote.question);
 				bot.say(to, "Vote by " + vote.by + " started: " + vote.question);
 				bot.say(to, "Write '" + bot.nick + ": ++' to agree, '" + bot.nick + ": --' to disagree");
 				self.activity(to);
@@ -92,6 +94,7 @@ function VotePlugin(bot) {
 							vote.disagree.splice(i, 1);
 						if (vote.agree.indexOf(nick) == -1) {
 							vote.agree.push(nick);
+							bot.out.log("vote", "vote for in " + to + " by " + nick + ": " + vote.question);
 							bot.notice(nick, "vote for '" + vote.question + "' in " + to + " counted");
 						}
 					}
@@ -101,6 +104,7 @@ function VotePlugin(bot) {
 							vote.agree.splice(i, 1);
 						if (vote.disagree.indexOf(nick) == -1) {
 							vote.disagree.push(nick);
+							bot.out.log("vote", "vote against in " + to + " by " + nick + ": " + vote.question);
 							bot.notice(nick, "vote against '" + vote.question + "' in " + to + " counted");
 						}
 					}

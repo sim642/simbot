@@ -55,7 +55,20 @@ function ChoosePlugin(bot) {
 			var dotRe = /^\.choose\s(.*)/;
 			var match = text.match(dotRe);
 			if (match && match[1].split(",").length > 1) {
-				bot.emit("cmd#choose", nick, to, [match[1]]);
+				var choices = match[1].split(",");
+				if (choices.length == 1) {
+					for (var name in self.randoms)
+						bot.say(to, nick + ": " + choices[0].trim());
+				}
+				else {
+					for (var name in self.randoms) {
+						(function(name) {
+							self.randoms[name](choices.length, function(i) {
+								bot.say(to, nick + ": " + choices[i].trim());
+							});
+						})(name);
+					}
+				}
 			}
 		}
 	};

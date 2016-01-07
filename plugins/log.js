@@ -10,6 +10,16 @@ function LogPlugin(bot) {
 		"(/)((?:\\\\\\1|(?!\\1).)+)" +
 		"\\1([a-z])*"); // simplified from sed plugin // copied from history plugin
 
+	self.logRe = /^([0-9-:.TZ]+) \[(\w+):(\w+)\] (.*)$/;
+	self.typeColor = {
+		"LOG": 2,
+		"DOING": 11,
+		"OK": 3,
+		"DEBUG": 13,
+		"WARN": 8,
+		"ERROR": 4
+	};
+
 	self.iterate = function(lineCb, endCb) {
 		var found = false;
 		fs.readFile("./data/simbot.log", {encoding: "utf8"}, function(err, data) {
@@ -25,6 +35,21 @@ function LogPlugin(bot) {
 
 			(endCb || function(){})(found);
 		});
+	};
+
+	self.recoverColor = function(str) {
+		var m = str.match(self.logRe);
+		if (m)
+		{
+			var str2 = "";
+			str2 += "\x0314" + m[1] + "\x0F ";
+			str2 += "\x03" + self.typeColor[m[2]] + "[" + m[2] + ":";
+			str2 += "\x02" + m[3] + "\x02]\x0F ";
+			str2 += m[4];
+			return str2;
+		}
+		else
+			return str;
 	};
 
 	self.events = {
@@ -50,6 +75,7 @@ function LogPlugin(bot) {
 
 			var outlines = [];
 			self.iterate(function(line) {
+				line = self.recoverColor(line);
 				if (re === null || line.match(re)) {
 					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
 

@@ -181,7 +181,7 @@ function HistoryPlugin(bot) {
 			});
 		},
 
-		"cmd#historycount": bot.plugins.auth.proxyEvent(6, function(nick, to, args) {
+		"cmd#historycount": function(nick, to, args, message) {
 			var channel = to;
 			var re = null;
 
@@ -198,20 +198,24 @@ function HistoryPlugin(bot) {
 				}
 			}
 
-			var cnt = 0;
-			self.iterate(channel, function(line) {
-				if (re !== null) {
-					var m = line.match(re);
-					cnt += (m || []).length;
-				}
-				else
-					cnt++;
+			message.authChannel = channel;
 
-				return true; // continue forever
-			}, function() {
-				bot.say(to, nick + ": " + cnt);
+			bot.plugins.auth.proxy(2, message, function() {
+				var cnt = 0;
+				self.iterate(channel, function(line) {
+					if (re !== null) {
+						var m = line.match(re);
+						cnt += (m || []).length;
+					}
+					else
+						cnt++;
+
+					return true; // continue forever
+				}, function() {
+					bot.say(to, nick + ": " + cnt);
+				});
 			});
-		})
+		}
 	};
 }
 

@@ -31,32 +31,42 @@ function ChoosePlugin(bot) {
 	};
 
 	self.events = {
-		"cmd#choose": function(nick, to, args) {
+		"cmd#choose": function(nick, to, args, message) {
 			var choices = args[0].split(",");
-			if (choices.length == 1 && choices[0].trim() == "") {
-				bot.say(to, "Nothing to choose from");
-			}
-			else if (choices.length == 1) {
-				for (var name in self.randoms)
-					bot.say(to, name + " chose '\x02" + choices[0].trim() + "\x02'");
-			}
-			else {
-				for (var name in self.randoms) {
-					(function(name) {
-						self.randoms[name](choices.length, function(i) {
-							bot.say(to, name + " chose '\x02" + choices[i].trim() + "\x02'");
-						});
-					})(name);
+
+			if (message.cmdChar != ".") {
+				if (choices.length == 1 && choices[0].trim() == "") {
+					bot.say(to, "Nothing to choose from");
+				}
+				else if (choices.length == 1) {
+					for (var name in self.randoms)
+						bot.say(to, name + " chose '\x02" + choices[0].trim() + "\x02'");
+				}
+				else {
+					for (var name in self.randoms) {
+						(function(name) {
+							self.randoms[name](choices.length, function(i) {
+								bot.say(to, name + " chose '\x02" + choices[i].trim() + "\x02'");
+							});
+						})(name);
+					}
 				}
 			}
-		},
-
-		"message": function(nick, to, text) {
-			/*var dotRe = /^\.choose\s(.*)/;
-			var match = text.match(dotRe);
-			if (match && match[1].split(",").length > 1) {
-				bot.emit("cmd#choose", nick, to, [match[1]]);
-			}*/
+			else {
+				if (choices.length == 1) {
+					for (var name in self.randoms)
+						bot.say(to, nick + ": " + choices[0].trim());
+				}
+				else {
+					for (var name in self.randoms) {
+						(function(name) {
+							self.randoms[name](choices.length, function(i) {
+								bot.say(to, nick + ": " + choices[i].trim());
+							});
+						})(name);
+					}
+				}
+			}
 		}
 	};
 }

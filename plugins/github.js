@@ -24,8 +24,6 @@ function GithubPlugin(bot) {
 	self.channels = [];
 	self.ignores = [];
 
-	self.hookChannels = [];
-
 	self.setToken = function(token) {
 		if (token) {
 			self.token = token;
@@ -44,8 +42,6 @@ function GithubPlugin(bot) {
 			self.channels = data.channels;
 		if (data && data.ignores)
 			self.ignores = data.ignores;
-		if (data && data.hookChannels)
-			self.hookChannels = data.hookChannels;
 
 		self.setToken(data.token);
 	};
@@ -56,7 +52,6 @@ function GithubPlugin(bot) {
 			"users": self.users,
 			"channels": self.channels,
 			"ignores": self.ignores,
-			"hookChannels": self.hookChannels
 		};
 	};
 
@@ -321,9 +316,10 @@ function GithubPlugin(bot) {
 					prefix = (j.owner ? j.owner.login : "anonymous") + "/" + j.id;
 
 					if (j.fork_of)
-						bits.push(["fork", j.fork_of.owner.login + "/" + j.fork_of.id]);
+						bits.push(["fork", (j.fork_of.owner ? j.fork_of.owner.login : "anonymous") + "/" + j.fork_of.id]);
 					if (j.description)
 						bits.push([, j.description, 0]);
+					bits.push([, j.public ? "public" : "private"]);
 					bits.push(["files", Object.keys(j.files).length]);
 					bits.push(["revisions", j.history.length]);
 					// TODO: star count - not available in API
@@ -418,6 +414,10 @@ function GithubPlugin(bot) {
 		"web#github": function(req, qs, body, res) {
 			res.end();
 
+			var channels = [];
+			if (qs.channels)
+				channels = qs.channels.split(",");
+
 			var event = req.headers["X-Github-Event".toLowerCase()];
 			var payload = JSON.parse(body);
 
@@ -425,7 +425,7 @@ function GithubPlugin(bot) {
 				case "push":
 					var branch = payload.ref.replace("refs/heads/", "");
 
-					if (branch == "master") {
+					if (branch == payload.repository.default_branch) {
 						payload.commits.forEach(function(commit) {
 							if (commit.distinct) {
 								var prefix = payload.repository.full_name;
@@ -435,7 +435,7 @@ function GithubPlugin(bot) {
 									bits.push([, shorturl, 2]);
 									var str = bot.plugins.bits.format(prefix, bits);
 
-									self.hookChannels.forEach(function(channel) {
+									channels.forEach(function(channel) {
 										bot.say(channel, str);
 									});
 								});
@@ -456,7 +456,7 @@ function GithubPlugin(bot) {
 								bits.push([, shorturl, 2]);
 								var str = bot.plugins.bits.format(prefix, bits);
 
-								self.hookChannels.forEach(function(channel) {
+								channels.forEach(function(channel) {
 									bot.say(channel, str);
 								});
 							});
@@ -467,8 +467,53 @@ function GithubPlugin(bot) {
 					}
 					break;
 
+				case "pull_request":
+					switch (payload.action) {
+						case "opened":
+						case "closed":
+						case "reopened":
+						case "synchronize":
+							var prefix = payload.repository.full_name;
+							var bits = [];
+
+							var action = payload.action;
+							if (action == "synchronize")
+								action = "updated";
+							else if (action == "closed" && payload.pull_request.merged)
+								action = "merged";
+
+							bits.push([payload.sender.login + " " + action + " pull request #" + payload.pull_request.number, payload.pull_request.title]);
+							bot.plugins.gitio.shorten(payload.pull_request.html_url, function(shorturl) {
+								bits.push([, shorturl, 2]);
+								var str = bot.plugins.bits.format(prefix, bits);
+
+								channels.forEach(function(channel) {
+									bot.say(channel, str);
+								});
+							});
+							break;
+
+						default:
+							break;
+					}
+					break;
+
+				case "fork":
+					var prefix = payload.repository.full_name;
+					var bits = [];
+					bits.push([payload.sender.login + " forked", payload.forkee.full_name]);
+					bot.plugins.gitio.shorten(payload.forkee.html_url, function(shorturl) {
+						bits.push([, shorturl, 2]);
+						var str = bot.plugins.bits.format(prefix, bits);
+
+						channels.forEach(function(channel) {
+							bot.say(channel, str);
+						});
+					});
+					break;
+
 				default:
-					bot.out.debug("github", [event, payload]);
+					bot.out.debug("github", [qs, event, payload]);
 			}
 		}
 	};

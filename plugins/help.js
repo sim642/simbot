@@ -61,7 +61,7 @@ function HelpPlugin(bot) {
 							bot.say(to, nick + ": " + args[1] + " in " + names[0] + " - " + bot.plugins[names[0]].help + (!err && res.statusCode == 200 ? " - " + url : ""));
 
 							if (!err && res.statusCode == 200) {
-								var re = new RegExp("`" + bot.plugins.util.escapeRegExp(args[1]) + "(\\s.*)?`");
+								var re = new RegExp("`" + bot.plugins.util.escapeRegExp("=" + m[2]) + "(\\s.*)?`");
 								var tokens = marked.lexer(body);
 								var listItem = false;
 								for (var i = 0; i < tokens.length; i++) {

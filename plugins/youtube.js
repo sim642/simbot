@@ -9,7 +9,7 @@ function YoutubePlugin(bot) {
 
 	self.apiKey = null;
 	
-	self.vidre = new RegExp('(?:youtube(?:-nocookie)?\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/)([^"&?/ ]{11})(?:[?#]t=((?:\\d+[hms])+))?', "i");
+	self.vidre = new RegExp('(?:youtube(?:-nocookie)?\\.com/(?:[^/ ]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/)([^"&?/ ]{11})(?:[?#]t=((?:\\d+[hms])+))?', "i");
 
 	self.channels = [];
 	self.ignores = [];

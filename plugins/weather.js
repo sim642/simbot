@@ -22,7 +22,14 @@ function WeatherPlugin(bot) {
 
 	self.events = {
 		"cmd#weather": function(nick, to, args) {
-			request("http://api.openweathermap.org/data/2.5/weather?APPID=" + self.apiKey + "&lang=en&q=" + args[0], function(err, res, body) {
+			request({
+				url: "http://api.openweathermap.org/data/2.5/weather",
+				qs: {
+					"APPID": self.apiKey,
+					"lang": "en",
+					"q": args[0]
+				}
+			}, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var j = JSON.parse(body);
 					if (j.cod == 200) {
@@ -90,7 +97,14 @@ function WeatherPlugin(bot) {
 			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
-			request("http://api.openweathermap.org/data/2.5/forecast?APPID=" + self.apiKey + "&lang=en&q=" + place, function(err, res, body) {
+			request({
+				url: "http://api.openweathermap.org/data/2.5/forecast",
+				qs: {
+					"APPID": self.apiKey,
+					"lang": "en",
+					"q": place
+				}
+			}, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var jj = JSON.parse(body);
 					if (jj.cod == 200) {
@@ -166,7 +180,14 @@ function WeatherPlugin(bot) {
 			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
-			request("http://api.openweathermap.org/data/2.5/forecast/daily?APPID=" + self.apiKey + "&lang=en&q=" + place, function(err, res, body) {
+			request({
+				url: "http://api.openweathermap.org/data/2.5/forecast/daily",
+				qs: {
+					"APPID": self.apiKey,
+					"lang": "en",
+					"q": place
+				}
+			}, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var jj = JSON.parse(body);
 					if (jj.cod == 200) {
@@ -224,7 +245,17 @@ function WeatherPlugin(bot) {
 			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
-			request("http://api.openweathermap.org/data/2.5/history/city/?APPID=" + self.apiKey + "&lang=en&type=tick&cnt=1&start=" + t + "&q=" + place, function(err, res, body) {
+			request({
+				url: "http://api.openweathermap.org/data/2.5/history/city/",
+				qs: {
+					"APPID": self.apiKey,
+					"lang": "en",
+					"type": "hour",
+					"cnt": 1,
+					"start": t,
+					"q": place
+				}
+			}, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var jj = JSON.parse(body);
 					if (jj.cod == 200) {

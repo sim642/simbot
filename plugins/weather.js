@@ -8,9 +8,21 @@ function WeatherPlugin(bot) {
 	
 	self.DateUTC = bot.plugins.date.toUTC;
 
+	self.apiKey = null;
+
+	self.load = function(data) {
+		if (data) {
+			self.apiKey = data.apiKey || null;
+		}
+	};
+
+	self.save = function() {
+		return {apiKey: self.apiKey};
+	};
+
 	self.events = {
 		"cmd#weather": function(nick, to, args) {
-			request("http://api.openweathermap.org/data/2.5/weather?lang=en&q=" + args[0], function(err, res, body) {
+			request("http://api.openweathermap.org/data/2.5/weather?APPID=" + self.apiKey + "&lang=en&q=" + args[0], function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var j = JSON.parse(body);
 					if (j.cod == 200) {
@@ -78,7 +90,7 @@ function WeatherPlugin(bot) {
 			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
-			request("http://api.openweathermap.org/data/2.5/forecast?lang=en&q=" + place, function(err, res, body) {
+			request("http://api.openweathermap.org/data/2.5/forecast?APPID=" + self.apiKey + "&lang=en&q=" + place, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var jj = JSON.parse(body);
 					if (jj.cod == 200) {
@@ -154,7 +166,7 @@ function WeatherPlugin(bot) {
 			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
-			request("http://api.openweathermap.org/data/2.5/forecast/daily?lang=en&q=" + place, function(err, res, body) {
+			request("http://api.openweathermap.org/data/2.5/forecast/daily?APPID=" + self.apiKey + "&lang=en&q=" + place, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var jj = JSON.parse(body);
 					if (jj.cod == 200) {
@@ -212,7 +224,7 @@ function WeatherPlugin(bot) {
 			var time = new Date(args[2]);
 			var t = time.getTime() / 1000;
 
-			request("http://api.openweathermap.org/data/2.5/history/city/?lang=en&type=tick&cnt=1&start=" + t + "&q=" + place, function(err, res, body) {
+			request("http://api.openweathermap.org/data/2.5/history/city/?APPID=" + self.apiKey + "&lang=en&type=tick&cnt=1&start=" + t + "&q=" + place, function(err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var jj = JSON.parse(body);
 					if (jj.cod == 200) {

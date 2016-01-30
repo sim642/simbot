@@ -39,15 +39,15 @@ function HelpPlugin(bot) {
 				});
 			}
 			else if (args[1]) {
-				var m = args[1].match(self.cmdRe);
-				if (m) {
+				var m = args[1].match(bot.plugins.cmd.chanRe);
+				if (m && bot.plugins.cmd.cmdChars.indexOf(m[1]) >= 0) {
 					var names = [];
 
 					for (var name in bot.plugins) {
 						if (bot.plugins[name].name) {
 							var plugin = bot.plugins[name];
 							for (var ev in plugin.events) {
-								if (ev == "cmd#" + m[1]) {
+								if (ev == "cmd#" + m[2]) {
 									names.push(name);
 								}
 							}
@@ -61,7 +61,7 @@ function HelpPlugin(bot) {
 							bot.say(to, nick + ": " + args[1] + " in " + names[0] + " - " + bot.plugins[names[0]].help + (!err && res.statusCode == 200 ? " - " + url : ""));
 
 							if (!err && res.statusCode == 200) {
-								var re = new RegExp("`" + bot.plugins.util.escapeRegExp(args[1]) + "(\\s.*)?`");
+								var re = new RegExp("`" + bot.plugins.util.escapeRegExp("=" + m[2]) + "(\\s.*)?`");
 								var tokens = marked.lexer(body);
 								var listItem = false;
 								for (var i = 0; i < tokens.length; i++) {

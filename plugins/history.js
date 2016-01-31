@@ -63,10 +63,25 @@ function HistoryPlugin(bot) {
 		});
 	};
 
+	self.makeWhoRe = function(who) {
+		var escaped = bot.plugins.util.escapeRegExp(who);
+		// TODO: http://stackoverflow.com/a/27191354/854540
+		return new RegExp(
+			"^\\[\\d{2}:\\d{2}:\\d{2}\\] " +
+			"(?:" +
+				"<" + escaped + ">" + // PRIVMSG
+			"|" +
+				"-" + escaped + "-" + // NOTICE
+			"|" +
+				"\\* " + escaped +    // ACTION
+			") ", "i");
+	};
+
 	self.events = {
 		"cmd#history": function(nick, to, args) {
 			var linecnt;
 			var channel = to;
+			var who = null;
 			var re = null;
 			var preSurround;
 			var postSurround;
@@ -89,10 +104,13 @@ function HistoryPlugin(bot) {
 					preSurround = parseInt(m[1]);
 				else if (m = arg.match(/^\+(\d+)$/))
 					postSurround = parseInt(m[1]);
+				else if (m = arg.match(/^(\w+)[,:]?$/))
+					who = m[1];
 				else if (m = arg.match(self.grepRe))
 					re = new RegExp(m[2], m[3]);
 			}
 
+			var whoRe = (who !== null ? self.makeWhoRe(who) : null);
 			preSurround = Math.min(preSurround !== undefined ? preSurround : (gist ? 5 : 3), gist ? 20 : 10);
 			postSurround = Math.min(postSurround !== undefined ? postSurround : (gist ? 2 : 1), gist ? 20 : 10);
 
@@ -100,8 +118,11 @@ function HistoryPlugin(bot) {
 			linecnt = Math.min(linecnt || (gist ? 50 : 15), re === null ? (gist ? 1000 : 50) : Math.ceil((gist ? 1000 : 50) / (preSurround + 1 + postSurround)));
 
 			var argStr = "";
+			if (who !== null) {
+				argStr += who + ",";
+			}
 			if (re !== null) {
-				argStr += "/" + re.source + "/" + re.toString().match(/[gimuy]*$/)[0]; // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags
+				argStr += (argStr ? " " : "") + "/" + re.source + "/" + re.toString().match(/[gimuy]*$/)[0]; // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags
 				argStr += " -" + preSurround.toString() + " +" + postSurround.toString();
 			}
 			argStr += (argStr ? " " : "") + linecnt.toString();
@@ -120,7 +141,7 @@ function HistoryPlugin(bot) {
 				if (strip)
 					line = bot.plugins.util.stripColors(line);
 
-				if (linecnt > 0 && (re === null || line.match(re))) {
+				if (linecnt > 0 && (whoRe !== null ? line.match(whoRe) : true) && (re === null || line.match(re))) {
 					if (re !== null) {
 						if (contextEnded) {
 							outlines.unshift("\x031 --------");

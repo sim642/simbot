@@ -32,16 +32,20 @@ Process"];
 
 	self.events = {
 		"cmd#classname": function(nick, to, args, message) {
-			var name = "";
-			for (var i = 0; i < self.parts.length; i++) {
-				var cnt = 1;
-				var num = parseInt(args[i + 1], 10);
-				if (args[i + 1] && !isNaN(num))
-					cnt = Math.min(num, 10);
+			var times = args[self.parts.length + 1] || 1;
 
-				for (var j = 0; j < cnt; j++) {
-					var a = self.parts[i].split(" ");
-					name += a[Math.floor(Math.random() * a.length)];
+			var name = "";
+			for (var t = 0; t < times; t++) {
+				for (var i = 0; i < self.parts.length; i++) {
+					var cnt = 1;
+					var num = parseInt(args[i + 1], 10);
+					if (args[i + 1] && !isNaN(num))
+						cnt = Math.min(num, 10);
+
+					for (var j = 0; j < cnt; j++) {
+						var a = self.parts[i].split(" ");
+						name += a[Math.floor(Math.random() * a.length)];
+					}
 				}
 			}
 			bot.say(to, nick + ": " + name);

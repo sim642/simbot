@@ -1,6 +1,4 @@
 var request = require("request");
-var dom = require("xmldom").DOMParser;
-var xpath = require("xpath");
 var util = require("util");
 
 function WikiPlugin(bot) {
@@ -10,42 +8,6 @@ function WikiPlugin(bot) {
 	self.depend = ["cmd", "bitly"];
 
 	self.query = function(root, text, callback) {
-		/* https://en.wikipedia.org/wiki/Special:ApiSandbox#action=query&prop=pageprops|revisions&format=json&rvprop=parsetree&generator=search&redirects=&gsrsearch=lineee&gsrlimit=1&gsrenablerewrites= */
-		/* /w/api.php?action=query&prop=pageprops|revisions&format=json&rvprop=parsetree&generator=search&redirects=&gsrsearch=lineee&gsrlimit=1&gsrenablerewrites= */
-		request({
-			url: root,
-			qs: {
-				"action": "query",
-				"redirects": "",
-
-				"generator": "search",
-				"gsrsearch": text,
-				"gsrlimit": 1,
-				"gsrenablerewrites": "",
-
-				"prop": "revisions|pageprops",
-				"rvprop": "parsetree",
-
-				"format": "json"
-			}
-		}, function(err, res, body) {
-			var data = JSON.parse(body);
-			bot.out.debug("wiki", util.inspect(data, {colors: true, depth: null}));
-
-			for (var pageid in data.query.pages) {
-				var page = data.query.pages[pageid];
-				var doc = new dom().parseFromString(page.revisions[0].parsetree);
-				bot.out.debug("wiki", page.revisions[0].parsetree);
-
-				var text = xpath.select("//*/text()", doc).map(function(node) {
-					return node.nodeValue;
-				}).join("").replace(/[\r\n]/g, " ");
-				bot.out.debug("wiki", text);
-			}
-		});
-	};
-
-	self.query2 = function(root, text, callback) {
 		/* https://www.mediawiki.org/wiki/Extension:TextExtracts */
 		/* https://www.mediawiki.org/wiki/API:Info */
 
@@ -99,7 +61,7 @@ function WikiPlugin(bot) {
 	self.events = {
 		"cmd#wikipedia": function(nick, to, args) {
 			if (args[0].trim().length > 0) {
-				self.query2("https://en.wikipedia.org/w/api.php", args[0], function(str) {
+				self.query("https://en.wikipedia.org/w/api.php", args[0], function(str) {
 					bot.say(to, str);
 				});
 			}

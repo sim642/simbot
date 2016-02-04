@@ -152,10 +152,9 @@ function HistoryPlugin(bot) {
 							outlines.unshift(cline);
 						});
 						context = [];
+						contextTodo = preSurround;
 					}
 					outlines.unshift(re !== null ? line.replace(re, "\x16$&\x16") : line); // highlight matches by color reversal
-
-					contextTodo = preSurround;
 
 					linecnt--;
 					fileUsed = true;

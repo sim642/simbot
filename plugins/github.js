@@ -430,7 +430,7 @@ function GithubPlugin(bot) {
 							if (commit.distinct) {
 								var prefix = payload.repository.full_name;
 								var bits = [];
-								bits.push([commit.author.username + " committed", commit.message]);
+								bits.push([commit.author.username + " committed", commit.message.replace(/[\r\n]/g, " \\ ")]);
 								bot.plugins.gitio.shorten(commit.url, function(shorturl) {
 									bits.push([, shorturl, 2]);
 									var str = bot.plugins.bits.format(prefix, bits);

@@ -426,6 +426,7 @@ function GithubPlugin(bot) {
 					var branch = payload.ref.replace("refs/heads/", "");
 
 					if (branch == payload.repository.default_branch) {
+						payload.commits.reverse();
 						payload.commits.forEach(function(commit) {
 							if (commit.distinct) {
 								var prefix = payload.repository.full_name;

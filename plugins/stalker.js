@@ -294,6 +294,30 @@ function StalkerPlugin(bot) {
 			}
 		},
 
+		"cmd#seen2": function(nick, to, args) {
+			var nick2 = args[1];
+			if (nick2) {
+				var recent = null;
+				var first = null;
+
+				for (var id in self.db) {
+					var row = self.db[id];
+					if (row.nick.toLowerCase() == nick2.toLowerCase()) {
+						if (recent === null || row.seen > recent.seen)
+							recent = row;
+						if (first === null || row.added < first.added)
+							first = row;
+					}
+				}
+
+				if (recent !== null && first !== null) {
+					bot.say(to, nick2 + " last seen: " + bot.plugins.date.printDateTime(recent.seen) + " (" + bot.plugins.date.printDur(recent.seen, "second") + " ago); first seen: " + bot.plugins.date.printDateTime(first.added) + " (" + bot.plugins.date.printDur(first.added, "second") + " ago)");
+				}
+				else
+					bot.say(to, nick2 + " has been never seen");
+			}
+		},
+
 		"cmd#istalk": function(nick, to, args) {
 			var nick2 = args[1];
 			if (nick2) {

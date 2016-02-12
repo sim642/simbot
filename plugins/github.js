@@ -422,6 +422,21 @@ function GithubPlugin(bot) {
 			var payload = JSON.parse(body);
 
 			switch (event) {
+				case "ping":
+					var prefix = payload.repository.full_name;
+					var bits = [];
+					bits.push([, payload.sender.login + " pinged", 0]);
+					bits.push(["events", payload.hook.events.join(", ")]);
+					bot.plugins.gitio.shorten(payload.repository.html_url, function(shorturl) {
+						bits.push([, shorturl, 2]);
+						var str = bot.plugins.bits.format(prefix, bits);
+
+						channels.forEach(function(channel) {
+							bot.say(channel, str);
+						});
+					});
+					break;
+
 				case "push":
 					var branch = payload.ref.replace("refs/heads/", "");
 

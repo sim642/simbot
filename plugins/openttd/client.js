@@ -60,6 +60,8 @@ function Client() {
 
 	self.clientID = null;
 	self.clients = {};
+	self.ackToken = null;
+	self.frameCnt = 0;
 
 	self.on("packet", function(packet) {
 		self.emit("packet#" + packet.readUInt8(0), packet.slice(1));
@@ -102,6 +104,33 @@ function Client() {
 
 	self.on("packet#19", function(buffer) {
 		self.send(new Buffer([0x14]));
+	});
+
+	self.on("packet#22", function(buffer) {
+		var reader = new BufferReader(buffer);
+
+		var frame = reader.nextUInt32LE();
+		var frameMax = reader.nextUInt32LE();
+		try {
+			self.ackToken = reader.nextUInt8();
+		}
+		catch (e) {
+
+		}
+
+		if (++self.frameCnt >= 100) {
+			var frameBuffer = new Buffer(4);
+			frameBuffer.writeUInt32LE(frame, 0);
+
+			var packet = Buffer.concat([
+				new Buffer([0x17]),
+				frameBuffer,
+				new Buffer([self.ackToken]),
+			]);
+			self.send(packet);
+
+			self.frameCnt = 0;
+		}
 	});
 
 	EventEmitter.call(self);

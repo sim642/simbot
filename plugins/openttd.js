@@ -27,6 +27,9 @@ function OpenTTDPlugin(bot) {
 	self.enable = function() {
 		self.interval = setInterval(self.refresh, 60 * 1000);
 		self.refresh();
+
+		if (self.defServer)
+			self.clientStart(self.defServer, self.defPort);
 	};
 
 	self.disable = function() {

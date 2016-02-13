@@ -133,6 +133,19 @@ function Client() {
 		}
 	});
 
+	self.on("packet#28", function(buffer) {
+		var reader = new BufferReader(buffer);
+
+		var chat = {
+			actionId: reader.nextUInt8(),
+			clientId: reader.nextUInt32LE(),
+			self: !!reader.nextUInt8(),
+			msg: reader.nextStringZero(),
+			data: reader.nextUInt64LE(),
+		};
+		console.log("chat", chat);
+	});
+
 	EventEmitter.call(self);
 }
 
@@ -150,7 +163,7 @@ Client.prototype.connect = function(addr, port) {
 	});
 
 	self.socket.on("data", function(buffer) {
-		console.log("data", buffer);
+		//console.log("data", buffer);
 		self.data = Buffer.concat([self.data, buffer]);
 		self.handle();
 	});
@@ -167,7 +180,7 @@ Client.prototype.send = function(packet) {
 	lenBuffer.writeUInt16LE(packet.length + lenBuffer.length, 0);
 
 	var outBuffer = Buffer.concat([lenBuffer, packet]);
-	console.log("send", outBuffer);
+	//console.log("send", outBuffer);
 	self.socket.write(outBuffer);
 };
 
@@ -179,7 +192,7 @@ Client.prototype.handle = function() {
 		if (len <= self.data.length) {
 			var packet = new Buffer(len - 2);
 			self.data.copy(packet, 0, 2, len);
-			console.log("packet", packet);
+			//console.log("packet", packet);
 			self.emit("packet", packet);
 
 			self.data = self.data.slice(len);

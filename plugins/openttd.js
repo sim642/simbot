@@ -1,4 +1,5 @@
 var openttd = require("./openttd/openttd");
+var Client = require("./openttd/client");
 
 function OpenTTDPlugin(bot) {
 	var self = this;
@@ -12,6 +13,8 @@ function OpenTTDPlugin(bot) {
 	self.channels = [];
 	self.pRet = null;
 	self.interval = null;
+
+	self.clients = {};
 
 	self.load = function(data) {
 		if (data) {
@@ -29,6 +32,10 @@ function OpenTTDPlugin(bot) {
 	self.disable = function() {
 		clearInterval(self.interval);
 		self.interval = null;
+
+		for (var host in self.clients) {
+			self.clientStop(host);
+		}
 	};
 
 	self.save = function() {
@@ -58,6 +65,30 @@ function OpenTTDPlugin(bot) {
 
 			self.pRet = ret;
 		});
+	};
+
+	self.clientStart = function(addr, port) {
+		var host = addr + ":" + port;
+		if (host in self.clients)
+			return;
+
+		self.clients[host] = new Client();
+		self.clients[host].connect(addr, port);
+
+		self.clients[host].on("chat", function(chat) {
+			if (chat.clientId != self.clients[host].clientId) {
+				var str = "<" + self.clients[host].clients[chat.clientId].name + "> " + chat.msg;
+
+				self.channels.forEach(function(channel) {
+					bot.say(channel, str);
+				});
+			}
+		});
+	};
+
+	self.clientStop = function(host) {
+		self.clients[host].end();
+		delete self.clients[host];
 	};
 
 	self.events = {
@@ -98,7 +129,7 @@ function OpenTTDPlugin(bot) {
 		},
 
 		"cmd#openttdcomp": function(nick, to, args) {
-			var comp = args[1];
+			var comp = args[1]; // TODO: error if not given
 			var server = args[2] || self.defServer;
 			var port = args[3] || self.defPort;
 			openttd.query(server, port, function(ret) {
@@ -134,7 +165,16 @@ function OpenTTDPlugin(bot) {
 
 				bot.say(to, bot.plugins.bits.format(prefix, bits));
 			});
-		}
+		},
+
+		"message": function(nick, to, text) {
+			if (self.channels.indexOf(to) < 0)
+				return;
+
+			for (var host in self.clients) {
+				self.clients[host].chat("<" + nick + "> " + text);
+			}
+		},
 	};
 }
 

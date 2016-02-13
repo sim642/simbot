@@ -143,7 +143,9 @@ function Client() {
 			msg: reader.nextStringZero(),
 			data: reader.nextUInt64LE(),
 		};
-		console.log("chat", chat);
+		//console.log("chat", chat);
+
+		self.emit("chat", chat);
 	});
 
 	EventEmitter.call(self);
@@ -158,7 +160,7 @@ Client.prototype.connect = function(addr, port) {
 	self.data = new Buffer(0);
 
 	self.socket.on("connect", function() {
-		console.log("connect");
+		//console.log("connect");
 		self.send(new Buffer([0x04]));
 	});
 
@@ -169,7 +171,7 @@ Client.prototype.connect = function(addr, port) {
 	});
 
 	self.socket.on("close", function(had_error) {
-		console.log("close", had_error);
+		//console.log("close", had_error);
 	});
 };
 
@@ -213,6 +215,13 @@ Client.prototype.chat = function(msg) {
 		new Buffer(msg + "\0"),
 		new Buffer(8),
 	]);
+	self.send(packet);
+};
+
+Client.prototype.end = function() {
+	var self = this;
+
+	var packet = new Buffer([0x27]);
 	self.send(packet);
 };
 

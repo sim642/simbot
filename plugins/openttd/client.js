@@ -58,7 +58,7 @@ function Client() {
 
 	self.socket = null;
 
-	self.clientID = null;
+	self.clientId = null;
 	self.clients = {};
 	self.ackToken = null;
 	self.frameCnt = 0;
@@ -199,6 +199,21 @@ Client.prototype.handle = function() {
 			self.handle();
 		}
 	}
+};
+
+Client.prototype.chat = function(msg) {
+	var self = this;
+
+	var destBuffer = new Buffer(4);
+	destBuffer.writeUInt32LE(1, 0);
+
+	var packet = Buffer.concat([
+		new Buffer([0x1B, 0x03, 0x00]),
+		destBuffer,
+		new Buffer(msg + "\0"),
+		new Buffer(8),
+	]);
+	self.send(packet);
 };
 
 module.exports = Client;

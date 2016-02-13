@@ -88,6 +88,10 @@ function OpenTTDPlugin(bot) {
 				});
 			}
 		});
+
+		self.clients[host].on("error", function(err) {
+			bot.out.error("openttd", host + ": " + err.message);
+		});
 	};
 
 	self.clientStop = function(host) {

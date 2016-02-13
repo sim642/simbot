@@ -110,6 +110,10 @@ function Client() {
 		self.emit("chat", chat);
 	});
 
+	self.on("packet#" + PACKET.SERVER_ERROR, function(buffer) {
+		self.emit("error", new Error(NETWORK_ERROR.getFullName(buffer.readUInt8(0))));
+	});
+
 	EventEmitter.call(self);
 }
 

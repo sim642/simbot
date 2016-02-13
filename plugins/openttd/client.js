@@ -6,52 +6,11 @@ var EventEmitter = require("events").EventEmitter;
 var net = require("net");
 var BufferReader = require("buffer-reader");
 
-var packetTypes = {
-	PACKET_SERVER_FULL: 0,
-	PACKET_SERVER_FULL: 1,
-	PACKET_CLIENT_JOIN: 2,
-	PACKET_SERVER_ERROR: 3,
-	PACKET_CLIENT_COMPANY_INFO: 4,
-	PACKET_SERVER_COMPANY_INFO: 5,
-	PACKET_SERVER_CHECK_NEWGRFS: 6,
-	PACKET_CLIENT_NEWGRFS_CHECKED: 7,
-	PACKET_SERVER_NEED_GAME_PASSWORD: 8,
-	PACKET_CLIENT_GAME_PASSWORD: 9,
-	PACKET_SERVER_NEED_COMPANY_PASSWORD: 10,
-	PACKET_CLIENT_COMPANY_PASSWORD: 11,
-	PACKET_SERVER_WELCOME: 12,
-	PACKET_SERVER_CLIENT_INFO: 13,
-	PACKET_CLIENT_GETMAP: 14,
-	PACKET_SERVER_WAIT: 15,
-	PACKET_SERVER_MAP_BEGIN: 16,
-	PACKET_SERVER_MAP_SIZE: 17,
-	PACKET_SERVER_MAP_DATA: 18,
-	PACKET_SERVER_MAP_DONE: 19,
-	PACKET_CLIENT_MAP_OK: 20,
-	PACKET_SERVER_JOIN: 21,
-	PACKET_SERVER_FRAME: 22,
-	PACKET_CLIENT_ACK: 23,
-	PACKET_SERVER_SYNC: 24,
-	PACKET_CLIENT_COMMAND: 25,
-	PACKET_SERVER_COMMAND: 26,
-	PACKET_CLIENT_CHAT: 27,
-	PACKET_SERVER_CHAT: 28,
-	PACKET_CLIENT_RCON: 29,
-	PACKET_SERVER_RCON: 30,
-	PACKET_CLIENT_MOVE: 31,
-	PACKET_SERVER_MOVE: 32,
-	PACKET_CLIENT_SET_PASSWORD: 33,
-	PACKET_CLIENT_SET_NAME: 34,
-	PACKET_SERVER_COMPANY_UPDATE: 35,
-	PACKET_SERVER_CONFIG_UPDATE: 36,
-	PACKET_SERVER_NEWGAME: 37,
-	PACKET_SERVER_SHUTDOWN: 38,
-	PACKET_CLIENT_QUIT: 39,
-	PACKET_SERVER_QUIT: 40,
-	PACKET_CLIENT_ERROR: 41,
-	PACKET_SERVER_ERROR_QUIT: 42,
-	PACKET_END: 43,
-};
+var enums = require("./enums")
+var PACKET = enums.PACKET;
+var DESTTYPE = enums.DESTTYPE;
+var NETWORK_ACTION = enums.NETWORK_ACTION;
+var NETWORK_ERROR = enums.NETWORK_ERROR;
 
 function Client() {
 	var self = this;
@@ -68,15 +27,15 @@ function Client() {
 		self.emit("packet#" + packet.readUInt8(0), packet.slice(1));
 	});
 
-	self.on("packet#5", function(buffer) {
+	self.on("packet#" + PACKET.SERVER_COMPANY_INFO, function(buffer) {
 		var moreData = !!buffer.readUInt8(1);
 		if (!moreData) {
 			/*var newGrfBuffer = new Buffer(4);
 			newGrfBuffer.writeUInt32LE(0, 0);*/
-			var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]);
+			var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]); // TODO: proper newGrf version
 
 			var packet = Buffer.concat([
-				new Buffer([0x02]),
+				new Buffer([PACKET.CLIENT_JOIN]),
 				new Buffer("1.5.3\0"),
 				newGrfBuffer,
 				new Buffer("simbot\0"),
@@ -86,11 +45,11 @@ function Client() {
 		}
 	});
 
-	self.on("packet#12", function(buffer) {
+	self.on("packet#" + PACKET.SERVER_WELCOME, function(buffer) {
 		self.clientId = buffer.readUInt32LE(0);
 	});
 
-	self.on("packet#13", function(buffer) {
+	self.on("packet#" + PACKET.SERVER_CLIENT_INFO, function(buffer) {
 		var reader = new BufferReader(buffer);
 
 		var client = {};
@@ -100,14 +59,14 @@ function Client() {
 
 		self.clients[client.id] = client;
 
-		self.send(new Buffer([0x0E]));
+		self.send(new Buffer([PACKET.CLIENT_GETMAP]));
 	});
 
-	self.on("packet#19", function(buffer) {
-		self.send(new Buffer([0x14]));
+	self.on("packet#" + PACKET.SERVER_MAP_DONE, function(buffer) {
+		self.send(new Buffer([PACKET.CLIENT_MAP_OK]));
 	});
 
-	self.on("packet#22", function(buffer) {
+	self.on("packet#" + PACKET.SERVER_FRAME, function(buffer) {
 		var reader = new BufferReader(buffer);
 
 		var frame = reader.nextUInt32LE();
@@ -124,7 +83,7 @@ function Client() {
 			frameBuffer.writeUInt32LE(frame, 0);
 
 			var packet = Buffer.concat([
-				new Buffer([0x17]),
+				new Buffer([PACKET.CLIENT_ACK]),
 				frameBuffer,
 				new Buffer([self.ackToken]),
 			]);
@@ -134,7 +93,7 @@ function Client() {
 		}
 	});
 
-	self.on("packet#28", function(buffer) {
+	self.on("packet#" + PACKET.SERVER_CHAT, function(buffer) {
 		var reader = new BufferReader(buffer);
 
 		var chat = {
@@ -145,6 +104,8 @@ function Client() {
 			data: reader.nextUInt64LE(),
 		};
 		//console.log("chat", chat);
+		chat.action = NETWORK_ACTION.getName(chat.actionId);
+		chat.client = self.clients[chat.clientId];
 
 		self.emit("chat", chat);
 	});
@@ -164,7 +125,7 @@ Client.prototype.connect = function(addr, port) {
 		self.open = true;
 		self.emit("connect");
 		//console.log("connect");
-		self.send(new Buffer([0x04]));
+		self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
 	});
 
 	self.socket.on("data", function(buffer) {
@@ -220,7 +181,7 @@ Client.prototype.chat = function(msg) {
 	destBuffer.writeUInt32LE(1, 0);
 
 	var packet = Buffer.concat([
-		new Buffer([0x1B, 0x03, 0x00]),
+		new Buffer([PACKET.CLIENT_CHAT, NETWORK_ACTION.CHAT, DESTTYPE.BROADCAST]),
 		destBuffer,
 		new Buffer(msg + "\0"),
 		new Buffer(8),
@@ -231,7 +192,7 @@ Client.prototype.chat = function(msg) {
 Client.prototype.end = function() {
 	var self = this;
 
-	var packet = new Buffer([0x27]);
+	var packet = new Buffer([PACKET.CLIENT_QUIT]);
 	self.send(packet);
 };
 

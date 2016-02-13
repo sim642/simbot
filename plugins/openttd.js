@@ -76,8 +76,9 @@ function OpenTTDPlugin(bot) {
 		self.clients[host].connect(addr, port);
 
 		self.clients[host].on("chat", function(chat) {
+			bot.out.debug("openttd", chat);
 			if (chat.clientId != self.clients[host].clientId) {
-				var str = "<" + self.clients[host].clients[chat.clientId].name + "> " + chat.msg;
+				var str = "<" + chat.client.name + "> " + chat.msg;
 
 				self.channels.forEach(function(channel) {
 					bot.say(channel, str);

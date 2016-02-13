@@ -57,6 +57,7 @@ function Client() {
 	var self = this;
 
 	self.socket = null;
+	self.open = false;
 
 	self.clientId = null;
 	self.clients = {};
@@ -160,6 +161,8 @@ Client.prototype.connect = function(addr, port) {
 	self.data = new Buffer(0);
 
 	self.socket.on("connect", function() {
+		self.open = true;
+		self.emit("connect");
 		//console.log("connect");
 		self.send(new Buffer([0x04]));
 	});
@@ -170,20 +173,27 @@ Client.prototype.connect = function(addr, port) {
 		self.handle();
 	});
 
+	self.socket.on("error", function(err) {
+		self.emit("error", err);
+	});
+
 	self.socket.on("close", function(had_error) {
 		//console.log("close", had_error);
+		self.emit("close");
 	});
 };
 
 Client.prototype.send = function(packet) {
 	var self = this;
 
-	var lenBuffer = new Buffer(2);
-	lenBuffer.writeUInt16LE(packet.length + lenBuffer.length, 0);
+	if (self.open) {
+		var lenBuffer = new Buffer(2);
+		lenBuffer.writeUInt16LE(packet.length + lenBuffer.length, 0);
 
-	var outBuffer = Buffer.concat([lenBuffer, packet]);
-	//console.log("send", outBuffer);
-	self.socket.write(outBuffer);
+		var outBuffer = Buffer.concat([lenBuffer, packet]);
+		//console.log("send", outBuffer);
+		self.socket.write(outBuffer);
+	}
 };
 
 Client.prototype.handle = function() {

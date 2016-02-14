@@ -23,6 +23,8 @@ function Client() {
 	self.companies = {};
 	self.ackToken = null;
 	self.frameCnt = 0;
+
+	self.companyCbing = false;
 	self.companyCbs = [];
 
 	self.on("packet", function(packet) {
@@ -73,6 +75,7 @@ function Client() {
 				cb();
 			});
 			self.companyCbs = [];
+			self.companyCbing = false;
 		}
 	});
 
@@ -208,12 +211,11 @@ function Client() {
 				break;
 
 			case NETWORK_ACTION.COMPANY_NEW:
-				self.companyCbs.push(function() {
+				self.companyCb(function() {
 					var companyId = chat.data - 1;
 					self.clients[chat.clientId].company = companyId == 0xFF ? null : self.companies[companyId];
 					self.emit("company#new", chat.client, self.companies[companyId]);
 				});
-				self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
 				break;
 		}
 	});
@@ -239,7 +241,7 @@ Client.prototype.connect = function(addr, port) {
 		self.emit("connect");
 		//console.log("connect");
 
-		self.companyCbs.push(function() {
+		self.companyCb(function() {
 			/*var newGrfBuffer = new Buffer(4);
 			newGrfBuffer.writeUInt32LE(0, 0);*/
 			var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]); // TODO: proper newGrf version
@@ -254,7 +256,6 @@ Client.prototype.connect = function(addr, port) {
 			self.send(packet);
 			self.emit("status", "joining");
 		});
-		self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
 		self.emit("status", "getting company info");
 	});
 
@@ -302,6 +303,16 @@ Client.prototype.handle = function() {
 			self.data = self.data.slice(len);
 			self.handle();
 		}
+	}
+};
+
+Client.prototype.companyCb = function(cb) {
+	var self = this;
+
+	self.companyCbs.push(cb);
+	if (!self.companyCbing) {
+		self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
+		self.companyCbing = true;
 	}
 };
 

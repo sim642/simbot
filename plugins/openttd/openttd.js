@@ -123,7 +123,8 @@ function openttdQuery(addr, port, callback) {
 
 	var timeout = setTimeout(function() {
 		server.close();
-	}, 30 * 1000);
+		callback(new Error("Timed out"));
+	}, 10 * 1000);
 
 	server.on('listening', function() {
 		todo = 2;
@@ -140,8 +141,13 @@ function openttdQuery(addr, port, callback) {
 		if (todo == 0) {
 			clearTimeout(timeout);
 			server.close();
-			callback(ret);
+			callback(null, ret);
 		}
+	});
+
+	server.once('error', function(err) {
+		clearTimeout(timeout);
+		callback(err);
 	});
 
 	server.bind();

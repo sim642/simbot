@@ -76,31 +76,32 @@ function OpenTTDPlugin(bot) {
 			return;
 
 		self.clients[host] = new Client();
+		(function(client) {
+			client.on("chat", function(chat) {
+				bot.out.debug("openttd", chat);
+				if (chat.clientId != client.clientId) {
+					var str = "<" + chat.client.name + "> " + chat.msg;
 
-		self.clients[host].on("chat", function(chat) {
-			bot.out.debug("openttd", chat);
-			if (chat.clientId != self.clients[host].clientId) {
-				var str = "<" + chat.client.name + "> " + chat.msg;
+					self.channels.forEach(function(channel) {
+						bot.say(channel, str);
+					});
+				}
+			});
 
-				self.channels.forEach(function(channel) {
-					bot.say(channel, str);
-				});
-			}
-		});
+			client.on("error", function(err) {
+				bot.out.error("openttd", host + ": " + err.message);
+			});
 
-		self.clients[host].on("error", function(err) {
-			bot.out.error("openttd", host + ": " + err.message);
-		});
+			client.on("status", function(str) {
+				bot.out.debug("openttd", host + ": " + str);
+			});
 
-		self.clients[host].on("status", function(str) {
-			bot.out.debug("openttd", host + ": " + str);
-		});
+			client.on("close", function() {
+				delete self.clients[host];
+			});
 
-		self.clients[host].on("close", function() {
-			delete self.clients[host];
-		});
-
-		self.clients[host].connect(addr, port);
+			client.connect(addr, port);
+		})(self.clients[host]);
 	};
 
 	self.clientStop = function(host) {

@@ -260,12 +260,14 @@ Client.prototype.chat = function(msg) {
 
 	var destBuffer = new Buffer(4);
 	destBuffer.writeUInt32LE(1, 0);
+	var dataBuffer = new Buffer(8);
+	dataBuffer.fill(0x00);
 
 	var packet = Buffer.concat([
 		new Buffer([PACKET.CLIENT_CHAT, NETWORK_ACTION.CHAT, DESTTYPE.BROADCAST]),
 		destBuffer,
 		new Buffer(msg + "\0"),
-		new Buffer(8),
+		dataBuffer,
 	]);
 	self.send(packet);
 };

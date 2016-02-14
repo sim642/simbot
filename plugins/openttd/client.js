@@ -85,6 +85,9 @@ function Client() {
 	self.on("packet#SERVER_WELCOME", function(buffer) {
 		self.clientId = buffer.readUInt32LE(0);
 		self.emit("status", "joined");
+
+		self.send(new Buffer([PACKET.CLIENT_GETMAP]));
+		self.emit("status", "getting map");
 	});
 
 	self.on("packet#SERVER_CLIENT_INFO", function(buffer) {
@@ -96,8 +99,6 @@ function Client() {
 		client.name = reader.nextStringZero();
 
 		self.clients[client.id] = client;
-
-		self.send(new Buffer([PACKET.CLIENT_GETMAP]));
 	});
 
 	self.on("packet#SERVER_MAP_DONE", function(buffer) {

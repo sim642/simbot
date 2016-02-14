@@ -90,7 +90,7 @@ function OpenTTDPlugin(bot) {
 			};
 
 			c.on("chat", function(chat) {
-				bot.out.debug("openttd", chat);
+				//bot.out.debug("openttd", chat);
 			});
 
 			c.on("chat#CHAT", function(client, msg) {

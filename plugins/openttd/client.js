@@ -195,7 +195,8 @@ function Client() {
 	self.on("chat", function(chat) {
 		switch (chat.actionId) {
 			case NETWORK_ACTION.CHAT:
-				self.emit("chat#CHAT", chat.client, chat.msg);
+				if (chat.clientId != self.clientId)
+					self.emit("chat#CHAT", chat.client, chat.msg);
 				break;
 
 			case NETWORK_ACTION.COMPANY_SPECTATOR:

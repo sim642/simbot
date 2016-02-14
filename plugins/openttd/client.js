@@ -124,8 +124,9 @@ function Client() {
 		var clientId = reader.nextUInt32LE();
 		var companyId = reader.nextUInt8();
 
-		self.emit("move", self.clients[clientId], self.companies[companyId]);
 		self.clients[clientId].companyId = companyId;
+		self.clients[clientId].company = companyId == 0xFF ? null : self.companies[companyId];
+		self.emit("move", self.clients[clientId], self.clients[clientId].company);
 	});
 
 	self.on("packet#SERVER_QUIT", function(buffer) {
@@ -207,7 +208,9 @@ function Client() {
 
 			case NETWORK_ACTION.COMPANY_NEW:
 				self.companyCbs.push(function() {
-					self.emit("company#new", chat.client, self.companies[chat.data - 1]);
+					var companyId = chat.data - 1;
+					self.clients[chat.clientId].company = companyId == 0xFF ? null : self.companies[companyId];
+					self.emit("company#new", chat.client, self.companies[companyId]);
 				});
 				self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
 				break;

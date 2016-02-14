@@ -20,6 +20,7 @@ function Client() {
 
 	self.clientId = null;
 	self.clients = {};
+	self.companies = {};
 	self.ackToken = null;
 	self.frameCnt = 0;
 
@@ -28,8 +29,41 @@ function Client() {
 	});
 
 	self.on("packet#" + PACKET.SERVER_COMPANY_INFO, function(buffer) {
-		var moreData = !!buffer.readUInt8(1);
-		if (!moreData) {
+		var reader = new BufferReader(buffer);
+
+		var version = reader.nextUInt8();
+		var moreData = !!reader.nextUInt8();
+		if (moreData) {
+			var company = {};
+			company.id = reader.nextUInt8();
+			company.name = reader.nextStringZero();
+			company.startYear = reader.nextUInt32LE();
+
+			company.value = reader.nextInt64LE();
+			company.money = reader.nextInt64LE();
+			company.income = reader.nextInt64LE();
+			company.performance = reader.nextUInt16LE();
+
+			company.passworded = !!reader.nextUInt8();
+
+			var types = ['train', 'lorry', 'bus', 'plane', 'ship'];
+
+			company.vehicles = {};
+			types.forEach(function(type) {
+				company.vehicles[type] = reader.nextUInt16LE();
+			});
+
+			company.stations = {};
+			types.forEach(function(type) {
+				company.stations[type] = reader.nextUInt16LE();
+			});
+
+			company.ai = !!reader.nextUInt8();
+
+			//console.log(company);
+			self.companies[company.id] = company;
+		}
+		else {
 			/*var newGrfBuffer = new Buffer(4);
 			newGrfBuffer.writeUInt32LE(0, 0);*/
 			var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]); // TODO: proper newGrf version
@@ -54,7 +88,7 @@ function Client() {
 
 		var client = {};
 		client.id = reader.nextUInt32LE();
-		client.playAs = reader.nextUInt8();
+		client.companyId = reader.nextUInt8();
 		client.name = reader.nextStringZero();
 
 		self.clients[client.id] = client;

@@ -25,10 +25,12 @@ function Client() {
 	self.frameCnt = 0;
 
 	self.on("packet", function(packet) {
-		self.emit("packet#" + packet.readUInt8(0), packet.slice(1));
+		var type = packet.readUInt8(0);
+		self.emit("packet#" + type, packet.slice(1));
+		self.emit("packet#" + PACKET.getName(type), packet.slice(1));
 	});
 
-	self.on("packet#" + PACKET.SERVER_COMPANY_INFO, function(buffer) {
+	self.on("packet#SERVER_COMPANY_INFO", function(buffer) {
 		var reader = new BufferReader(buffer);
 
 		var version = reader.nextUInt8();
@@ -79,11 +81,11 @@ function Client() {
 		}
 	});
 
-	self.on("packet#" + PACKET.SERVER_WELCOME, function(buffer) {
+	self.on("packet#SERVER_WELCOME", function(buffer) {
 		self.clientId = buffer.readUInt32LE(0);
 	});
 
-	self.on("packet#" + PACKET.SERVER_CLIENT_INFO, function(buffer) {
+	self.on("packet#SERVER_CLIENT_INFO", function(buffer) {
 		var reader = new BufferReader(buffer);
 
 		var client = {};
@@ -96,11 +98,11 @@ function Client() {
 		self.send(new Buffer([PACKET.CLIENT_GETMAP]));
 	});
 
-	self.on("packet#" + PACKET.SERVER_MAP_DONE, function(buffer) {
+	self.on("packet#SERVER_MAP_DONE", function(buffer) {
 		self.send(new Buffer([PACKET.CLIENT_MAP_OK]));
 	});
 
-	self.on("packet#" + PACKET.SERVER_FRAME, function(buffer) {
+	self.on("packet#SERVER_FRAME", function(buffer) {
 		var reader = new BufferReader(buffer);
 
 		var frame = reader.nextUInt32LE();
@@ -127,7 +129,7 @@ function Client() {
 		}
 	});
 
-	self.on("packet#" + PACKET.SERVER_CHAT, function(buffer) {
+	self.on("packet#SERVER_CHAT", function(buffer) {
 		var reader = new BufferReader(buffer);
 
 		var chat = {
@@ -144,7 +146,7 @@ function Client() {
 		self.emit("chat", chat);
 	});
 
-	self.on("packet#" + PACKET.SERVER_ERROR, function(buffer) {
+	self.on("packet#SERVER_ERROR", function(buffer) {
 		self.emit("error", new Error(NETWORK_ERROR.getFullName(buffer.readUInt8(0))));
 	});
 

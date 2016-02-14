@@ -76,31 +76,64 @@ function OpenTTDPlugin(bot) {
 			return;
 
 		self.clients[host] = new Client();
-		(function(client) {
-			client.on("chat", function(chat) {
-				bot.out.debug("openttd", chat);
-				if (chat.clientId != client.clientId) {
-					var str = "<" + chat.client.name + "> " + chat.msg;
+		(function(c) {
+			var say = function(str) {
+				self.channels.forEach(function(channel) {
+					bot.say(channel, str);
+				});
+			};
 
-					self.channels.forEach(function(channel) {
-						bot.say(channel, str);
-					});
-				}
+			var notice = function(str) {
+				self.channels.forEach(function(channel) {
+					bot.notice(channel, str);
+				});
+			};
+
+			c.on("chat", function(chat) {
+				bot.out.debug("openttd", chat);
 			});
 
-			client.on("error", function(err) {
+			c.on("chat#CHAT", function(client, msg) {
+				say("<" + client.name + "> " + msg);
+			});
+
+			c.on("join", function(client) {
+				notice(client.name + " has connected");
+			});
+
+			c.on("company#spectator", function(client) {
+				notice(client.name + " has joined spectators");
+			});
+
+			c.on("company#join", function(client, company) {
+				notice(client.name + " has joined company #" + (company.id + 1) + " (" + company.name + ")");
+			});
+
+			c.on("company#new", function(client, company) {
+				notice(client.name + " has created company #" + (company.id + 1) + " (" + company.name + ")");
+			});
+
+			c.on("move", function(client, company) {
+				notice(client.name + " has moved to company #" + (company.id + 1) + "(" + company.name + ")");
+			});
+
+			c.on("quit", function(client, error) {
+				notice(client.name + " has disconnected" + (error ? " (" + error.message + ")" : ""));
+			});
+
+			c.on("error", function(err) {
 				bot.out.error("openttd", host + ": " + err.message);
 			});
 
-			client.on("status", function(str) {
+			c.on("status", function(str) {
 				bot.out.debug("openttd", host + ": " + str);
 			});
 
-			client.on("close", function() {
+			c.on("close", function() {
 				delete self.clients[host];
 			});
 
-			client.connect(addr, port);
+			c.connect(addr, port);
 		})(self.clients[host]);
 	};
 

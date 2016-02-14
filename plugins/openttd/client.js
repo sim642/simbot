@@ -23,6 +23,7 @@ function Client() {
 	self.companies = {};
 	self.ackToken = null;
 	self.frameCnt = 0;
+	self.companyCbs = [];
 
 	self.on("packet", function(packet) {
 		var type = packet.readUInt8(0);
@@ -68,19 +69,10 @@ function Client() {
 			self.companies[company.id] = company;
 		}
 		else {
-			/*var newGrfBuffer = new Buffer(4);
-			newGrfBuffer.writeUInt32LE(0, 0);*/
-			var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]); // TODO: proper newGrf version
-
-			var packet = Buffer.concat([
-				new Buffer([PACKET.CLIENT_JOIN]),
-				new Buffer("1.5.3\0"),
-				newGrfBuffer,
-				new Buffer("simbot\0"),
-				new Buffer([0xFF, 0x00]),
-			]);
-			self.send(packet);
-			self.emit("status", "joining");
+			self.companyCbs.forEach(function(cb) {
+				cb();
+			});
+			self.companyCbs = [];
 		}
 	});
 
@@ -100,6 +92,8 @@ function Client() {
 		client.companyId = reader.nextUInt8();
 		client.name = reader.nextStringZero();
 
+		client.company = client.companyId == 0xFF ? null : self.companies[client.companyId];
+
 		self.clients[client.id] = client;
 	});
 
@@ -112,6 +106,16 @@ function Client() {
 		var reader = new BufferReader(buffer);
 
 		var clientId = reader.nextUInt32LE();
+		if (clientId != self.clientId) {
+			self.emit("join", self.clients[clientId]);
+
+			var client = self.clients[clientId]
+			var company = client.company;
+			if (company)
+				self.emit("company#join", client, company);
+			else
+				self.emit("company#spectator", client);
+		}
 	});
 
 	self.on("packet#SERVER_MOVE", function(buffer) {
@@ -120,6 +124,7 @@ function Client() {
 		var clientId = reader.nextUInt32LE();
 		var companyId = reader.nextUInt8();
 
+		self.emit("move", self.clients[clientId], self.companies[companyId]);
 		self.clients[clientId].companyId = companyId;
 	});
 
@@ -128,6 +133,7 @@ function Client() {
 
 		var clientId = reader.nextUInt32LE();
 
+		self.emit("quit", self.clients[clientId], null);
 		delete self.clients[clientId];
 	});
 
@@ -135,8 +141,9 @@ function Client() {
 		var reader = new BufferReader(buffer);
 
 		var clientId = reader.nextUInt32LE();
-		// TODO: parse NETWORK_ERROR
+		var error = NETWORK_ERROR.getFullName(reader.nextUInt8());
 
+		self.emit("quit", self.clients[clientId], error);
 		delete self.clients[clientId];
 	});
 
@@ -184,6 +191,29 @@ function Client() {
 		self.emit("chat", chat);
 	});
 
+	self.on("chat", function(chat) {
+		switch (chat.actionId) {
+			case NETWORK_ACTION.CHAT:
+				self.emit("chat#CHAT", chat.client, chat.msg);
+				break;
+
+			case NETWORK_ACTION.COMPANY_SPECTATOR:
+				self.emit("company#spectator", chat.client);
+				break;
+
+			case NETWORK_ACTION.COMPANY_JOIN:
+				self.emit("company#join", chat.client, self.companies[chat.data - 1]);
+				break;
+
+			case NETWORK_ACTION.COMPANY_NEW:
+				self.companyCbs.push(function() {
+					self.emit("company#new", chat.client, self.companies[chat.data - 1]);
+				});
+				self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
+				break;
+		}
+	});
+
 	self.on("packet#SERVER_ERROR", function(buffer) {
 		self.emit("error", new Error(NETWORK_ERROR.getFullName(buffer.readUInt8(0))));
 	});
@@ -204,6 +234,22 @@ Client.prototype.connect = function(addr, port) {
 		self.open = true;
 		self.emit("connect");
 		//console.log("connect");
+
+		self.companyCbs.push(function() {
+			/*var newGrfBuffer = new Buffer(4);
+			newGrfBuffer.writeUInt32LE(0, 0);*/
+			var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]); // TODO: proper newGrf version
+
+			var packet = Buffer.concat([
+				new Buffer([PACKET.CLIENT_JOIN]),
+				new Buffer("1.5.3\0"),
+				newGrfBuffer,
+				new Buffer("simbot\0"),
+				new Buffer([0xFF, 0x00]),
+			]);
+			self.send(packet);
+			self.emit("status", "joining");
+		});
 		self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
 		self.emit("status", "getting company info");
 	});

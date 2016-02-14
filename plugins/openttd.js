@@ -96,12 +96,15 @@ function OpenTTDPlugin(bot) {
 			bot.out.debug("openttd", host + ": " + str);
 		});
 
+		self.clients[host].on("close", function() {
+			delete self.clients[host];
+		});
+
 		self.clients[host].connect(addr, port);
 	};
 
 	self.clientStop = function(host) {
 		self.clients[host].end();
-		delete self.clients[host];
 	};
 
 	self.events = {

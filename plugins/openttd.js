@@ -76,7 +76,6 @@ function OpenTTDPlugin(bot) {
 			return;
 
 		self.clients[host] = new Client();
-		self.clients[host].connect(addr, port);
 
 		self.clients[host].on("chat", function(chat) {
 			bot.out.debug("openttd", chat);
@@ -92,6 +91,12 @@ function OpenTTDPlugin(bot) {
 		self.clients[host].on("error", function(err) {
 			bot.out.error("openttd", host + ": " + err.message);
 		});
+
+		self.clients[host].on("status", function(str) {
+			bot.out.debug("openttd", host + ": " + str);
+		});
+
+		self.clients[host].connect(addr, port);
 	};
 
 	self.clientStop = function(host) {

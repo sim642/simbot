@@ -78,11 +78,13 @@ function Client() {
 				new Buffer([0xFF, 0x00]),
 			]);
 			self.send(packet);
+			self.emit("status", "joining");
 		}
 	});
 
 	self.on("packet#SERVER_WELCOME", function(buffer) {
 		self.clientId = buffer.readUInt32LE(0);
+		self.emit("status", "joined");
 	});
 
 	self.on("packet#SERVER_CLIENT_INFO", function(buffer) {
@@ -100,6 +102,7 @@ function Client() {
 
 	self.on("packet#SERVER_MAP_DONE", function(buffer) {
 		self.send(new Buffer([PACKET.CLIENT_MAP_OK]));
+		self.emit("status", "got map");
 	});
 
 	self.on("packet#SERVER_FRAME", function(buffer) {
@@ -160,12 +163,14 @@ Client.prototype.connect = function(addr, port) {
 
 	self.socket = net.connect(port, addr);
 	self.data = new Buffer(0);
+	self.emit("status", "connecting");
 
 	self.socket.on("connect", function() {
 		self.open = true;
 		self.emit("connect");
 		//console.log("connect");
 		self.send(new Buffer([PACKET.CLIENT_COMPANY_INFO]));
+		self.emit("status", "getting company info");
 	});
 
 	self.socket.on("data", function(buffer) {
@@ -179,6 +184,7 @@ Client.prototype.connect = function(addr, port) {
 	});
 
 	self.socket.on("close", function(had_error) {
+		self.emit("status", "closed");
 		//console.log("close", had_error);
 		self.emit("close");
 	});

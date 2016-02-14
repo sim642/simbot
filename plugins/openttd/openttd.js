@@ -3,8 +3,6 @@ require('./patch-buffer');
 var dgram = require('dgram');
 var BufferReader = require('buffer-reader');
 
-var server = dgram.createSocket('udp4');
-
 function openttdDate(days, old) {
 	var d = new Date(0, 0, 1);
 	d.setFullYear((old || false) ? 1920 : 0);

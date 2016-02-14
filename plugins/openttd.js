@@ -183,7 +183,7 @@ function OpenTTDPlugin(bot) {
 			});
 		},
 
-		"message": function(nick, to, text) {
+		"nocmd": function(nick, to, text) {
 			if (self.channels.indexOf(to) < 0)
 				return;
 

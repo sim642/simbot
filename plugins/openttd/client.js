@@ -62,6 +62,8 @@ function Client() {
 
 			company.ai = !!reader.nextUInt8();
 
+			// TODO: parse client list
+
 			//console.log(company);
 			self.companies[company.id] = company;
 		}
@@ -104,6 +106,38 @@ function Client() {
 	self.on("packet#SERVER_MAP_DONE", function(buffer) {
 		self.send(new Buffer([PACKET.CLIENT_MAP_OK]));
 		self.emit("status", "got map");
+	});
+
+	self.on("packet#SERVER_JOIN", function(buffer) {
+		var reader = new BufferReader(buffer);
+
+		var clientId = reader.nextUInt32LE();
+	});
+
+	self.on("packet#SERVER_MOVE", function(buffer) {
+		var reader = new BufferReader(buffer);
+
+		var clientId = reader.nextUInt32LE();
+		var companyId = reader.nextUInt8();
+
+		self.clients[clientId].companyId = companyId;
+	});
+
+	self.on("packet#SERVER_QUIT", function(buffer) {
+		var reader = new BufferReader(buffer);
+
+		var clientId = reader.nextUInt32LE();
+
+		delete self.clients[clientId];
+	});
+
+	self.on("packet#SERVER_ERROR_QUIT", function(buffer) {
+		var reader = new BufferReader(buffer);
+
+		var clientId = reader.nextUInt32LE();
+		// TODO: parse NETWORK_ERROR
+
+		delete self.clients[clientId];
 	});
 
 	self.on("packet#SERVER_FRAME", function(buffer) {

@@ -25,10 +25,12 @@ function CmdPlugin(bot) {
 	};
 
 	self.getCmds = function() {
-		return Object.keys(bot._events).reduce(function(arr, ev) {
+		return Object.keys(bot._events).filter(function(ev) {
+			return bot._events[ev]; // removed listeners are actually in the object but valued undefined
+		}).reduce(function(arr, ev) {
 			var m = ev.match(/^cmd#(.+)$/);
-			if (m)
-				return arr.concat(m[1]);
+			if (m) // filter
+				return arr.concat(m[1]); // map
 			else
 				return arr;
 		}, []);

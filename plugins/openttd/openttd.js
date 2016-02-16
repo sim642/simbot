@@ -3,8 +3,6 @@ require('./patch-buffer');
 var dgram = require('dgram');
 var BufferReader = require('buffer-reader');
 
-var server = dgram.createSocket('udp4');
-
 function openttdDate(days, old) {
 	var d = new Date(0, 0, 1);
 	d.setFullYear((old || false) ? 1920 : 0);
@@ -123,7 +121,8 @@ function openttdQuery(addr, port, callback) {
 
 	var timeout = setTimeout(function() {
 		server.close();
-	}, 30 * 1000);
+		callback(new Error("Timed out"));
+	}, 10 * 1000);
 
 	server.on('listening', function() {
 		todo = 2;
@@ -140,8 +139,13 @@ function openttdQuery(addr, port, callback) {
 		if (todo == 0) {
 			clearTimeout(timeout);
 			server.close();
-			callback(ret);
+			callback(null, ret);
 		}
+	});
+
+	server.once('error', function(err) {
+		clearTimeout(timeout);
+		callback(err);
 	});
 
 	server.bind();

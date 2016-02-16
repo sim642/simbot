@@ -46,28 +46,34 @@ function OpenTTDPlugin(bot) {
 	};
 
 	self.refresh = function() {
-		openttd.query(self.defServer, self.defPort, function(ret) {
-			if (self.pRet &&
-				(self.pRet[1].numClient != ret[1].numClient ||
-				 self.pRet[1].numCompany != ret[1].numCompany ||
-				 self.pRet[1].map.name != ret[1].map.name)) {
-				var prefix = ret[1].name + " \x02(" + self.defServer + ":" + self.defPort + ")\x02";
+		if (self.defServer && self.defPort) {
+			openttd.query(self.defServer, self.defPort, function(err, ret) {
+				if (!err) {
+					if (self.pRet &&
+						(self.pRet[1].numClient != ret[1].numClient ||
+						 self.pRet[1].numCompany != ret[1].numCompany ||
+						 self.pRet[1].map.name != ret[1].map.name)) {
+						var prefix = ret[1].name + " \x02(" + self.defServer + ":" + self.defPort + ")\x02";
 
-				var bits = [];
-				bits.push(["map", ret[1].map.name + " \x02(" + ret[1].map.width + "×" + ret[1].map.height + ")\x02"]);
-				bits.push(["date", ret[1].curDate.toISOString().replace(/^([\d-]+)T.*/, "$1")]);
-				bits.push(["companies", ret[1].numCompany + "/" + ret[1].maxCompany]);
-				bits.push(["clients", ret[1].numClient + "/" + ret[1].maxClient]);
+						var bits = [];
+						bits.push(["map", ret[1].map.name + " \x02(" + ret[1].map.width + "×" + ret[1].map.height + ")\x02"]);
+						bits.push(["date", ret[1].curDate.toISOString().replace(/^([\d-]+)T.*/, "$1")]);
+						bits.push(["companies", ret[1].numCompany + "/" + ret[1].maxCompany]);
+						bits.push(["clients", ret[1].numClient + "/" + ret[1].maxClient]);
 
-				var str = bot.plugins.bits.format(prefix, bits);
+						var str = bot.plugins.bits.format(prefix, bits);
 
-				self.channels.forEach(function(channel) {
-					bot.say(channel, str);
-				});
-			}
+						self.channels.forEach(function(channel) {
+							bot.say(channel, str);
+						});
+					}
 
-			self.pRet = ret;
-		});
+					self.pRet = ret;
+				}
+				else
+					bot.out.error("openttd", err);
+			});
+		}
 	};
 
 	self.clientStart = function(addr, port) {
@@ -145,14 +151,24 @@ function OpenTTDPlugin(bot) {
 		"cmd#openttd": function(nick, to, args) {
 			var server = args[1] || self.defServer;
 			var port = args[2] || self.defPort;
-			openttd.query(server, port, function(ret) {
-				var prefix = ret[1].name + " \x02(" + server + ":" + port + ")\x02";
-
+			openttd.query(server, port, function(err, ret) {
+				var prefix;
 				var bits = [];
-				bits.push(["map", ret[1].map.name + " \x02(" + ret[1].map.width + "×" + ret[1].map.height + ")\x02"]);
-				bits.push(["date", ret[1].curDate.toISOString().replace(/^([\d-]+)T.*/, "$1")]);
-				bits.push(["companies", ret[1].numCompany + "/" + ret[1].maxCompany]);
-				bits.push(["clients", ret[1].numClient + "/" + ret[1].maxClient]);
+
+				if (!err) {
+					prefix = ret[1].name + " \x02(" + server + ":" + port + ")\x02";
+
+					bits.push(["map", ret[1].map.name + " \x02(" + ret[1].map.width + "×" + ret[1].map.height + ")\x02"]);
+					bits.push(["date", ret[1].curDate.toISOString().replace(/^([\d-]+)T.*/, "$1")]);
+					bits.push(["companies", ret[1].numCompany + "/" + ret[1].maxCompany]);
+					bits.push(["clients", ret[1].numClient + "/" + ret[1].maxClient]);
+				}
+				else {
+					bot.out.error("openttd", err);
+
+					prefix = server + ":" + port;
+					bits.push([, "not reached"]);
+				}
 
 				bot.say(to, bot.plugins.bits.format(prefix, bits));
 			});
@@ -162,17 +178,28 @@ function OpenTTDPlugin(bot) {
 			var server = args[1] || self.defServer;
 			var port = args[2] || self.defPort;
 			openttd.query(server, port, function(ret) {
-				var prefix = ret[1].name + " ranking";
-
+				var prefix;
 				var bits = [];
-				var companies = ret[3].companies;
-				companies.sort(function(lhs, rhs) {
-					return rhs.performance - lhs.performance;
-				});
 
-				companies.forEach(function(company) {
-					bits.push([company.name + " \x02(" + company.performance + ")\x02", "£" + bot.plugins.util.thSeps(company.value)]);
-				});
+				if (!err) {
+					prefix = ret[1].name + " ranking";
+
+					var companies = ret[3].companies;
+					companies.sort(function(lhs, rhs) {
+						return rhs.performance - lhs.performance;
+					});
+
+					companies.forEach(function(company) {
+						bits.push([company.name + " \x02(" + company.performance + ")\x02", "£" + bot.plugins.util.thSeps(company.value)]);
+					});
+
+				}
+				else {
+					bot.out.error("openttd", err);
+
+					prefix = server + ":" + port;
+					bits.push([, "not reached"]);
+				}
 
 				bot.say(to, bot.plugins.bits.format(prefix, bits));
 			});
@@ -183,34 +210,45 @@ function OpenTTDPlugin(bot) {
 			var server = args[2] || self.defServer;
 			var port = args[3] || self.defPort;
 			openttd.query(server, port, function(ret) {
-				var companies = ret[3].companies;
-
-				var i;
-				for (i = 0; i < companies.length && companies[i].id != comp && companies[i].name.toLowerCase().indexOf(comp.toLowerCase()) < 0; i++); // maybe unneccessary find
-				if (i == companies.length) // not found
-					return;
-
-				var company = companies[i];
-
-				var prefix = company.name + " on " + ret[1].name;
+				var prefix;
 				var bits = [];
 
-				bits.push(["start year", company.startYear]);
-				bits.push(["value", "£" + bot.plugins.util.thSeps(company.value)]);
-				bits.push(["money", "£" + bot.plugins.util.thSeps(company.money)]);
-				bits.push(["income", "£" + bot.plugins.util.thSeps(company.income)]);
-				bits.push(["performance", company.performance]);
+				if (!err) {
+					var companies = ret[3].companies;
 
-				/*bits.push(["vehicles", Object.keys(company.vehicles).map(function(type) {
-					return type + ": " + company.vehicles[type];
-				}).join(", ")]);
-				bits.push(["stations", Object.keys(company.stations).map(function(type) {
-					return type + ": " + company.stations[type];
-				}).join(", ")]);*/
+					var i;
+					for (i = 0; i < companies.length && companies[i].id != comp && companies[i].name.toLowerCase().indexOf(comp.toLowerCase()) < 0; i++); // maybe unneccessary find
+					if (i == companies.length) // not found
+						return;
 
-				bits.push(["type", "vehicles (stations)"]);
-				for (var type in company.vehicles) {
-					bits.push([type, company.vehicles[type] + " (" + company.stations[type] + ")"]);
+					var company = companies[i];
+
+					prefix = company.name + " on " + ret[1].name;
+
+					bits.push(["start year", company.startYear]);
+					bits.push(["value", "£" + bot.plugins.util.thSeps(company.value)]);
+					bits.push(["money", "£" + bot.plugins.util.thSeps(company.money)]);
+					bits.push(["income", "£" + bot.plugins.util.thSeps(company.income)]);
+					bits.push(["performance", company.performance]);
+
+					/*bits.push(["vehicles", Object.keys(company.vehicles).map(function(type) {
+						return type + ": " + company.vehicles[type];
+					}).join(", ")]);
+					bits.push(["stations", Object.keys(company.stations).map(function(type) {
+						return type + ": " + company.stations[type];
+					}).join(", ")]);*/
+
+					bits.push(["type", "vehicles (stations)"]);
+					for (var type in company.vehicles) {
+						bits.push([type, company.vehicles[type] + " (" + company.stations[type] + ")"]);
+					}
+
+				}
+				else {
+					bot.out.error("openttd", err);
+
+					prefix = server + ":" + port;
+					bits.push([, "not reached"]);
 				}
 
 				bot.say(to, bot.plugins.bits.format(prefix, bits));

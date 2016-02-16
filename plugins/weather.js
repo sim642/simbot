@@ -20,6 +20,12 @@ function WeatherPlugin(bot) {
 		return {apiKey: self.apiKey};
 	};
 
+	self.windChars = function(deg) {
+		// http://climate.umn.edu/snow_fence/components/winddirectionanddegreeswithouttable3.htm
+		var chars = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N"];
+		return chars[Math.floor((deg + 360 / 16 / 2) / (360 / 16))];
+	};
+
 	self.present = function(place, time, callback) {
 		request({
 			url: "http://api.openweathermap.org/data/2.5/weather",
@@ -38,7 +44,20 @@ function WeatherPlugin(bot) {
 					bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
 					bits.push(["humidity", j.main.humidity.toString() + "%"]);
 					bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
-					bits.push(["wind", j.wind.speed.toString() + "m/s" + (j.wind.gust ? " (" + j.wind.gust.toString() + "m/s)" : "") + (j.wind.deg ? " " + j.wind.deg.toFixed(0).toString() + "°" : "")]);
+					if (j.wind) {
+						var str = j.wind.speed.toString() + "m/s";
+						if (j.wind.gust)
+							str += " (" + j.wind.gust.toString() + "m/s)";
+						if (j.wind.deg) {
+							str += " " + j.wind.deg.toFixed(0).toString() + "°";
+							str += " (" + self.windChars(j.wind.deg) + ")";
+						}
+
+						if (str)
+							bits.push(["wind", str]);
+						else
+							bot.out.warn("weather", j);
+					}
 					bits.push(["clouds", j.clouds.all.toString() + "%"]);
 					if (j.rain) {
 						var str;
@@ -117,7 +136,20 @@ function WeatherPlugin(bot) {
 							bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
 							bits.push(["humidity", j.main.humidity.toString() + "%"]);
 							bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
-							bits.push(["wind", j.wind.speed.toString() + "m/s " + (j.wind.gust ? "(" + j.wind.gust.toString() + "m/s)" : "") + j.wind.deg.toFixed(0).toString() + "°"]);
+							if (j.wind) {
+								var str = j.wind.speed.toString() + "m/s";
+								if (j.wind.gust)
+									str += " (" + j.wind.gust.toString() + "m/s)";
+								if (j.wind.deg) {
+									str += " " + j.wind.deg.toFixed(0).toString() + "°";
+									str += " (" + self.windChars(j.wind.deg) + ")";
+								}
+
+								if (str)
+									bits.push(["wind", str]);
+								else
+									bot.out.warn("weather", j);
+							}
 							bits.push(["clouds", j.clouds.all.toString() + "%"]);
 							if (j.rain) {
 								var str;
@@ -201,7 +233,20 @@ function WeatherPlugin(bot) {
 							bits.push(["temperature", (j.temp.day - 273.15).toFixed(1) + "°C"]); // TODO: time of day temperature
 							bits.push(["humidity", j.humidity.toString() + "%"]);
 							bits.push(["pressure", j.pressure.toString() + "hPa"]);
-							bits.push(["wind", j.speed.toString() + "m/s " + j.deg.toFixed(0).toString() + "°"]);
+							if (j.wind) {
+								var str = j.wind.speed.toString() + "m/s";
+								if (j.wind.gust)
+									str += " (" + j.wind.gust.toString() + "m/s)";
+								if (j.wind.deg) {
+									str += " " + j.wind.deg.toFixed(0).toString() + "°";
+									str += " (" + self.windChars(j.wind.deg) + ")";
+								}
+
+								if (str)
+									bits.push(["wind", str]);
+								else
+									bot.out.warn("weather", j);
+							}
 							bits.push(["clouds", j.clouds.toString() + "%"]);
 							if (j.rain !== undefined) {
 								bits.push(["rain", j.rain.toString() + "mm/3h"]); // correct unit?
@@ -270,7 +315,20 @@ function WeatherPlugin(bot) {
 						bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
 						bits.push(["humidity", j.main.humidity.toString() + "%"]);
 						bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
-						bits.push(["wind", j.wind.speed.toString() + "m/s " + (j.wind.gust ? "(" + j.wind.gust.toString() + "m/s)" : "") + j.wind.deg.toFixed(0).toString() + "°"]);
+						if (j.wind) {
+							var str = j.wind.speed.toString() + "m/s";
+							if (j.wind.gust)
+								str += " (" + j.wind.gust.toString() + "m/s)";
+							if (j.wind.deg) {
+								str += " " + j.wind.deg.toFixed(0).toString() + "°";
+								str += " (" + self.windChars(j.wind.deg) + ")";
+							}
+
+							if (str)
+								bits.push(["wind", str]);
+							else
+								bot.out.warn("weather", j);
+						}
 						bits.push(["clouds", j.clouds.all.toString() + "%"]);
 						if (j.rain) {
 							var str;

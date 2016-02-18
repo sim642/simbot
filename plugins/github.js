@@ -81,8 +81,10 @@ function GithubPlugin(bot) {
 				var j = JSON.parse(body);
 				callback(j);
 			}
-			else
+			else {
 				bot.out.error("github", err, body);
+				callback(null);
+			}
 		});
 	};
 
@@ -111,15 +113,18 @@ function GithubPlugin(bot) {
 
 				j.forEach(function(repo) {
 					self.getRepoLangs(repo, function(langs) {
-						rets.push(langs);
+						if (langs)
+							rets.push(langs);
 
 						if (rets.length == j.length)
 							done();
 					});
 				});
 			}
-			else
+			else {
 				bot.out.error("github", err, body);
+				callback(null);
+			}
 		});
 	};
 
@@ -175,8 +180,10 @@ function GithubPlugin(bot) {
 
 				callback(justContribs, total, most, longstreak, curstreak);
 			}
-			else
+			else {
 				bot.out.error("github", err, body);
+				callback(null, null, null, null, null);
+			}
 		});
 	};
 
@@ -290,20 +297,24 @@ function GithubPlugin(bot) {
 					};
 
 					self.getUserLangs(j, function(langs) {
-						var slangs = self.sortLangs(langs);
-						if (slangs.length > 0) {
-							bits.push(["languages", slangs.slice(0, 4).map(function(lang) {
-								return lang[0];
-							}).join(", ")]);
+						if (langs) {
+							var slangs = self.sortLangs(langs);
+							if (slangs.length > 0) {
+								bits.push(["languages", slangs.slice(0, 4).map(function(lang) {
+									return lang[0];
+								}).join(", ")]);
+							}
 						}
 
 						if (j.type == "User") {
 							self.getContribs(j, function(contribs, total, most, longstreak, curstreak) {
-								bits.push(["contributions", total]);
-								bits.push(["most daily contributions", most]);
-								bits.push(["longest streak", longstreak + " days"]);
-								bits.push(["current streak", curstreak + " days"]);
-								bits.push(["recent contributions", self.graph(contribs.slice(-14)), 0]);
+								if (contribs) {
+									bits.push(["contributions", total]);
+									bits.push(["most daily contributions", most]);
+									bits.push(["longest streak", longstreak + " days"]);
+									bits.push(["current streak", curstreak + " days"]);
+									bits.push(["recent contributions", self.graph(contribs.slice(-14)), 0]);
+								}
 
 								finish();
 							});

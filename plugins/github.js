@@ -194,7 +194,7 @@ function GithubPlugin(bot) {
 				"Accept": "application/json"
 			}
 		}, function(err, res, body) {
-			if (!err && res.statusCode == 200) {
+			if (!err && res.statusCode == 200) { // github actually returned data
 				var j = JSON.parse(body);
 				var weeks = [];
 				var days = [];
@@ -208,6 +208,9 @@ function GithubPlugin(bot) {
 				});
 
 				callback(weeks, days);
+			}
+			else if (!err && res.statusCode == 202) { // github ready to give data
+				self.getCommits(repo, callback);
 			}
 			else {
 				bot.out.error("github", err, body);

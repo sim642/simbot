@@ -180,6 +180,35 @@ function GithubPlugin(bot) {
 		});
 	};
 
+	self.getCommits = function(repo, callback) {
+		self.request({
+			url: "https://github.com/" + repo.full_name + "/graphs/commit-activity-data",
+			headers: {
+				"Accept": "application/json"
+			}
+		}, function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var j = JSON.parse(body);
+				var weeks = [];
+				var days = [];
+
+				j.forEach(function(week) {
+					weeks.push(week.total);
+
+					week.days.forEach(function(day) {
+						days.push(day);
+					});
+				});
+
+				callback(weeks, days);
+			}
+			else {
+				bot.out.error("github", err, body);
+				callback(null, null);
+			}
+		});
+	};
+
 	self.github = function(arg, noError, callback) {
 		var realarg = bot.plugins.util.getKeyByValue(self.users, arg) || arg;
 
@@ -219,7 +248,12 @@ function GithubPlugin(bot) {
 						}
 						bits.push(["issues", j.open_issues_count]);
 
-						finish();
+						self.getCommits(j, function(weeks, days) {
+							if (weeks)
+								bits.push(["recent contributions", self.graph(weeks.slice(-14)), 0]);
+
+							finish();
+						});
 					});
 				}
 				else if (!err && res.statusCode == 404) {

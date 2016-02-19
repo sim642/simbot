@@ -107,6 +107,7 @@ function TopicLogPlugin(bot) {
 		"cmd#topics": function(nick, to, args) {
 			var cnt;
 			var channel = to;
+			var grep = null;
 
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
@@ -115,6 +116,11 @@ function TopicLogPlugin(bot) {
 					channel = arg;
 				else if (arg.match(/^\d+$/))
 					cnt = parseInt(arg);
+				else if (arg.match(bot.plugins.sed.grepRe)) {
+					grep = bot.plugins.sed.grep(arg, null, function(text) {
+						return "\x16" + text + "\x16";
+					});
+				}
 			}
 
 			cnt = Math.min(Math.max(cnt, 1) || 3, 10);
@@ -123,19 +129,36 @@ function TopicLogPlugin(bot) {
 			{
 				var chanlog = self.topiclog[channel];
 
-				var lastentry = chanlog[chanlog.length - cnt - 1];
-				for (var i = -cnt; i < 0; i++) {
-					var entry = chanlog[chanlog.length + i];
-					if (entry)
-					{
-						var str;
-						if (lastentry)
-							str = self.colordiff(lastentry.topic, entry.topic);
-						else
-							str = entry.topic;
+				if (grep) {
+					var outlines = [];
+					for (var i = chanlog.length - 1; outlines.length < cnt && i >= 0; i--) {
+						var entry = chanlog[i];
+						var g = grep(entry.topic);
 
-						bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + channel + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
-						lastentry = entry;
+						if (g !== true) { // string returned
+							outlines.unshift("\x02Topic #" + i + " in " + channel + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + g);
+						}
+					}
+
+					outlines.forEach(function(str) {
+						bot.notice(nick, str);
+					});
+				}
+				else {
+					var lastentry = chanlog[chanlog.length - cnt - 1];
+					for (var i = -cnt; i < 0; i++) {
+						var entry = chanlog[chanlog.length + i];
+						if (entry)
+						{
+							var str;
+							if (lastentry)
+								str = self.colordiff(lastentry.topic, entry.topic);
+							else
+								str = entry.topic;
+
+							bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + channel + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
+							lastentry = entry;
+						}
 					}
 				}
 			}

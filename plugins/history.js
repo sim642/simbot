@@ -67,14 +67,14 @@ function HistoryPlugin(bot) {
 		var escaped = bot.plugins.util.escapeRegExp(who);
 		// TODO: http://stackoverflow.com/a/27191354/854540
 		return new RegExp(
-			"^\\[\\d{2}:\\d{2}:\\d{2}\\] " +
-			"(?:" +
+			"^\\[(\\d{2}:\\d{2}:\\d{2})\\] " +
+			"(" +
 				"<" + escaped + ">" + // PRIVMSG
 			"|" +
 				"-" + escaped + "-" + // NOTICE
 			"|" +
 				"\\* " + escaped +    // ACTION
-			") ", "i");
+			") (.*)$", "i");
 	};
 
 	self.events = {

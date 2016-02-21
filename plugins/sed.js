@@ -112,20 +112,20 @@ function SedPlugin(bot) {
 			if (sed) { // possibly unneeded check due to self.sedCmd
 				bot.out.log("sed", nick + " in " + to + ": " + m[0]);
 
-				var re = new RegExp("^\\[[\\d:]{8}\\] (<$nick>|\\* $nick) (.*)$".replace(/\$nick/g, sedNick), "i");
+				var re = bot.plugins.history.makeWhoRe(sedNick);
 
 				var cnt = 0;
 				bot.plugins.history.iterate(to, function(line) {
 					cnt++;
 					var m2 = line.match(re);
 					if (m2) {
-						var text2 = m2[2];
+						var text2 = m2[3];
 						var s = sed(text2);
 
 						if (s === false)
 							return false;
 						else if (s !== true) { // string returned
-							bot.say(to, m2[1] + " " + s);
+							bot.say(to, m2[2] + " " + s);
 							return false;
 						}
 					}

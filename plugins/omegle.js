@@ -240,6 +240,9 @@ function OmeglePlugin(bot) {
 											}
 										});
 										break;
+									case "antinudeBanned":
+										bot.out.error("omegle", "Banned");
+										break;
 									case "error":
 										bot.out.error("omegle", "Error: " + eventdata[i][1]);
 										break;

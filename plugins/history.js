@@ -77,11 +77,20 @@ function HistoryPlugin(bot) {
 			") (.*)$", "i");
 	};
 
+	self.makeModeRe = function(mode) {
+		return new RegExp(
+			"^\\[(\\d{2}:\\d{2}:\\d{2})\\] " +
+			"\\*\\*\\* " +
+			"(\\S+) sets mode: " +
+			bot.plugins.util.escapeRegExp(mode[1]) + "\\S*" + bot.plugins.util.escapeRegExp(mode[2]), "i");
+	};
+
 	self.events = {
 		"cmd#history": function(nick, to, args) {
 			var linecnt;
 			var channel = to;
 			var who = null;
+			var mode = null;
 			var re = null;
 			var preSurround;
 			var postSurround;
@@ -104,6 +113,8 @@ function HistoryPlugin(bot) {
 					preSurround = parseInt(m[1]);
 				else if (m = arg.match(/^\+(\d+)$/))
 					postSurround = parseInt(m[1]);
+				else if (m = arg.match(/^([+-]?)([a-z])$/))
+					mode = m;
 				else if (m = arg.match(/^(\w+)[,:]?$/))
 					who = m[1];
 				else if (m = arg.match(self.grepRe))
@@ -111,6 +122,7 @@ function HistoryPlugin(bot) {
 			}
 
 			var whoRe = (who !== null ? self.makeWhoRe(who) : null);
+			var modeRe = (mode !== null ? self.makeModeRe(mode) : null);
 			preSurround = Math.min(preSurround !== undefined ? preSurround : (gist ? 5 : 3), gist ? 20 : 10);
 			postSurround = Math.min(postSurround !== undefined ? postSurround : (gist ? 2 : 1), gist ? 20 : 10);
 
@@ -141,7 +153,10 @@ function HistoryPlugin(bot) {
 				if (strip)
 					line = bot.plugins.util.stripColors(line);
 
-				if (linecnt > 0 && (whoRe !== null ? line.match(whoRe) : true) && (re === null || line.match(re))) {
+				if (linecnt > 0 &&
+					(whoRe !== null ? line.match(whoRe) : true) &&
+					(modeRe !== null ? line.match(modeRe) : true) &&
+					(re === null || line.match(re))) {
 					if (re !== null) {
 						if (contextEnded) {
 							outlines.unshift("\x031 --------");

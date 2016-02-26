@@ -82,6 +82,7 @@ function HistoryPlugin(bot) {
 			"^\\[(\\d{2}:\\d{2}:\\d{2})\\] " +
 			"\\*\\*\\* " +
 			"(\\S+) sets mode: " +
+			"(?:[+-][^\\s+-]+)*" +
 			bot.plugins.util.escapeRegExp(mode[1]) + "\\S*" + bot.plugins.util.escapeRegExp(mode[2]), "i");
 	};
 

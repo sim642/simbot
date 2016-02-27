@@ -51,6 +51,11 @@ function WikiPlugin(bot) {
 				var data = JSON.parse(body);
 				//bot.out.debug("wiki", util.inspect(data, {colors: true, depth: null}));
 
+				if (data.error) {
+					callback(data.error.info);
+					return;
+				}
+
 				if (data.query && data.query.pages) {
 					for (var pageid in data.query.pages) {
 						var page = data.query.pages[pageid];
@@ -91,6 +96,11 @@ function WikiPlugin(bot) {
 				var data = JSON.parse(body);
 				//bot.out.debug("wiki", util.inspect(data, {colors: true, depth: null}));
 
+				if (data.error) {
+					callback(data.error.info);
+					return;
+				}
+
 				if (data.query && data.query.pages) {
 					for (var pageid in data.query.pages) {
 						var page = data.query.pages[pageid];
@@ -109,6 +119,12 @@ function WikiPlugin(bot) {
 							}
 						}, function(err, res, body) {
 							var data = JSON.parse(body);
+
+							if (data.error) {
+								callback(data.error.info);
+								return;
+							}
+
 							var html = data.parse.text["*"];
 
 							var doc = new dom().parseFromString(html);

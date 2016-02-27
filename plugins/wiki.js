@@ -10,9 +10,12 @@ function WikiPlugin(bot) {
 	self.depend = ["cmd", "bitly"];
 
 	self.ellipsize = function(text, length) {
-		var ellipsis = "...";
-		var limit = length - ellipsis.length;
-		return text.length > limit ? text.substr(0, limit) + ellipsis : text;
+		if (text.length > length) {
+			var whitePos = text.indexOf(" ", length);
+			return text.substr(0, whitePos !== -1 ? whitePos : length) + "...";
+		}
+		else
+			return text;
 	};
 
 	self.methods = {
@@ -128,7 +131,7 @@ function WikiPlugin(bot) {
 							var html = data.parse.text["*"];
 
 							var doc = new dom().parseFromString(html);
-							var text = xpath.select("./p//text()", doc).map(function(node) {
+							var text = xpath.select("./p//text()[not(ancestor::*[@class=\"reference\" or contains(@class,\"metadata\")])]", doc).map(function(node) {
 								return node.nodeValue;
 							}).join("").replace(/[\r\n]/g, " ");
 							text = self.ellipsize(text, 350);

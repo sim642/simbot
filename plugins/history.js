@@ -217,6 +217,10 @@ function HistoryPlugin(bot) {
 			});
 		},
 
+		"cmd#gistory": function(nick, to, args) {
+			bot.emit("cmd#history", nick, to, args.concat("gist")); // only appends the parsed arguments, not args[0]
+		},
+
 		"cmd#historycount": function(nick, to, args, message) {
 			var channel = to;
 			var re = null;

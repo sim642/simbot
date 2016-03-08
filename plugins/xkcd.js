@@ -4,7 +4,7 @@ function XkcdPlugin(bot) {
 	var self = this;
 	self.name = "xkcd";
 	self.help = "Xkcd plugin";
-	self.depend = ["cmd", "pushbullet"];
+	self.depend = ["cmd"];
 
 	self.apiKey = null;
 	self.chans = [];
@@ -14,7 +14,8 @@ function XkcdPlugin(bot) {
 			self.apiKey = data.apiKey;
 			self.chans = data.chans;
 		}
-		bot.plugins.pushbullet.subscribe("xkcd");
+		if (bot.plugins.pushbullet)
+			bot.plugins.pushbullet.subscribe("xkcd");
 	};
 
 	self.save = function() {

@@ -93,36 +93,32 @@ function DatePlugin(bot) {
 			return self.durationDiff(dur);
 	};
 
-	self.printDur = function(dt, trim, limit) {
-		var name = ["millisecond", "second", "minute", "hour", "day", "month", "year"];
-
-		var dur = self.duration(dt);
-		trim = Math.max(name.indexOf(trim), +trim || 0); // if in name then get index, otherwise use as number which defaults to 0
-		limit = limit || name.length;
-		var parts = [];
-		for (var i = name.length - 1; i >= 0 && parts.length < limit; i--) {
-			if (Math.abs(dur[i]) > 0 && (i >= trim || parts.length === 0))
-				parts.push(dur[i] + " " + name[i] + (Math.abs(dur[i]) == 1 ? "" : "s"));
-		}
-
-		return parts.join(", ");
-	};
-
-	self.printDurShort = function(dt, trim, limit) {
-		var name = ["ms", "s", "m", "h", "d", "mo", "yr"];
+	self.makePrintDur = function(name, formatter, joiner) {
 		var trimName = ["millisecond", "second", "minute", "hour", "day", "month", "year"];
+		if (!name)
+			name = trimName;
 
-		var dur = self.duration(dt);
-		trim = Math.max(name.indexOf(trim), trimName.indexOf(trim), +trim || 0); // if in name then get index, otherwise use as number which defaults to 0
-		limit = limit || name.length;
-		var parts = [];
-		for (var i = name.length - 1; i >= 0 && parts.length < limit; i--) {
-			if (Math.abs(dur[i]) > 0 && (i >= trim || parts.length === 0))
-				parts.push(dur[i] + name[i]);
-		}
+		return function(dt, trim, limit) {
+			var dur = self.duration(dt);
+			trim = Math.max(name.indexOf(trim), trimName.indexOf(trim), +trim || 0); // if in name then get index, otherwise use as number which defaults to 0
+			limit = limit || name.length;
+			var parts = [];
+			for (var i = name.length - 1; i >= 0 && parts.length < limit; i--) {
+				if (Math.abs(dur[i]) > 0 && (i >= trim || parts.length === 0))
+					parts.push(formatter(dur[i], name[i]));
+			}
 
-		return parts.join(" ");
+			return parts.join(joiner);
+		};
 	};
+
+	self.printDur = self.makePrintDur(null, function(dur, name) {
+		return dur + " " + name + (Math.abs(dur) == 1 ? "" : "s");
+	}, ", ");
+
+	self.printDurShort = self.makePrintDur(["ms", "s", "m", "h", "d", "mo", "yr"], function(dur, name) {
+		return dur + name;
+	}, " ");
 
 	self.printDurTime = function(dt) {
 		var t = dt / 1000; // work in seconds

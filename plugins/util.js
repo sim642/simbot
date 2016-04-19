@@ -68,6 +68,10 @@ function UtilPlugin(bot) {
 		return text.replace(/\x1f|\x02|\x12|\x0f|\x16|\x03(?:\d{1,2}(?:,\d{1,2})?)?/g, "");
 	};
 
+	self.filterRegexFlags = function(flags) {
+		return flags.replace(/[^gmsy]/g, "");
+	};
+
 	// https://stackoverflow.com/questions/9907419/javascript-object-get-key-by-value
 	self.getKeyByValue = function(obj, value) {
 		for (var prop in obj) {

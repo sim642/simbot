@@ -36,12 +36,17 @@ function SedPlugin(bot) {
 	self.sed = function(expr, filter, postRepl) {
 		var m = expr.match(self.sedRe);
 		if (m) {
-			var sedPrere = new RegExp(m[1] || ".*", m[2]);
+			var sedPrereFlags = m[2] || "";
+			var stripPre = sedPrereFlags.indexOf("c") >= 0;
+			var sedPrere = new RegExp(m[1] || ".*", bot.plugins.util.filterRegexFlags(sedPrereFlags));
 			var sedCnt = m[3] ? parseInt(m[3]) : null;
+			var strip = false;
 			var sedRe = null;
 			var sedRepl = null;
 			if (m[5]) {
-				sedRe = new RegExp(m[5], m[7]);
+				var sedReFlags = m[7] || "";
+				strip = sedReFlags.indexOf("c") >= 0;
+				sedRe = new RegExp(m[5], bot.plugins.util.filterRegexFlags(sedReFlags));
 				sedRepl = bot.plugins.util.strUnescape(m[6]);
 			}
 
@@ -49,7 +54,11 @@ function SedPlugin(bot) {
 			postRepl = postRepl || function(text){ return text; };
 
 			return function(line) {
-				if (filter(line) && sedPrere.test(line)) {
+				var stripped = bot.plugins.util.stripColors(line);
+				var preLine = stripPre ? stripped : line;
+				line = strip ? stripped : line;
+
+				if (filter(preLine) && sedPrere.test(preLine)) {
 					var out = sedRe !== null ? line.replace(sedRe, postRepl(sedRepl)).replace(/[\r\n]/g, "") : line;
 
 					if (sedCnt === null) {

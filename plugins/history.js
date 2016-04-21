@@ -119,7 +119,7 @@ function HistoryPlugin(bot) {
 				else if (m = arg.match(/^(\w+)[,:]?$/))
 					who = m[1];
 				else if (m = arg.match(self.grepRe))
-					re = new RegExp(m[2], m[3]);
+					re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(m[3]));
 			}
 
 			var whoRe = (who !== null ? self.makeWhoRe(who) : null);
@@ -233,7 +233,7 @@ function HistoryPlugin(bot) {
 				else {
 					var m = arg.match(self.grepRe);
 					if (m) {
-						re = new RegExp(m[2], m[3]);
+						re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(m[3]));
 					}
 				}
 			}

@@ -4,7 +4,7 @@ function LogPlugin(bot) {
 	var self = this;
 	self.name = "log";
 	self.help = "simbot log viewer plugin";
-	self.depend = ["cmd", "auth"];
+	self.depend = ["cmd", "auth", "util"];
 
 	self.grepRe = new RegExp(
 		"(/)((?:\\\\\\1|(?!\\1).)+)" +
@@ -66,7 +66,7 @@ function LogPlugin(bot) {
 				else {
 					var m = arg.match(self.grepRe);
 					if (m) {
-						re = new RegExp(m[2], m[3]);
+						re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(m[3]));
 					}
 				}
 			}

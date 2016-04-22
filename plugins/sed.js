@@ -84,7 +84,7 @@ function SedPlugin(bot) {
 	self.grep = function(expr, filter, postRepl) {
 		var m = expr.match(self.grepRe);
 		if (m) {
-			var grepRe = new RegExp(m[1], m[2]);
+			var grepRe = new RegExp(m[1], bot.plugins.util.filterRegexFlags(m[2]));
 
 			filter = filter || function(){ return true; };
 			postRepl = postRepl || function(text){ return text; };

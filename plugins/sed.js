@@ -84,12 +84,17 @@ function SedPlugin(bot) {
 	self.grep = function(expr, filter, postRepl) {
 		var m = expr.match(self.grepRe);
 		if (m) {
-			var grepRe = new RegExp(m[1], bot.plugins.util.filterRegexFlags(m[2]));
+			var grepReFlags = m[2] || "";
+			var grepRe = new RegExp(m[1], bot.plugins.util.filterRegexFlags(grepReFlags));
+			var strip = grepReFlags.indexOf("c") >= 0;
 
 			filter = filter || function(){ return true; };
 			postRepl = postRepl || function(text){ return text; };
 
 			return function(line) {
+				if (strip)
+					line = bot.plugins.util.stripColors(line);
+
 				if (filter(line) && grepRe.test(line)) {
 					return line.replace(grepRe, postRepl("$&"));
 				}

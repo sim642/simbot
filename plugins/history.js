@@ -104,8 +104,6 @@ function HistoryPlugin(bot) {
 
 				if (arg == "gist")
 					gist = true;
-				else if (arg == "strip")
-					strip = true;
 				else if (arg.match(/^#/))
 					channel = arg;
 				else if (arg.match(/^\d+$/))
@@ -118,8 +116,11 @@ function HistoryPlugin(bot) {
 					mode = m;
 				else if (m = arg.match(/^(\w+)[,:]?$/))
 					who = m[1];
-				else if (m = arg.match(self.grepRe))
-					re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(m[3]));
+				else if (m = arg.match(self.grepRe)) {
+					var reFlags = m[3] || "";
+					re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(reFlags));
+					strip = reFlags.indexOf("c") >= 0;
+				}
 			}
 
 			var whoRe = (who !== null ? self.makeWhoRe(who) : null);

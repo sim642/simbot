@@ -26,7 +26,8 @@ function HistoryPlugin(bot) {
 	self.iterate = function(channel, lineCb, endCb, fileCb) {
 		var re = /^(\d{4})-(\d{2})-(\d{2})\.log$/;
 
-		fs.readdir(self.basedir + "/" + channel, function(err, files) {
+		var channelDir = path.join(self.basedir, channel);
+		fs.readdir(channelDir, function(err, files) {
 			if (err)
 				bot.out.error("history", err);
 			var logfiles = files.sort();
@@ -37,7 +38,7 @@ function HistoryPlugin(bot) {
 					var logfile = logfiles.pop();
 					var match = logfile.match(re);
 
-					fs.readFile(path.join(self.basedir + "/" + channel, logfile), {encoding: "utf8"}, function(err, data) {
+					fs.readFile(path.join(channelDir, logfile), {encoding: "utf8"}, function(err, data) {
 						if (err)
 							throw err;
 

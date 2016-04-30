@@ -8,7 +8,6 @@ function HistoryPlugin(bot) {
 	self.depend = ["cmd", "auth", "gist", "util"];
 	
 	self.basedir = null;
-	self.basename = null;
 
 	self.grepRe = new RegExp(
 		"(/)((?:\\\\\\1|(?!\\1).)+)" +
@@ -17,20 +16,20 @@ function HistoryPlugin(bot) {
 	self.load = function(data) {
 		if (data) {
 			self.basedir = data.basedir;
-			self.basename = data.basename;
 		}
 	};
 
 	self.save = function() {
-		return {basedir: self.basedir, basename: self.basename};
+		return {basedir: self.basedir};
 	};
 
 	self.iterate = function(channel, lineCb, endCb, fileCb) {
-		fs.readdir(self.basedir, function(err, files) {
-			var re = new RegExp("^" + self.basename + channel + "_(\\d{4})(\\d{2})(\\d{2})\\.log$");
-			var logfiles = files.filter(function (file) {
-				return file.match(re);
-			}).sort();
+		var re = /^(\d{4})-(\d{2})-(\d{2})\.log$/;
+
+		fs.readdir(self.basedir + "/" + channel, function(err, files) {
+			if (err)
+				bot.out.error("history", err);
+			var logfiles = files.sort();
 
 			var found = false;
 			var func = function(logfiles) {
@@ -38,7 +37,7 @@ function HistoryPlugin(bot) {
 					var logfile = logfiles.pop();
 					var match = logfile.match(re);
 
-					fs.readFile(path.join(self.basedir, logfile), {encoding: "utf8"}, function(err, data) {
+					fs.readFile(path.join(self.basedir + "/" + channel, logfile), {encoding: "utf8"}, function(err, data) {
 						if (err)
 							throw err;
 

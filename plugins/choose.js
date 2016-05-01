@@ -6,13 +6,48 @@ function ChoosePlugin(bot) {
 	self.help = "Random chooser plugin";
 	self.depend = ["cmd"];
 
+	self.randomOrgApiKey = null;
+
+	self.load = function(data) {
+		if (data) {
+			self.randomOrgApiKey = data.randomOrgApiKey || null;
+		}
+	};
+
+	self.save = function() {
+		return {
+			randomOrgApiKey: self.randomOrgApiKey
+		};
+	};
+
 	self.randoms = {
 		"random.org": function(n, callback) {
-			request("http://www.random.org/integers/?num=1&min=0&max=" + (n - 1) + "&col=1&base=10&format=plain&rnd=new", function(err, res, body) {
-				if (!err && res.statusCode == 200) {
-					var i = parseInt(body.toString().trim());
-					callback(i);
+			request.post({
+				url: "https://api.random.org/json-rpc/1/invoke",
+				json: true,
+				body: {
+				    "jsonrpc": "2.0",
+					"method": "generateIntegers",
+					"params": {
+						"apiKey": self.randomOrgApiKey,
+						"n": 1,
+						"min": 0,
+						"max": n - 1,
+						"base": 10
+					},
+					"id": 1
 				}
+			}, function(err, res, body) {
+				if (!err) {
+					if (res.statusCode == 200) {
+						var i = parseInt(body.result.random.data[0]);
+						callback(i);
+					}
+					else
+						bot.out.error("choose", res.statusCode, body);
+				}
+				else
+					bot.out.error("choose", err);
 			});
 		},
 
@@ -26,6 +61,8 @@ function ChoosePlugin(bot) {
 						callback(i);
 					}
 				}
+				else
+					bot.out.error("choose", err, body);
 			});
 		}
 	};

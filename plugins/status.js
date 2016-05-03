@@ -8,27 +8,47 @@ function StatusPlugin(bot) {
 	self.help = "simbot and system status plugin";
 	self.depend = ["cmd", "bits", "date", "util"];
 
-	self.dirSize = function(dir, filter, callback) {
-		if (callback === undefined) {
-			callback = filter;
-			filter = function() {
-				return true;
-			};
-		}
+	self.size = function(p, callback) {
+		fs.stat(p, function(err, stats) {
+			if (err) {
+				callback(err);
+				return;
+			}
 
-		var size = 0;
-		var added = 0;
+			if (stats.isDirectory()) {
+				var total = stats.size;
+				var added = 0;
 
-		fs.readdir(dir, function(err, files) {
-			files = files.filter(filter);
-			for (var i = 0; i < files.length; i++) {
-				fs.stat(path.join(dir, files[i]), function(err, stats) {
-					added++;
-					size += stats.size;
+				fs.readdir(p, function(err, files) {
+					if (err) {
+						callback(err);
+						return;
+					}
 
-					if (added == files.length)
-						callback(size);
+					var checkDone = function() {
+						if (added == files.length)
+							callback(null, total);
+					};
+
+					files.forEach(function(subp) {
+						self.size(path.join(p, subp), function(err, size) {
+							if (err) {
+								callback(err);
+								return;
+							}
+
+							added++;
+							total += size;
+							checkDone();
+						});
+					});
+
+					checkDone();
 				});
+			}
+			else {
+				callback(err, stats.size);
+				return;
 			}
 		});
 	};
@@ -69,17 +89,20 @@ function StatusPlugin(bot) {
 			};
 
 			todo++;
-			self.dirSize("./data/", function(size) {
-				addSize(["simbot", size]);
+			self.size("./data/", function(err, size) {
+				if (!err)
+					addSize(["simbot", size]);
+				else
+					bot.out.error("status", err);
 			});
 
 			if (bot.plugins.history) {
 				todo++;
-				var re = new RegExp("^" + bot.plugins.history.basename + ".+" + "_\\d{8}\\.log$");
-				self.dirSize(bot.plugins.history.basedir, function(filename) {
-					return filename.match(re);
-				}, function(size) {
-					addSize(["logs", size]);
+				self.size(bot.plugins.history.basedir, function(err, size) {
+					if (!err)
+						addSize(["logs", size]);
+					else
+						bot.out.error("status", err);
 				});
 			}
 		},

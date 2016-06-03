@@ -149,7 +149,7 @@ function RedditPlugin(bot) {
 		realtime = realtime || false;
 
 		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttps://reddit.com/event/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
+		var str = "\x1Fhttps://reddit.com/live/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
 
 		if (!short)
 			str += (!realtime ? " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers" : "" ) + "; " + bot.plugins.util.unescapeHtml(event.description).replace(/[\r\n]/g, " \\ ");

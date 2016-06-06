@@ -385,8 +385,10 @@ function RedditPlugin(bot) {
 
 							self.tickers[listing].pList = list;
 						}
-						else if (res.statusCode == 503)
+						else if (res && res.statusCode == 503)
 							bot.out.warn("reddit", "servers are busy (" + self.baseUrl + listing + ".json)");
+						else if (err)
+							bot.out.error("reddit", self.baseUrl + listing + ".json", err);
 						else
 							bot.out.error("reddit", self.baseUrl + listing + ".json", res.statusCode, res, body);
 					});

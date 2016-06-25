@@ -112,6 +112,12 @@ function OmeglePlugin(bot) {
 		self.chats[to].req = request.post({url: server + "start?" + qs.stringify(query) }, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
+				if (!(data instanceof String)) {
+					bot.notice(to, "omegle failure");
+					delete self.chats[to];
+					return;
+				}
+					
 				self.chats[to].id = data;
 
 				self.chats[to].hardDisconnect = function() {
@@ -252,6 +258,9 @@ function OmeglePlugin(bot) {
 									}
 								}
 							}
+						}
+						else {
+							bot.out.error("omegle", ["Interval error: ", err, body]);
 						}
 					});
 				}, 1000);

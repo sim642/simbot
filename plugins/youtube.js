@@ -13,13 +13,13 @@ function YoutubePlugin(bot) {
 
 	self.channels = [];
 	self.ignores = [];
-	self.shortLookup = false;
+	self.linkedLookup = true;
 
 	self.load = function(data) {
 		self.apiKey = data.apiKey || null;
 		self.channels = data.channels;
 		self.ignores = data.ignores;
-		self.shortLookup = data.shortLookup || false;
+		self.linkedLookup = data.linkedLookup !== undefined ? data.linkedLookup : true;
 	};
 
 	self.save = function() {
@@ -27,7 +27,7 @@ function YoutubePlugin(bot) {
 			apiKey: self.apiKey,
 			channels: self.channels,
 			ignores: self.ignores,
-			shortLookup: self.shortLookup
+			linkedLookup: self.linkedLookup
 		};
 	};
 
@@ -47,11 +47,11 @@ function YoutubePlugin(bot) {
 		return bot.plugins.date.printDurTime(self.ISO2dt(t));
 	};
 
-	self.format = function(data, time, short, callback) {
+	self.format = function(data, time, linked, callback) {
 		var live = data.snippet.liveBroadcastContent != "none";
 		var dur = live ? data.snippet.liveBroadcastContent : self.duration(data.contentDetails.duration);
 		var views = live && data.liveStreamingDetails.concurrentViewers ? bot.plugins.util.thSeps(data.liveStreamingDetails.concurrentViewers.toString()) + " viewers" : bot.plugins.util.thSeps(data.statistics.viewCount.toString()) + " views";
-		var str = (!short ? "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : " : "") + "\x02" + data.snippet.title + "\x02 [" + dur + "] by " + data.snippet.channelTitle + "; " + views;
+		var str = (linked ? "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : " : "") + "\x02" + data.snippet.title + "\x02 [" + dur + "] by " + data.snippet.channelTitle + "; " + views;
 		if (data.statistics !== undefined) {
 			var likes = parseFloat(data.statistics.likeCount);
 			var dislikes = parseFloat(data.statistics.dislikeCount);
@@ -63,7 +63,7 @@ function YoutubePlugin(bot) {
 		(callback || function(){})(str);
 	};
 
-	self.lookup = function(match, short, callback) {
+	self.lookup = function(match, linked, callback) {
 		request({
 				uri: "https://www.googleapis.com/youtube/v3/videos",
 				qs: {
@@ -75,7 +75,7 @@ function YoutubePlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).items;
 				if (data[0] !== undefined)
-					self.format(data[0], match[2], short, callback);
+					self.format(data[0], match[2], linked, callback);
 				else
 					(callback || function(){})("'\x02" + match[1] + "\x02' is an invalid video ID");
 			}
@@ -96,7 +96,7 @@ function YoutubePlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body).items;
 				if (data[0] !== undefined)
-					self.lookup([, data[0].id.videoId, ], false, callback); // ugly match imitating syntax
+					self.lookup([, data[0].id.videoId, ], true, callback); // ugly match imitating syntax
 				else
 					(callback || function(){})("'\x02" + query + "\x02' returned no videos");
 			}
@@ -109,8 +109,8 @@ function YoutubePlugin(bot) {
 				var match = text.match(self.vidre);
 				if (match) {
 					bot.out.log("youtube", nick + " in " + to + ": " + match[0]);
-					self.lookup(match, self.shortLookup, function(str) {
-						bot.say(to, str); // TODO: remove "me"
+					self.lookup(match, self.linkedLookup, function(str) {
+						bot.say(to, str);
 					});
 				}
 			}

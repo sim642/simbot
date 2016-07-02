@@ -19,6 +19,7 @@ function RedditPlugin(bot) {
 
 	self.channels = {}; /* true | {reddit: false/true, other: false/true}*/
 	self.ignores = [];
+	self.linkedLookup = true;
 
 	self.tickers = {};
 	self.interval = null;
@@ -36,6 +37,7 @@ function RedditPlugin(bot) {
 		self.urlTime = data.urlTime;
 		self.channels = data.channels;
 		self.ignores = data.ignores;
+		self.linkedLookup = data.linkedLookup !== undefined ? data.linkedLookup : true;
 		self.tickers = data.tickers || {};
 	};
 
@@ -72,6 +74,7 @@ function RedditPlugin(bot) {
 			urlTime: self.urlTime,
 			channels: self.channels,
 			ignores: self.ignores,
+			linkedLookup: self.linkedLookup,
 			tickers: tickers};
 	};
 
@@ -109,12 +112,20 @@ function RedditPlugin(bot) {
 			fail();
 	};
 
-	self.formatPost = function(post, short, callback, extra, realtime) {
+	self.formatLink = function(url, warning, linked) {
+		var warning = warning ? "\x034[NSFW]\x03 " : "";
+
+		if (linked)
+			return "\x1F" + url + "\x1F " + warning + ": ";
+		else
+			return warning;
+	};
+
+	self.formatPost = function(post, short, linked, callback, extra, realtime) {
 		short = short || false;
 		realtime = realtime || false;
 
-		var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttps://redd.it/" + post.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
+		var str = self.formatLink("https://redd.it/" + post.id, post.is_over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
 
 		if (!short && !realtime)
 			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
@@ -122,7 +133,7 @@ function RedditPlugin(bot) {
 		callback(str);
 	};
 
-	self.formatComment = function(comment, short, callback, extra, realtime) {
+	self.formatComment = function(comment, short, linked, callback, extra, realtime) {
 		short = short || false;
 		realtime = realtime || false;
 
@@ -132,8 +143,7 @@ function RedditPlugin(bot) {
 
 				var longurl = "https://reddit.com" + post.permalink + comment.id + (extra || "");
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
-					var warning = post.over_18 ? " \x034[NSFW]\x03" : "";
-					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
+					var str = self.formatLink(shorturl, post.is_over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
 
 					if (!short && !realtime)
 						str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
@@ -144,12 +154,12 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.formatEvent = function(event, short, callback, extra, realtime) {
+	self.formatEvent = function(event, short, linked, callback, extra, realtime) {
 		short = short || false;
 		realtime = realtime || false;
 
 		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
-		var str = "\x1Fhttps://reddit.com/live/" + event.id + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
+		var str = self.formatLink("https://reddit.com/live/" + event.id, event.nsfw, linked) + "\x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
 
 		if (!short)
 			str += (!realtime ? " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers" : "" ) + "; " + bot.plugins.util.unescapeHtml(event.description).replace(/[\r\n]/g, " \\ ");
@@ -157,7 +167,7 @@ function RedditPlugin(bot) {
 		callback(str);
 	};
 
-	self.formatUpdate = function(update, short, callback, extra, realtime) {
+	self.formatUpdate = function(update, short, linked, callback, extra, realtime) {
 		short = short || false;
 		realtime = realtime || false;
 
@@ -167,8 +177,7 @@ function RedditPlugin(bot) {
 
 				var longurl = "https://reddit.com/live/" + event.id + "/updates/" + update.id;
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
-					var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
-					var str = "\x1F" + shorturl + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "/updates] by " + update.author;
+					var str = self.formatLink(shorturl, event.nsfw, linked) + "\x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "/updates] by " + update.author;
 
 					if (!short)
 						str += (!realtime ? " " + bot.plugins.date.printDur(new Date(update.created_utc * 1000), null, 1) + " ago" : "") + "; " + bot.plugins.util.unescapeHtml(update.body).replace(/[\r\n]/g, " \\ ");
@@ -181,13 +190,13 @@ function RedditPlugin(bot) {
 		});
 	};
 
-	self.formatSubreddit = function(subreddit, short, callback, extra, realtime) {
+	self.formatSubreddit = function(subreddit, short, linked, callback, extra, realtime) {
 		short = short || false;
 		realtime = realtime || false;
 
 		var warning = subreddit.over18 ? " \x034[NSFW]\x03" : "";
 		var private = subreddit.subreddit_type != "public" ? " [" + subreddit.subreddit_type + "]" : "";
-		var str = "\x1Fhttps://reddit.com" + subreddit.url + "\x1F" + warning + " : \x02" + bot.plugins.util.unescapeHtml(subreddit.title) + "\x02" + private;
+		var str = self.formatLink("https://reddit.com" + subreddit.url, subreddit.over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(subreddit.title) + "\x02" + private;
 
 		if (!short && !realtime)
 			str += "; " + bot.plugins.util.thSeps(subreddit.subscribers) + " subscribers; " + bot.plugins.util.thSeps(subreddit.accounts_active) + " active";
@@ -195,7 +204,7 @@ function RedditPlugin(bot) {
 		callback(str);
 	};
 
-	self.formatUser = function(user, short, callback, extra, realtime) {
+	self.formatUser = function(user, short, linked, callback, extra, realtime) {
 		short = short || false;
 		realtime = realtime || false;
 
@@ -207,7 +216,7 @@ function RedditPlugin(bot) {
 		if (user.is_mod)
 			flags +=" \x033[MOD]\x03";
 
-		var str = "\x1Fhttps://reddit.com/u/" + user.name + "\x1F : \x02" + user.name + "\x02; " + bot.plugins.util.thSeps(user.link_karma) + " link karma; " + bot.plugins.util.thSeps(user.comment_karma) + " comment karma";
+		var str = self.formatLink("https://reddit.com/u/" + user.name, false, linked) + "\x02" + user.name + "\x02; " + bot.plugins.util.thSeps(user.link_karma) + " link karma; " + bot.plugins.util.thSeps(user.comment_karma) + " comment karma";
 
 		if (!short && !realtime)
 			str += "; redditor for " + bot.plugins.date.printDur(new Date(user.created_utc * 1000), null, 1) + (flags != "" ? ";" + flags : "");
@@ -215,7 +224,7 @@ function RedditPlugin(bot) {
 		callback(str);
 	};
 
-	self.format = function(item, short, callback, extra, realtime) {
+	self.format = function(item, short, linked, callback, extra, realtime) {
 		var mapping = {
 			"t3": self.formatPost,
 			"t1": self.formatComment,
@@ -225,7 +234,7 @@ function RedditPlugin(bot) {
 			"t2": self.formatUser
 		};
 
-		return mapping[item.kind](item.data, short, callback, extra, realtime);
+		return mapping[item.kind](item.data, short, linked, callback, extra, realtime);
 	};
 
 	self.cleanUrl = function(lurl) {
@@ -244,7 +253,7 @@ function RedditPlugin(bot) {
 					var post = results[i].data;
 
 					if (post.url.indexOf(lurl) >= 0) { // actually contains link (prevent reddit search stupidity)
-						self.formatPost(post, false, function(str) {
+						self.formatPost(post, false, self.linkedLookup, function(str) {
 							callback(str);
 						});
 						break;
@@ -264,7 +273,7 @@ function RedditPlugin(bot) {
 				var results = data.children;
 
 				if (results.length > 0) {
-					self.format(results[0], false, function(str) {
+					self.format(results[0], false, self.linkedLookup, function(str) {
 						callback(str);
 					}, match[4]);
 				}
@@ -282,7 +291,7 @@ function RedditPlugin(bot) {
 				if (!err && res.statusCode == 200) {
 					var data = JSON.parse(body);
 
-					self.format(data, false, function(str) {
+					self.format(data, false, self.linkedLookup, function(str) {
 						callback(str);
 					});
 				}
@@ -295,7 +304,7 @@ function RedditPlugin(bot) {
 					var results = data.children;
 
 					if (results.length > 0) {
-						self.format(results[0], false, function(str) {
+						self.format(results[0], false, self.linkedLookup, function(str) {
 							callback(str);
 						}, id);
 					}
@@ -311,7 +320,7 @@ function RedditPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
 
-				self.format(data, false, function(str) {
+				self.format(data, false, self.linkedLookup, function(str) {
 					callback(str);
 				});
 			}
@@ -375,7 +384,7 @@ function RedditPlugin(bot) {
 
 									if (!found) {
 										self.tickers[listing].channels.forEach(function(to) {
-											self.format(list[i], self.tickers[listing].short, function(str) {
+											self.format(list[i], self.tickers[listing].short, true, function(str) {
 												bot.say(to, str);
 											}, self.tickers[listing].extra, true);
 										});

@@ -15,7 +15,7 @@ function RedditPlugin(bot) {
 	self.urlTime = "week";
 	self.listingLive = /^\/live\/(\w+)/i;
 
-	self.subUserRe = /\/([ru])\/([^\s\/]+)/i;
+	self.subUserRe = /\/([ru]|user)\/([^\s\/]+)/i;
 
 	self.channels = {}; /* true | {reddit: false/true, other: false/true}*/
 	self.ignores = [];
@@ -519,7 +519,7 @@ function RedditPlugin(bot) {
 
 						if (self.channels[to] === true ||
 							(self.channels[to].subreddit && match[1] == "r") ||
-							(self.channels[to].user && match[1] == "u"))
+							(self.channels[to].user && (match[1] == "u" || match[1] == "user")))
 						{
 							self.lookupSubUser(url, function(str) {
 								bot.out.log("reddit", nick + " in " + to + ": " + url);

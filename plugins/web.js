@@ -21,10 +21,6 @@ function WebPlugin(bot) {
 			var body = chunks.join("");
 
 			bot.emit("web", u.pathname, req, u.query, body, res);
-			if (bot.listeners("web#" + u.pathname)[0] !== undefined)
-				bot.emit("web#" + u.pathname, req, u.query, body, res);
-			else
-				bot.emit("web#", u.pathname, req, u.query, body, res);
 		});
 	};
 
@@ -62,8 +58,17 @@ function WebPlugin(bot) {
 	}
 
 	self.events = {
-		"web#": function(endpoint, req, qs, body, res) {
+		"web": function(path, req, qs, body, res) {
+			if (bot.listeners("web#" + path)[0] !== undefined)
+				bot.emit("web#" + path, req, qs, body, res);
+			else
+				bot.emit("web#", path, req, qs, body, res);
+		},
+
+		"web#": function(path, req, qs, body, res) {
 			res.end();
+
+			bot.out.warn("web", "unlistened request on " + path);
 		},
 	};
 }

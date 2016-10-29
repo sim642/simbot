@@ -20,8 +20,11 @@ function WebPlugin(bot) {
 		req.on('end', function() {
 			var body = chunks.join("");
 
-			bot.emit("web", u.pathname.substr(1), req, u.query, body, res);
-			bot.emit("web#" + u.pathname.substr(1), req, u.query, body, res);
+			bot.emit("web", u.pathname, req, u.query, body, res);
+			if (bot.listeners("web#" + u.pathname)[0] !== undefined)
+				bot.emit("web#" + u.pathname, req, u.query, body, res);
+			else
+				bot.emit("web#", u.pathname, req, u.query, body, res);
 		});
 	};
 
@@ -59,7 +62,9 @@ function WebPlugin(bot) {
 	}
 
 	self.events = {
-
+		"web#": function(endpoint, req, qs, body, res) {
+			res.end();
+		},
 	};
 }
 

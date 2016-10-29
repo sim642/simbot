@@ -459,7 +459,7 @@ function GithubPlugin(bot) {
 			}
 		},
 
-		"web#github": function(req, qs, body, res) {
+		"web#/github": function(req, qs, body, res) {
 			res.end();
 
 			var channels = [];

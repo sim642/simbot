@@ -8,7 +8,7 @@ function PolitenessPlugin(bot) {
 
 	self.politeness = function(text, callback) {
 		request.post({
-			url: "https://api-classifier.foxtype.com/v1/all/politeness02",
+			url: "https://elb-classifier.foxtype.com/v1/all/politeness02",
 			body: {
 				"text": text,
 			},
@@ -18,7 +18,7 @@ function PolitenessPlugin(bot) {
 				callback(body);
 			}
 			else {
-				bot.out.error("politeness", body);
+				bot.out.error("politeness", err, res, body);
 			}
 		});
 	};

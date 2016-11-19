@@ -23,9 +23,49 @@ function MessengerPlugin(bot) {
 		};
 	};
 
+	self.send = function(data) {
+		request.post({
+			uri: "https://graph.facebook.com/v2.6/me/messages",
+			qs: {
+				access_token: self.pageAccessToken
+			},
+			json: data
+		}, function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+
+			}
+			else {
+				bot.out.error("messenger", "failed to send", err, body);
+			}
+		});
+	};
+
+	self.sendTextMessage = function(recipientId, text) {
+		self.send({
+			recipient: {
+				id: recipientId
+			},
+			message: {
+				text: text
+			}
+		});
+	};
+
 	self.events = {
 		"messenger#event": function(event) {
 			bot.out.debug("messenger", event);
+
+			if (event.message)
+				bot.emit("messenger#message", event, event.message);
+		},
+
+		"messenger#message": function(event, message) {
+			if (message.text) {
+				self.sendTextMessage(event.sender.id, message.text);
+			}
+			else if (message.attachments) {
+
+			}
 		},
 
 		"webs#/messenger": function(req, qs, body, res) {

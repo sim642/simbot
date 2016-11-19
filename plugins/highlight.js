@@ -2,7 +2,7 @@ function HighlightPlugin(bot) {
 	var self = this;
 	self.name = "highlight";
 	self.help = "Highlight plugin";
-	self.depend = ["cmd", "pushbullet", "util"];
+	self.depend = ["cmd", "messenger", "util"];
 
 	self.highlights = {};
 	/*
@@ -32,6 +32,13 @@ function HighlightPlugin(bot) {
 		};
 	};
 
+	self.send = function(hinick, to, op, nick, text) {
+		text = bot.plugins.util.stripColors(text);
+
+		// bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + text);
+		bot.plugins.messenger.sendTextMessage(hinick, to + " <" + op + nick + "> " + text);
+	};
+
 	self.events = {
 		"message": function(nick, to, text, message) {
 			var tolow = to.toLowerCase();
@@ -56,7 +63,7 @@ function HighlightPlugin(bot) {
 
 				if (text.match(new RegExp("\\b" + hinick + "(?=\\b|[_|])", "i"))) {
 					if (Object.keys(bot.chans[tolow].users).map(function(elem) { return elem.toLowerCase(); }).indexOf(hinick) == -1)
-						bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + bot.plugins.util.stripColors(text));
+						self.send(hinick, to, op, nick, text);
 					else if (level != "offline") {
 						if (activity !== null || level == "away") { // needs whois
 							var hinick2 = hinick;
@@ -75,11 +82,11 @@ function HighlightPlugin(bot) {
 									bot.out.error("highlight", "no idle data in WHOIS reply", info, message);
 
 								if (good)
-									bot.plugins.pushbullet.pushnote(hinick2, "Highlighted in " + to, "<" + op + nick + "> " + bot.plugins.util.stripColors(text));
+									self.send(hinick2, to, op, nick, text);
 							});
 						}
 						else
-							bot.plugins.pushbullet.pushnote(hinick, "Highlighted in " + to, "<" + op + nick + "> " + bot.plugins.util.stripColors(text));
+							self.send(hinick, to, op, nick, text);
 					}
 				}
 			}
@@ -87,8 +94,7 @@ function HighlightPlugin(bot) {
 
 		"cmd#sethighlight": function(nick, to, args) {
 			var lnick = nick.toLowerCase();
-			if (lnick in bot.plugins.pushbullet.emails) {
-				switch (args[1]) {
+			switch (args[1]) {
 				case "online":
 				case "away":
 				case "offline":
@@ -109,10 +115,7 @@ function HighlightPlugin(bot) {
 					var user = self.highlights[lnick];
 					bot.notice(nick, "highlights set to " + user.level + (user.activity ? " (" + user.activity.toString() + "mins)": ""));
 					break;
-				}
 			}
-			else
-				bot.notice(nick, "pushbullet must be set to use this feature");
 		}
 	};
 }

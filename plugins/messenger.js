@@ -9,10 +9,13 @@ function MessengerPlugin(bot) {
 	self.verifyToken = null;
 	self.pageAccessToken = null;
 
+	self.ids = {};
+
 	self.load = function(data) {
 		if (data) {
 			self.verifyToken = data.verifyToken;
 			self.pageAccessToken = data.pageAccessToken;
+			self.ids = data.ids;
 		}
 	};
 
@@ -20,6 +23,7 @@ function MessengerPlugin(bot) {
 		return {
 			verifyToken: self.verifyToken,
 			pageAccessToken: self.pageAccessToken,
+			ids: self.ids,
 		};
 	};
 
@@ -40,10 +44,17 @@ function MessengerPlugin(bot) {
 		});
 	};
 
+	self.parseTo = function(to) {
+		if (to in self.ids)
+			return self.ids[to];
+		else
+			return to;
+	};
+
 	self.sendTextMessage = function(recipientId, text) {
 		self.send({
 			recipient: {
-				id: recipientId
+				id: self.parseTo(recipientId)
 			},
 			message: {
 				text: text

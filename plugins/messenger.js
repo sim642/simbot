@@ -4,18 +4,20 @@ function MessengerPlugin(bot) {
 	var self = this;
 	self.name = "messenger";
 	self.help = "Messenger bot plugin";
-	self.depend = [];
+	self.depend = ["cmd", "nickserv", "util"];
 
 	self.verifyToken = null;
 	self.pageAccessToken = null;
 
 	self.ids = {};
+	self.idVerifys = {};
 
 	self.load = function(data) {
 		if (data) {
 			self.verifyToken = data.verifyToken;
 			self.pageAccessToken = data.pageAccessToken;
 			self.ids = data.ids;
+			self.idVerifys = data.idVerifys;
 		}
 	};
 
@@ -24,6 +26,7 @@ function MessengerPlugin(bot) {
 			verifyToken: self.verifyToken,
 			pageAccessToken: self.pageAccessToken,
 			ids: self.ids,
+			idVerifys: self.idVerifys,
 		};
 	};
 
@@ -62,7 +65,40 @@ function MessengerPlugin(bot) {
 		});
 	};
 
+	self.generateIdVerify = function() {
+		var idVerify = null;
+
+		do {
+			idVerify = Math.floor(Math.random() * 100000).toString();
+		}
+		while (idVerify in self.idVerifys);
+
+		return idVerify;
+	};
+
 	self.events = {
+		"cmd#setmessenger": function(nick, to, args) {
+			bot.plugins.nickserv.nickIdentified(nick, function(identified) {
+				if (identified) {
+					if (!(nick.toLowerCase() in self.ids)) {
+						var existing = bot.plugins.util.getKeyByValue(self.idVerifys, nick.toLowerCase());
+						if (existing !== null) {
+							delete self.idVerifys[existing];
+						}
+
+						var idVerify = self.generateIdVerify();
+						self.idVerifys[idVerify] = nick.toLowerCase();
+						bot.notice(nick, "message Simbot on messenger: " + idVerify);
+					}
+					else {
+						delete self.ids[nick.toLowerCase()];
+						bot.notice(nick, "messenger unset");
+					}
+				}
+				else
+					bot.notice(nick, "must be identified for this nick to set messenger");
+			});
+		},
 		"messenger#event": function(event) {
 			bot.out.debug("messenger", event);
 
@@ -72,7 +108,14 @@ function MessengerPlugin(bot) {
 
 		"messenger#message": function(event, message) {
 			if (message.text) {
-				self.sendTextMessage(event.sender.id, message.text);
+				if (message.text in self.idVerifys) {
+					self.ids[self.idVerifys[message.text]] = event.sender.id;
+					delete self.idVerifys[message.text];
+					self.sendTextMessage(event.sender.id, "Verified!");
+				}
+				else {
+					self.sendTextMessage(event.sender.id, message.text);
+				}
 			}
 			else if (message.attachments) {
 

@@ -83,7 +83,7 @@ function HistoryPlugin(bot) {
 			"\\*\\*\\* " +
 			"(\\S+) sets mode: " +
 			"(?:[+-][^\\s+-]+)*" +
-			bot.plugins.util.escapeRegExp(mode[1]) + "\\S*" + bot.plugins.util.escapeRegExp(mode[2]), "i");
+			bot.plugins.util.escapeRegExp(mode[1]) + "\\S*" + bot.plugins.util.escapeRegExp(mode[2]), "");
 	};
 
 	self.events = {
@@ -112,7 +112,7 @@ function HistoryPlugin(bot) {
 					preSurround = parseInt(m[1]);
 				else if (m = arg.match(/^\+(\d+)$/))
 					postSurround = parseInt(m[1]);
-				else if (m = arg.match(/^([+-]?)([a-z])$/))
+				else if (m = arg.match(/^([+-]?)([A-Za-z])$/))
 					mode = m;
 				else if (m = arg.match(/^(\w+)[,:]?$/))
 					who = m[1];

@@ -4,16 +4,23 @@ function TopicLogPlugin(bot) {
 	var self = this;
 	self.name = "topiclog";
 	self.help = "Topic logger plugin";
-	self.depend = ["cmd", "date", "util", "*sed"];
+	self.depend = ["auth", "cmd", "date", "util", "*sed"];
 
 	self.topiclog = {};
 	self.tochange = {};
 
-	self.separator = " | ";
+	self.separators = {};
 
 	self.load = function(data) {
 		if (data) {
-			self.topiclog = data;
+			if (!("topiclog" in data)) {
+				self.topiclog = data;
+			}
+			else {
+				self.topiclog = data.topiclog;
+				self.separators = data.separators;
+			}
+
 			for (var channel in self.topiclog) {
 				var chanlog = self.topiclog[channel];
 				for (var i = 0; i < chanlog.length; i++)
@@ -23,7 +30,7 @@ function TopicLogPlugin(bot) {
 	};
 
 	self.save = function() {
-		return self.topiclog;
+		return {"topiclog": self.topiclog, "separators": self.separators};
 	};
 
 	self.topic = function(channel, topic, nick) {
@@ -240,20 +247,25 @@ function TopicLogPlugin(bot) {
 			}
 		},
 
+		"cmd#topicseparator": bot.plugins.auth.proxyEvent(2, function(nick, to, args) {
+			self.separators[to] = args[1];
+		}),
+
 		"cmd#topicprepend": function(nick, to, args) {
 			var chan = to;
-			if (chan in self.topiclog) {
+			if (chan in self.topiclog && chan in self.separators) {
 				var chanlog = self.topiclog[chan];
 				var oldTopic = chanlog[chanlog.length - 1].topic || "";
+				var separator = self.separators[chan];
 
-				var pieces = oldTopic.split(self.separator);
+				var pieces = oldTopic.split(separator);
 				if (pieces.length == 1 && pieces[0] == "")
 					pieces = [];
 				pieces.unshift(args[0]);
 
 				var newTopic = "";
 				for (var i = 0; i < pieces.length; i++) {
-					var piece = (i > 0 ? self.separator : "") + pieces[i];
+					var piece = (i > 0 ? separator : "") + pieces[i];
 					if (newTopic.length + piece.length <= bot.supported.topiclength)
 						newTopic += piece;
 					else
@@ -266,18 +278,19 @@ function TopicLogPlugin(bot) {
 
 		"cmd#topicappend": function(nick, to, args) {
 			var chan = to;
-			if (chan in self.topiclog) {
+			if (chan in self.topiclog && chan in self.separators) {
 				var chanlog = self.topiclog[chan];
 				var oldTopic = chanlog[chanlog.length - 1].topic || "";
+				var separator = self.separators[chan];
 
-				var pieces = oldTopic.split(self.separator);
+				var pieces = oldTopic.split(separator);
 				if (pieces.length == 1 && pieces[0] == "")
 					pieces = [];
 				pieces.push(args[0]);
 
 				var newTopic = "";
 				for (var i = pieces.length - 1; i >= 0; i--) {
-					var piece = pieces[i] + (i < pieces.length - 1 ? self.separator : "");
+					var piece = pieces[i] + (i < pieces.length - 1 ? separator : "");
 					if (newTopic.length + piece.length <= bot.supported.topiclength)
 						newTopic = piece + newTopic;
 					else

@@ -9,6 +9,8 @@ function TopicLogPlugin(bot) {
 	self.topiclog = {};
 	self.tochange = {};
 
+	self.separator = " | ";
+
 	self.load = function(data) {
 		if (data) {
 			self.topiclog = data;
@@ -49,6 +51,8 @@ function TopicLogPlugin(bot) {
 
 	self.events = {
 		"topic": function(channel, topic, nick, message) {
+			// bot.out.debug("topiclog", channel, topic, nick, message);
+
 			var chanlog = self.topiclog[channel];
 			if (chanlog === undefined || chanlog[chanlog.length - 1].topic != topic) {
 				var entry = {};
@@ -234,7 +238,55 @@ function TopicLogPlugin(bot) {
 					}
 				}
 			}
-		}
+		},
+
+		"cmd#topicprepend": function(nick, to, args) {
+			var chan = to;
+			if (chan in self.topiclog) {
+				var chanlog = self.topiclog[chan];
+				var oldTopic = chanlog[chanlog.length - 1].topic || "";
+
+				var pieces = oldTopic.split(self.separator);
+				if (pieces.length == 1 && pieces[0] == "")
+					pieces = [];
+				pieces.unshift(args[0]);
+
+				var newTopic = "";
+				for (var i = 0; i < pieces.length; i++) {
+					var piece = (i > 0 ? self.separator : "") + pieces[i];
+					if (newTopic.length + piece.length <= bot.supported.topiclength)
+						newTopic += piece;
+					else
+						break;
+				}
+
+				self.topic(chan, newTopic, nick);
+			}
+		},
+
+		"cmd#topicappend": function(nick, to, args) {
+			var chan = to;
+			if (chan in self.topiclog) {
+				var chanlog = self.topiclog[chan];
+				var oldTopic = chanlog[chanlog.length - 1].topic || "";
+
+				var pieces = oldTopic.split(self.separator);
+				if (pieces.length == 1 && pieces[0] == "")
+					pieces = [];
+				pieces.push(args[0]);
+
+				var newTopic = "";
+				for (var i = pieces.length - 1; i >= 0; i--) {
+					var piece = pieces[i] + (i < pieces.length - 1 ? self.separator : "");
+					if (newTopic.length + piece.length <= bot.supported.topiclength)
+						newTopic = piece + newTopic;
+					else
+						break;
+				}
+
+				self.topic(chan, newTopic, nick);
+			}
+		},
 	};
 }
 

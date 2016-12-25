@@ -133,7 +133,7 @@ function TopicLogPlugin(bot) {
 					var outlines = [];
 					for (var i = chanlog.length - 1; outlines.length < cnt && i >= 0; i--) {
 						var entry = chanlog[i];
-						var g = grep(entry.topic);
+						var g = grep(entry.topic || "");
 
 						if (g !== true) { // string returned
 							outlines.unshift("\x02Topic #" + i + " in " + channel + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + g);
@@ -154,7 +154,7 @@ function TopicLogPlugin(bot) {
 							if (lastentry)
 								str = self.colordiff(lastentry.topic, entry.topic);
 							else
-								str = entry.topic;
+								str = entry.topic || "";
 
 							bot.notice(nick, "\x02Topic #" + (chanlog.length + i) + " in " + channel + " by " + entry.nick + " at " + bot.plugins.date.printDateTime(entry.time) + ":\x02 " + str);
 							lastentry = entry;
@@ -195,7 +195,7 @@ function TopicLogPlugin(bot) {
 					id += chanlog.length - 1;
 
 				if (id >= 0 && id < chanlog.length) {
-					self.topic(chan, chanlog[id].topic, nick);
+					self.topic(chan, chanlog[id].topic || "", nick);
 				}
 				else
 					bot.say(to, "Invalid topic ID");
@@ -222,7 +222,7 @@ function TopicLogPlugin(bot) {
 				var chanlog = self.topiclog[channel];
 
 				for (var i = chanlog.length - 1; i >= 0; i--) {
-					var text2 = chanlog[i].topic;
+					var text2 = chanlog[i].topic || "";
 					var s = sed(text2);
 
 					if (s === false)

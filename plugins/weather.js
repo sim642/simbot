@@ -390,6 +390,14 @@ function WeatherPlugin(bot) {
 
 	self.events = {
 		"cmd#weather": function(nick, to, args) {
+			var place = args[0];
+
+			self.present(place, null, function(str) {
+				bot.say(to, str);
+			});
+		},
+
+		"cmd#weather2": function(nick, to, args) {
 			var place = args[1];
 			var time = new Date(args[2]);
 

@@ -23,7 +23,7 @@ function WeatherPlugin(bot) {
 	self.windChars = function(deg) {
 		// http://climate.umn.edu/snow_fence/components/winddirectionanddegreeswithouttable3.htm
 		var chars = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N"];
-		return chars[Math.floor((deg + 360 / 16 / 2) / (360 / 16))];
+		return chars[Math.floor((deg + 360 / chars.length / 2) / (360 / chars.length)) % chars.length];
 	};
 
 	self.present = function(place, time, callback) {

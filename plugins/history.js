@@ -11,7 +11,7 @@ function HistoryPlugin(bot) {
 
 	self.grepRe = new RegExp(
 		"(/)((?:\\\\\\1|(?!\\1).)+)" +
-		"\\1([a-z])*"); // simplified from sed plugin
+		"\\1([a-z]*)"); // simplified from sed plugin
 
 	self.load = function(data) {
 		if (data) {
@@ -117,7 +117,7 @@ function HistoryPlugin(bot) {
 				else if (m = arg.match(/^(\w+)[,:]?$/))
 					who = m[1];
 				else if (m = arg.match(self.grepRe)) {
-					var reFlags = m[3] || "";
+					var reFlags = m[3];
 					re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(reFlags));
 					strip = reFlags.indexOf("c") >= 0;
 				}

@@ -194,20 +194,28 @@ function HistoryPlugin(bot) {
 
 				return linecnt > 0 || contextTodo > 0;
 			}, function() {
-				if (gist) {
-					bot.plugins.gist.create({
-						"history.txt": outlines.map(bot.plugins.util.stripColors).join("\n")
-					}, false, "History for " + channel + (argStr ? " (" + argStr + ")" : ""), function(data) {
-						bot.say(to, nick + ": " + data.html_url);
-					});
+				if (outlines.length > 0) {
+					if (gist) {
+						bot.plugins.gist.create({
+							"history.txt": outlines.map(bot.plugins.util.stripColors).join("\n")
+						}, false, "History for " + channel + (argStr ? " (" + argStr + ")" : ""), function(data) {
+							bot.say(to, nick + ": " + data.html_url);
+						});
+					}
+					else {
+						bot.say(nick, "\x031--- Begin history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
+						for (var i = 0; i < outlines.length; i++) {
+							var str = outlines[i];
+							bot.say(nick, str);
+						}
+						bot.say(nick, "\x031--- End history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
+					}
 				}
 				else {
-					bot.say(nick, "\x031--- Begin history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
-					for (var i = 0; i < outlines.length; i++) {
-						var str = outlines[i];
-						bot.say(nick, str);
-					}
-					bot.say(nick, "\x031--- End history for " + channel + (argStr ? " (" + argStr + ")" : "") + " ---");
+					if (gist)
+						bot.say(to, nick + ": no history");
+					else
+						bot.say(nick, "\x031--- No history ---");
 				}
 			}, function(logfile, date) {
 				if (fileUsed) {

@@ -1,4 +1,5 @@
 var openttd = require("./openttd/openttd");
+var Client = require("./openttd/client");
 
 function OpenTTDPlugin(bot) {
 	var self = this;
@@ -8,10 +9,13 @@ function OpenTTDPlugin(bot) {
 
 	self.defServer = null;
 	self.defPort = 3979;
+	self.defVersion = "1.6.1";
 
 	self.channels = [];
 	self.pRet = null;
 	self.interval = null;
+
+	self.clients = {};
 
 	self.load = function(data) {
 		if (data) {
@@ -24,11 +28,18 @@ function OpenTTDPlugin(bot) {
 	self.enable = function() {
 		self.interval = setInterval(self.refresh, 60 * 1000);
 		self.refresh();
+
+		if (self.defServer)
+			self.clientStart(self.defServer, self.defPort);
 	};
 
 	self.disable = function() {
 		clearInterval(self.interval);
 		self.interval = null;
+
+		for (var host in self.clients) {
+			self.clientStop(host);
+		}
 	};
 
 	self.save = function() {
@@ -64,6 +75,77 @@ function OpenTTDPlugin(bot) {
 					bot.out.error("openttd", err);
 			});
 		}
+	};
+
+	self.clientStart = function(addr, port) {
+		var host = addr + ":" + port;
+		if (host in self.clients)
+			return;
+
+		self.clients[host] = new Client();
+		(function(c) {
+			var say = function(str) {
+				self.channels.forEach(function(channel) {
+					bot.say(channel, str);
+				});
+			};
+
+			var notice = function(str) {
+				self.channels.forEach(function(channel) {
+					bot.notice(channel, str);
+				});
+			};
+
+			c.on("chat", function(chat) {
+				//bot.out.debug("openttd", chat);
+			});
+
+			c.on("chat#CHAT", function(client, msg) {
+				say("<" + client.name + "> " + msg);
+			});
+
+			c.on("join", function(client) {
+				notice(client.name + " has connected");
+			});
+
+			c.on("company#spectator", function(client) {
+				notice(client.name + " has joined spectators");
+			});
+
+			c.on("company#join", function(client, company) {
+				notice(client.name + " has joined company #" + (company.id + 1) + " (" + company.name + ")");
+			});
+
+			c.on("company#new", function(client, company) {
+				notice(client.name + " has created company #" + (company.id + 1) + " (" + company.name + ")");
+			});
+
+			c.on("move", function(client, company) {
+				notice(client.name + " has moved to company #" + (company.id + 1) + "(" + company.name + ")");
+			});
+
+			c.on("quit", function(client, error) {
+				notice(client.name + " has disconnected" + (error ? " (" + error.message + ")" : ""));
+			});
+
+			c.on("error", function(err) {
+				bot.out.error("openttd", host + ": " + err.message);
+			});
+
+			c.on("status", function(str) {
+				bot.out.debug("openttd", host + ": " + str);
+			});
+
+			c.on("close", function() {
+				delete self.clients[host];
+			});
+
+			c.connect(addr, port, self.defVersion);
+		})(self.clients[host]);
+	};
+
+	self.clientStop = function(host) {
+		self.clients[host].end();
 	};
 
 	self.events = {
@@ -125,7 +207,7 @@ function OpenTTDPlugin(bot) {
 		},
 
 		"cmd#openttdcomp": function(nick, to, args) {
-			var comp = args[1];
+			var comp = args[1]; // TODO: error if not given
 			var server = args[2] || self.defServer;
 			var port = args[3] || self.defPort;
 			openttd.query(server, port, function(ret) {
@@ -172,7 +254,16 @@ function OpenTTDPlugin(bot) {
 
 				bot.say(to, bot.plugins.bits.format(prefix, bits));
 			});
-		}
+		},
+
+		"nocmd": function(nick, to, text) {
+			if (self.channels.indexOf(to) < 0)
+				return;
+
+			for (var host in self.clients) {
+				self.clients[host].chat("<" + nick + "> " + text);
+			}
+		},
 	};
 }
 

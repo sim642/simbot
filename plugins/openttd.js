@@ -9,6 +9,7 @@ function OpenTTDPlugin(bot) {
 
 	self.defServer = null;
 	self.defPort = 3979;
+	self.defVersion = "1.6.1";
 
 	self.channels = [];
 	self.pRet = null;
@@ -139,7 +140,7 @@ function OpenTTDPlugin(bot) {
 				delete self.clients[host];
 			});
 
-			c.connect(addr, port);
+			c.connect(addr, port, self.defVersion);
 		})(self.clients[host]);
 	};
 

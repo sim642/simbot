@@ -5,6 +5,7 @@ var EventEmitter = require("events").EventEmitter;
 
 var net = require("net");
 var BufferReader = require("buffer-reader");
+var request = require("request");
 
 var enums = require("./enums")
 var PACKET = enums.PACKET;
@@ -229,7 +230,30 @@ function Client() {
 
 util.inherits(Client, EventEmitter);
 
-Client.prototype.connect = function(addr, port) {
+Client.prototype.getVersionData = function(version, cb) {
+	var versionSplit = version.split(".");
+	var major = versionSplit[0];
+	var minor = versionSplit[1];
+	var build = versionSplit[2];
+
+	request("http://finger.openttd.org/tags.txt", function(err, res, body) {
+		if (!err && res.statusCode == 200) {
+			var rows = body.split("\n").map(function(row) {
+				return row.split("\t");
+			});
+
+			var match = rows.filter(function(row) {
+				return row[2] == version;
+			})[0];
+
+			var revision = parseInt(match[0]);
+
+			cb(major, minor, build, revision);
+		}
+	});
+}
+
+Client.prototype.connect = function(addr, port, version) {
 	var self = this;
 
 	self.socket = net.connect(port, addr);
@@ -242,19 +266,22 @@ Client.prototype.connect = function(addr, port) {
 		//console.log("connect");
 
 		self.companyCb(function() {
-			/*var newGrfBuffer = new Buffer(4);
-			newGrfBuffer.writeUInt32LE(0, 0);*/
-			var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]); // TODO: proper newGrf version
+			self.getVersionData(version, function(major, minor, build, revision) {
+				var newGrfBuffer = new Buffer(4);
+				newGrfBuffer.writeUInt32LE(major << 28 | minor << 24 | build << 20 | 1 << 19 | revision, 0);
+				//var newGrfBuffer = new Buffer([0x46, 0x6B, 0x38, 0x15]); // TODO: proper newGrf version
+				//var newGrfBuffer = new Buffer([0xD9, 0x6B, 0x18, 0x16]); // TODO: proper newGrf version
 
-			var packet = Buffer.concat([
-				new Buffer([PACKET.CLIENT_JOIN]),
-				new Buffer("1.5.3\0"),
-				newGrfBuffer,
-				new Buffer("simbot\0"),
-				new Buffer([0xFF, 0x00]),
-			]);
-			self.send(packet);
-			self.emit("status", "joining");
+				var packet = Buffer.concat([
+					new Buffer([PACKET.CLIENT_JOIN]),
+					new Buffer(version + "\0"),
+					newGrfBuffer,
+					new Buffer("simbot\0"),
+					new Buffer([0xFF, 0x00]),
+				]);
+				self.send(packet);
+				self.emit("status", "joining");
+			});
 		});
 		self.emit("status", "getting company info");
 	});

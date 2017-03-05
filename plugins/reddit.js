@@ -112,20 +112,24 @@ function RedditPlugin(bot) {
 			fail();
 	};
 
-	self.formatLink = function(url, warning, linked) {
-		var warning = warning ? "\x034[NSFW]\x03 " : "";
+	self.formatPostLink = function(url, post, linked) {
+		var flags = "";
+		if (post.is_over18)
+			flags += "\x034[NSFW]\x03 ";
+		if (post.spoiler)
+			flags += "[SPOILER] ";
 
 		if (linked)
-			return "\x1F" + url + "\x1F " + warning + ": ";
+			return "\x1F" + url + "\x1F " + flags + ": ";
 		else
-			return warning;
+			return flags;
 	};
 
 	self.formatPost = function(post, short, linked, callback, extra, realtime) {
 		short = short || false;
 		realtime = realtime || false;
 
-		var str = self.formatLink("https://redd.it/" + post.id, post.is_over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
+		var str = self.formatPostLink("https://redd.it/" + post.id, post, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
 
 		if (!short && !realtime)
 			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
@@ -143,7 +147,7 @@ function RedditPlugin(bot) {
 
 				var longurl = "https://reddit.com" + post.permalink + comment.id + (extra || "");
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
-					var str = self.formatLink(shorturl, post.is_over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
+					var str = self.formatPostLink(shorturl, post, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
 
 					if (!short && !realtime)
 						str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
@@ -152,6 +156,15 @@ function RedditPlugin(bot) {
 				});
 			}
 		});
+	};
+
+	self.formatLink = function(url, warning, linked) {
+		var warning = warning ? "\x034[NSFW]\x03 " : "";
+
+		if (linked)
+			return "\x1F" + url + "\x1F " + warning + ": ";
+		else
+			return warning;
 	};
 
 	self.formatEvent = function(event, short, linked, callback, extra, realtime) {

@@ -232,32 +232,48 @@ function HistoryPlugin(bot) {
 
 		"cmd#historycount": function(nick, to, args, message) {
 			var channel = to;
+			var who = null;
+			var mode = null;
 			var re = null;
+			var strip = false;
 
 			for (var i = 1; i < args.length; i++) {
 				var arg = args[i];
+				var m;
 
 				if (arg.match(/^#/))
 					channel = arg;
-				else {
-					var m = arg.match(self.grepRe);
-					if (m) {
-						re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(m[3]));
-					}
+				else if (m = arg.match(/^([+-]?)([A-Za-z])$/))
+					mode = m;
+				else if (m = arg.match(/^(\w+)[,:]?$/))
+					who = m[1];
+				else if (m = arg.match(self.grepRe)) {
+					var reFlags = m[3];
+					re = new RegExp(m[2], bot.plugins.util.filterRegexFlags(reFlags));
+					strip = reFlags.indexOf("c") >= 0;
 				}
 			}
+
+			var whoRe = (who !== null ? self.makeWhoRe(who) : null);
+			var modeRe = (mode !== null ? self.makeModeRe(mode) : null);
 
 			message.authChannel = channel;
 
 			bot.plugins.auth.proxy(2, message, function() {
 				var cnt = 0;
 				self.iterate(channel, function(line) {
-					if (re !== null) {
-						var m = line.match(re);
-						cnt += (m || []).length;
+					if (strip)
+						line = bot.plugins.util.stripColors(line);
+
+					var m;
+					if ((whoRe !== null ? line.match(whoRe) : true) &&
+						(modeRe !== null ? line.match(modeRe) : true) &&
+						(re === null || (m = line.match(re)))) {
+						if (re !== null)
+							cnt += (m || []).length;
+						else
+							cnt++;
 					}
-					else
-						cnt++;
 
 					return true; // continue forever
 				}, function() {

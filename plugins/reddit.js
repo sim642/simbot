@@ -9,7 +9,7 @@ function RedditPlugin(bot) {
 	self.depend = ["cmd", "ignore", "date", "bitly", "util"];
 
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
-	self.urlRedditRe = /reddit\.com\/(r\/[^\s\/]+\/)?comments\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+)(\?context=\d+)?)?/i;
+	self.urlRedditRe = /(?:reddit\.com\/(r\/[^\s\/]+\/)?comments|redd\.it)\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+)(\?context=\d+)?)?/i;
 	self.urlLiveRe = /reddit\.com\/live\/(\w+)(?:\/updates\/([0-9a-z\-]+))?/i;
 	self.urlSort = "hot";
 	self.urlTime = "week";
@@ -279,7 +279,7 @@ function RedditPlugin(bot) {
 	self.lookupReddit = function(rurl, callback) {
 		var match = rurl.match(self.urlRedditRe);
 		var isComment = match[3] !== undefined;
-		var url = self.cleanUrl(rurl.replace(/(https?:\/\/)?(\w+\.)?reddit\.com/i, self.baseUrl)) + ".json";
+		var url = self.cleanUrl(rurl.replace(/redd\.it/i, "reddit.com/comments").replace(/(https?:\/\/)?(\w+\.)?reddit\.com/i, self.baseUrl)) + ".json";
 		self.request(url, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body)[+isComment].data;

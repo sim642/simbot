@@ -60,10 +60,67 @@ function BitbucketPlugin(bot) {
 			if (!err)
 				callback(counts);
 			else {
-				bot.out.error("bitbucker", err);
+				bot.out.error("bitbucket", err);
 				callback({});
 			}
 		});
+	};
+
+	self.getPaginated = function(href, callback) {
+		var ret = [];
+
+		async.doWhilst(function(callback) {
+			self.request(href, function(err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var j = JSON.parse(body);
+					ret = ret.concat(j.values);
+					callback(null, j);
+				}
+				else {
+					bot.out.error("bitbucket", err, body);
+					callback(err);
+				}
+			});
+		}, function(result) {
+			if (result.next) {
+				href = result.next;
+				return true;
+			}
+			else
+				return false;
+		}, function(err) {
+			callback(!err ? ret : null);
+		});
+	};
+
+	self.getUserLangs = function(user, callback) {
+		self.getPaginated(user.links.repositories.href, function(repos) {
+			if (repos) {
+				var langs = {};
+				repos.forEach(function(repo) {
+					var lang = repo.language;
+					if (!(lang in langs))
+						langs[lang] = 0;
+					langs[lang]++;
+				});
+
+				callback(langs);
+			}
+			else
+				callback(null);
+		});
+	};
+
+	self.sortLangs = function(langs) {
+		var slangs = [];
+		for (var lang in langs) {
+			slangs.push([lang, langs[lang]]);
+		}
+
+		slangs.sort(function(lhs, rhs) {
+			return rhs[1] - lhs[1];
+		});
+		return slangs;
 	};
 
 	self.bitbucket = function(arg, noError, callback) {
@@ -153,7 +210,7 @@ function BitbucketPlugin(bot) {
 						output();
 					};
 
-					/*self.getUserLangs(j, function(langs) {
+					self.getUserLangs(j, function(langs) {
 						if (langs) {
 							var slangs = self.sortLangs(langs);
 							if (slangs.length > 0) {
@@ -163,7 +220,7 @@ function BitbucketPlugin(bot) {
 							}
 						}
 
-						if (j.type == "User") {
+						/*if (j.type == "User") {
 							self.getContribs(j, function(contribs, total, most, longstreak, curstreak) {
 								if (contribs) {
 									bits.push(["contributions", total]);
@@ -177,9 +234,9 @@ function BitbucketPlugin(bot) {
 							});
 						}
 						else
-							finish();
-					});*/
-					finish();
+							finish();*/
+						finish();
+					});
 				});
 
 			};

@@ -1,4 +1,5 @@
 var request = require("request");
+var async = require("async");
 
 function BitbucketPlugin(bot) {
 	var self = this;
@@ -41,6 +42,30 @@ function BitbucketPlugin(bot) {
 			return user;
 	};
 
+	self.getSize = function(href, callback) {
+		self.request(href, function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var j = JSON.parse(body);
+				callback(null, j.size);
+			}
+			else
+				callback(err);
+		});
+	};
+
+	self.getSizes = function(map, obj, callback) {
+		async.mapValues(map, function(value, key, callback) {
+			self.getSize(obj.links.self.href + "/" + value, callback);
+		}, function(err, counts) {
+			if (!err)
+				callback(counts);
+			else {
+				bot.out.error("bitbucker", err);
+				callback({});
+			}
+		});
+	};
+
 	self.bitbucket = function(arg, noError, callback) {
 		var realarg = bot.plugins.util.getKeyByValue(self.users, arg) || arg;
 
@@ -64,27 +89,36 @@ function BitbucketPlugin(bot) {
 						bits.push([, j.description, 0]);
 					if (j.website)
 						bits.push([, j.website, 2]);
-					/*bits.push(["stars", j.stargazers_count]);
-					bits.push(["watch", j.watchers_count]);
-					bits.push(["forks", j.forks_count]);*/
 
-					if (j.language)
-						bits.push(["language", j.language]);
+					self.getSizes({
+						watch: "watchers",
+						forks: "forks",
+						issues: "issues"
+					}, j, function(counts) {
+						if (counts.watch)
+							bits.push(["watch", counts.watch]);
+						if (counts.forks)
+							bits.push(["forks", counts.forks]);
 
-					//bits.push(["issues", j.open_issues_count]);
+						if (j.language)
+							bits.push(["language", j.language]);
 
-					var finish = function() {
-						bits.push([, j.links.html.href, 2]);
-						output();
-					};
+						if (counts.issues)
+							bits.push(["issues", counts.issues]);
 
-					/*self.getCommits(j, function(weeks, days) {
-						if (weeks)
-							bits.push(["recent contributions", self.graph(weeks.slice(-14)), 0]);
+						var finish = function() {
+							bits.push([, j.links.html.href, 2]);
+							output();
+						};
 
+						/*self.getCommits(j, function(weeks, days) {
+							if (weeks)
+								bits.push(["recent contributions", self.graph(weeks.slice(-14)), 0]);
+
+							finish();
+						});*/
 						finish();
-					});*/
-					finish();
+					});
 				}
 				else if (!err && res.statusCode == 404) {
 					prefix = arg;
@@ -97,7 +131,7 @@ function BitbucketPlugin(bot) {
 					bot.out.error("bitbucket", err, body);
 			});
 		}
-		else if (arg.match(self.userRe)) { // user/org
+		else if (arg.match(self.userRe)) { // user/team
 			var parse = function(j) {
 				prefix = j.username + (realarg.toLowerCase() != j.username.toLowerCase() ? " (" + realarg + ")" : "");
 				bits.push([, j.type]);
@@ -107,50 +141,52 @@ function BitbucketPlugin(bot) {
 					bits.push(["location", j.location]);
 				if (j.website)
 					bits.push([, j.website, 2]);
-				/*if (j.bio)
-					bits.push([, j.bio, 0]);
-				bits.push(["repos", j.public_repos]);
-				bits.push(["gists", j.public_gists]);
-				bits.push(["followers", j.followers]);
-				bits.push(["following", j.following]);*/
 
-				var finish = function() {
-					bits.push([, j.links.html.href, 2]);
-					output();
-				};
+				self.getSizes({
+					repos: "repositories"
+				}, j, function(counts) {
+					if (counts.repos)
+						bits.push(["repos", counts.repos]);
 
-				/*self.getUserLangs(j, function(langs) {
-					if (langs) {
-						var slangs = self.sortLangs(langs);
-						if (slangs.length > 0) {
-							bits.push(["languages", slangs.slice(0, 4).map(function(lang) {
-								return lang[0];
-							}).join(", ")]);
-						}
-					}
+					var finish = function() {
+						bits.push([, j.links.html.href, 2]);
+						output();
+					};
 
-					if (j.type == "User") {
-						self.getContribs(j, function(contribs, total, most, longstreak, curstreak) {
-							if (contribs) {
-								bits.push(["contributions", total]);
-								bits.push(["most daily contributions", most]);
-								bits.push(["longest streak", longstreak + " days"]);
-								bits.push(["current streak", curstreak + " days"]);
-								bits.push(["recent contributions", self.graph(contribs.slice(-14)), 0]);
+					/*self.getUserLangs(j, function(langs) {
+						if (langs) {
+							var slangs = self.sortLangs(langs);
+							if (slangs.length > 0) {
+								bits.push(["languages", slangs.slice(0, 4).map(function(lang) {
+									return lang[0];
+								}).join(", ")]);
 							}
+						}
 
+						if (j.type == "User") {
+							self.getContribs(j, function(contribs, total, most, longstreak, curstreak) {
+								if (contribs) {
+									bits.push(["contributions", total]);
+									bits.push(["most daily contributions", most]);
+									bits.push(["longest streak", longstreak + " days"]);
+									bits.push(["current streak", curstreak + " days"]);
+									bits.push(["recent contributions", self.graph(contribs.slice(-14)), 0]);
+								}
+
+								finish();
+							});
+						}
+						else
 							finish();
-						});
-					}
-					else
-						finish();
-				});*/
-				finish();
+					});*/
+					finish();
+				});
+
 			};
 
 			var parse404 = function() {
 				prefix = arg;
-				bits.push([, "user/organization not found", 0]);
+				bits.push([, "user/team not found", 0]);
 
 				if (!noError)
 					output();

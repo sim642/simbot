@@ -18,6 +18,7 @@
     "node": "~0.10.13"
   },
   "dependencies": {
+    "async": "^2.5.0",
     "buffer-reader": "^0.1.0",
     "cli-color": "^0.2.3",
     "diff": "^1.0.8",

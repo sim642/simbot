@@ -11,17 +11,19 @@ function CmdPlugin(bot) {
 
 	self.correctDist = null;
 	self.suggestDist = null;
+	self.externalCmds = [];
 
 	self.load = function(data) {
 		if (data) {
 			self.cmdChars = data.cmdChars || self.cmdChars;
 			self.correctDist = data.correctDist || null;
 			self.suggestDist = data.suggestDist || null;
+			self.externalCmds = data.externalCmds || self.externalCmds;
 		}
 	};
 
 	self.save = function() {
-		return {cmdChars: self.cmdChars, correctDist: self.correctDist, suggestDist: self.suggestDist};
+		return {cmdChars: self.cmdChars, correctDist: self.correctDist, suggestDist: self.suggestDist, externalCmds: self.externalCmds};
 	};
 
 	self.getCmds = function() {
@@ -60,7 +62,7 @@ function CmdPlugin(bot) {
 				bot.out.log("cmd", nick + " in " + to + " called " + message.cmdChar + cmd + " with args: [" + args.join(", ") + "]");
 				bot.emit("cmd#" + cmd, nick, to, args, message);
 			}
-			else {
+			else if (self.externalCmds.indexOf(cmd) < 0) {
 				var func = bot.plugins.editdist.relativize(bot.plugins.editdist.OSA);
 
 				var cands = self.getCmds().map(function(cmd2) {

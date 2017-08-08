@@ -129,7 +129,7 @@ function RedditPlugin(bot) {
 		short = short || false;
 		realtime = realtime || false;
 
-		var str = self.formatPostLink("https://redd.it/" + post.id, post, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "] by " + post.author;
+		var str = self.formatPostLink("https://redd.it/" + post.id, post, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title.trim()) + "\x02 [r/" + post.subreddit + "] by " + post.author;
 
 		if (!short && !realtime)
 			str += " " + bot.plugins.date.printDur(new Date(post.created_utc * 1000), null, 1) + " ago; " + post.num_comments + " comments; " + post.score + " score";
@@ -147,7 +147,7 @@ function RedditPlugin(bot) {
 
 				var longurl = "https://reddit.com" + post.permalink + comment.id + (extra || "");
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
-					var str = self.formatPostLink(shorturl, post, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
+					var str = self.formatPostLink(shorturl, post, linked) + "\x02" + bot.plugins.util.unescapeHtml(post.title.trim()) + "\x02 [r/" + post.subreddit + "/comments] by " + comment.author;
 
 					if (!short && !realtime)
 						str += " " + bot.plugins.date.printDur(new Date(comment.created_utc * 1000), null, 1) + " ago; " + comment.score + " score";
@@ -172,10 +172,10 @@ function RedditPlugin(bot) {
 		realtime = realtime || false;
 
 		var warning = event.nsfw ? " \x034[NSFW]\x03" : "";
-		var str = self.formatLink("https://reddit.com/live/" + event.id, event.nsfw, linked) + "\x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "]";
+		var str = self.formatLink("https://reddit.com/live/" + event.id, event.nsfw, linked) + "\x02" + bot.plugins.util.unescapeHtml(event.title.trim()) + "\x02 [" + event.state + "]";
 
 		if (!short)
-			str += (!realtime ? " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers" : "" ) + "; " + bot.plugins.util.unescapeHtml(event.description).replace(/[\r\n]/g, " \\ ");
+			str += (!realtime ? " " + bot.plugins.date.printDur(new Date(event.created_utc * 1000), null, 1) + " ago; " + (event.viewer_count_fuzzed ? "~" : "") + event.viewer_count + " viewers" : "" ) + "; " + bot.plugins.util.unescapeHtml(event.description.trim()).replace(/[\r\n]/g, " \\ ");
 
 		callback(str);
 	};
@@ -190,10 +190,10 @@ function RedditPlugin(bot) {
 
 				var longurl = "https://reddit.com/live/" + event.id + "/updates/" + update.id;
 				bot.plugins.bitly.shorten(longurl, function(shorturl) {
-					var str = self.formatLink(shorturl, event.nsfw, linked) + "\x02" + bot.plugins.util.unescapeHtml(event.title) + "\x02 [" + event.state + "/updates] by " + update.author;
+					var str = self.formatLink(shorturl, event.nsfw, linked) + "\x02" + bot.plugins.util.unescapeHtml(event.title.trim()) + "\x02 [" + event.state + "/updates] by " + update.author;
 
 					if (!short)
-						str += (!realtime ? " " + bot.plugins.date.printDur(new Date(update.created_utc * 1000), null, 1) + " ago" : "") + "; " + bot.plugins.util.unescapeHtml(update.body).replace(/[\r\n]/g, " \\ ");
+						str += (!realtime ? " " + bot.plugins.date.printDur(new Date(update.created_utc * 1000), null, 1) + " ago" : "") + "; " + bot.plugins.util.unescapeHtml(update.body.trim()).replace(/[\r\n]/g, " \\ ");
 
 					callback(str);
 				});
@@ -209,7 +209,7 @@ function RedditPlugin(bot) {
 
 		var warning = subreddit.over18 ? " \x034[NSFW]\x03" : "";
 		var private = subreddit.subreddit_type != "public" ? " [" + subreddit.subreddit_type + "]" : "";
-		var str = self.formatLink("https://reddit.com" + subreddit.url, subreddit.over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(subreddit.title) + "\x02" + private;
+		var str = self.formatLink("https://reddit.com" + subreddit.url, subreddit.over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(subreddit.title.trim()) + "\x02" + private;
 
 		if (!short && !realtime)
 			str += "; " + bot.plugins.util.thSeps(subreddit.subscribers) + " subscribers; " + bot.plugins.util.thSeps(subreddit.accounts_active) + " active";

@@ -4,7 +4,7 @@ function GreetPlugin(bot) {
 	self.help = "Greet plugin";
 	
 	self.midre = /\b(yo(?:[\s-]yo)*|h[ea]l{2,}o+|h[ae]+[jiy]+[ao]*|hi+(?:-?y[ao]+)?|howdy|hola|bonjour|(?:what(?:\')?s\s|s)up|fuck(?:ing|\soff|\syou(?:\stoo|2)?)?)\b/;
-	self.bdayRe = /happy\s+b(?:irth)?day[\s,]+(\w+)/i;
+	self.bdayRe = /happy\s+b(?:irth)?day[\s,]+(\S+)/i;
 
 	self.events = {
 		"message": function(nick, to, text) {

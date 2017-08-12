@@ -4,7 +4,7 @@ function WeatherPlugin(bot) {
 	var self = this;
 	self.name = "weather";
 	self.help = "Weather plugin";
-	self.depend = ["cmd", "bits", "date"];
+	self.depend = ["cmd", "bits", "date", "gmaps"];
 	
 	self.DateUTC = bot.plugins.date.toUTC;
 
@@ -26,14 +26,18 @@ function WeatherPlugin(bot) {
 		return chars[Math.floor((deg + 360 / chars.length / 2) / (360 / chars.length)) % chars.length];
 	};
 
-	self.present = function(place, time, callback) {
+	self.present = function(place, placeParams, time, callback) {
+		if (!placeParams) {
+			callback("No place called \x02" + place);
+			return;
+		}
+
 		request({
 			url: "http://api.openweathermap.org/data/2.5/weather",
-			qs: {
+			qs: Object.assign({
 				"APPID": self.apiKey,
-				"lang": "en",
-				"q": place
-			}
+				"lang": "en"
+			}, placeParams)
 		}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var j = JSON.parse(body);
@@ -113,16 +117,20 @@ function WeatherPlugin(bot) {
 		});
 	};
 
-	self.future = function(place, time, callback) {
+	self.future = function(place, placeParams, time, callback) {
 		var t = time.getTime() / 1000;
+
+		if (!placeParams) {
+			callback("No place called \x02" + place);
+			return;
+		}
 
 		request({
 			url: "http://api.openweathermap.org/data/2.5/forecast",
-			qs: {
+			qs: Object.assign({
 				"APPID": self.apiKey,
-				"lang": "en",
-				"q": place
-			}
+				"lang": "en"
+			}, placeParams)
 		}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var jj = JSON.parse(body);
@@ -210,16 +218,20 @@ function WeatherPlugin(bot) {
 		});
 	};
 
-	self.future2 = function(place, time, callback) {
+	self.future2 = function(place, placeParams, time, callback) {
 		var t = time.getTime() / 1000;
+
+		if (!placeParams) {
+			callback("No place called \x02" + place);
+			return;
+		}
 
 		request({
 			url: "http://api.openweathermap.org/data/2.5/forecast/daily",
-			qs: {
+			qs: Object.assign({
 				"APPID": self.apiKey,
-				"lang": "en",
-				"q": place
-			}
+				"lang": "en"
+			}, placeParams)
 		}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var jj = JSON.parse(body);
@@ -289,19 +301,23 @@ function WeatherPlugin(bot) {
 		});
 	};
 
-	self.past = function(place, time, callback) {
+	self.past = function(place, placeParams, time, callback) {
 		var t = time.getTime() / 1000;
+
+		if (!placeParams) {
+			callback("No place called \x02" + place);
+			return;
+		}
 
 		request({
 			url: "http://api.openweathermap.org/data/2.5/history/city/",
-			qs: {
+			qs: Object.assign({
 				"APPID": self.apiKey,
 				"lang": "en",
 				"type": "hour",
 				"cnt": 1,
-				"start": t,
-				"q": place
-			}
+				"start": t
+			}, placeParams)
 		}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var jj = JSON.parse(body);
@@ -388,12 +404,46 @@ function WeatherPlugin(bot) {
 		});
 	};
 
+	self.geocode = function(place, callback) {
+		bot.plugins.gmaps.client.geocode({
+			address: place,
+		}, function(err, res) {
+			if (!err) {
+				var j = res.json;
+				//bot.out.debug("weather", j);
+				switch (j.status) {
+					case "OK":
+						var result = j.results[0];
+						var location = result.geometry.location;
+						callback({
+							lon: location.lng,
+							lat: location.lat
+						});
+						break;
+
+					default:
+						bot.out.error("weather", err, res);
+						// fallthrough
+
+					case "ZERO_RESULTS":
+						callback(null);
+						break;
+				}
+			}
+			else {
+				bot.out.error("weather", err, res);
+				callback(null);
+			}
+		});
+	};
+
 	self.events = {
 		"cmd#weather": function(nick, to, args) {
 			var place = args[0];
-
-			self.present(place, null, function(str) {
-				bot.say(to, str);
+			self.geocode(place, function(placeParams) {
+				self.present(place, placeParams, null, function(str) {
+					bot.say(to, str);
+				});
 			});
 		},
 
@@ -401,16 +451,18 @@ function WeatherPlugin(bot) {
 			var place = args[1];
 			var time = new Date(args[2]);
 
-			var func = null;
-			if (isNaN(time))
-				func = self.present;
-			else if (Date.now() < time.getTime())
-				func = self.future;
-			else if (Date.now() > time.getTime())
-				func = self.past;
+			self.geocode(place, function(placeParams) {
+				var func = null;
+				if (isNaN(time))
+					func = self.present;
+				else if (Date.now() < time.getTime())
+					func = self.future;
+				else if (Date.now() > time.getTime())
+					func = self.past;
 
-			func(place, time, function(str) {
-				bot.say(to, str);
+				func(place, placeParams, time, function(str) {
+					bot.say(to, str);
+				});
 			});
 		}
 	};

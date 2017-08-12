@@ -4,20 +4,34 @@ function WeatherPlugin(bot) {
 	var self = this;
 	self.name = "weather";
 	self.help = "Weather plugin";
-	self.depend = ["cmd", "bits", "date", "gmaps"];
+	self.depend = ["cmd", "bits", "date", "gmaps", "nickserv"];
 	
 	self.DateUTC = bot.plugins.date.toUTC;
 
 	self.apiKey = null;
 
+	self.users = {};
+
 	self.load = function(data) {
 		if (data) {
 			self.apiKey = data.apiKey || null;
+			self.users = data.users || {};
 		}
 	};
 
 	self.save = function() {
-		return {apiKey: self.apiKey};
+		return {
+			apiKey: self.apiKey,
+			users: self.users
+		};
+	};
+
+	self.parseUser = function(user) {
+		var lowUser = user.toLowerCase();
+		if (lowUser in self.users)
+			return self.users[lowUser];
+		else
+			return user;
 	};
 
 	self.windChars = function(deg) {
@@ -439,7 +453,9 @@ function WeatherPlugin(bot) {
 
 	self.events = {
 		"cmd#weather": function(nick, to, args) {
-			var place = args[0];
+			var place = args[0] || nick;
+			place = self.parseUser(place);
+
 			self.geocode(place, function(placeParams) {
 				self.present(place, placeParams, null, function(str) {
 					bot.say(to, str);
@@ -450,6 +466,7 @@ function WeatherPlugin(bot) {
 		"cmd#weather2": function(nick, to, args) {
 			var place = args[1];
 			var time = new Date(args[2]);
+			place = self.parseUser(place);
 
 			self.geocode(place, function(placeParams) {
 				var func = null;
@@ -464,7 +481,24 @@ function WeatherPlugin(bot) {
 					bot.say(to, str);
 				});
 			});
-		}
+		},
+
+		"cmd#setweather": function(nick, to, args) {
+			bot.plugins.nickserv.nickIdentified(nick, function(identified) {
+				if (identified) {
+					if (args[0] !== undefined && args[0].trim() !== "") {
+						self.users[nick.toLowerCase()] = args[0];
+						bot.notice(nick, "weather set to " + args[0]);
+					}
+					else {
+						delete self.users[nick.toLowerCase()];
+						bot.notice(nick, "weather unset");
+					}
+				}
+				else
+					bot.notice(nick, "must be identified for this nick to set weather");
+			});
+		},
 	};
 }
 

@@ -24,13 +24,55 @@ function SedPlugin(bot) {
 
 	self.msgSed = true;
 
+	self.autoSeds = {};
+
 	self.load = function(data) {
-		if (data)
+		if (data) {
 			self.msgSed = data.msgSed !== undefined ? data.msgSed : true;
+			self.loadAutoSeds(data.autoSeds || {});
+		}
 	};
 
 	self.save = function() {
-		return {msgSed: self.msgSed};
+		return {msgSed: self.msgSed, autoSeds: self.saveAutoSeds()};
+	};
+
+	self.addAutoSed = function(channel, expr) {
+		if (!(channel in self.autoSeds))
+			self.autoSeds[channel] = {};
+		if (!(expr in self.autoSeds[channel]))
+			self.autoSeds[channel][expr] = {};
+
+		self.autoSeds[channel][expr].sed = self.sed(expr, null, function(text) {
+			return "\x16" + text + "\x16";
+		});
+	};
+
+	self.loadAutoSeds = function(data) {
+		self.autoSeds = {};
+		for (channel in data) {
+			var channelData = data[channel];
+			for (expr in channelData) {
+				self.addAutoSed(channel, expr);
+			}
+		}
+	};
+
+	self.saveAutoSeds = function() {
+		var data = {};
+
+		for (channel in self.autoSeds) {
+			var channelData = self.autoSeds[channel];
+
+			if (!(channel in data))
+				data[channel] = {};
+
+			for (expr in channelData) {
+				data[channel][expr] = {};
+			}
+		}
+
+		return data;
 	};
 
 	self.sed = function(expr, filter, postRepl) {
@@ -150,18 +192,42 @@ function SedPlugin(bot) {
 					if (!found)
 						bot.say(to, nick + ": no matching line found");
 				});
+
+				return true;
 			}
 		}
+
+		return false;
 	};
 
 	self.events = {
 		"message": function(nick, to, text) {
-			if (!self.msgSed)
-				return;
+			var auto = true;
 
-			self.chanSed(nick, to, text, function(line) {
-				return !self.sedCmd(line);
-			});
+			if (self.msgSed) {
+				auto = !self.chanSed(nick, to, text, function(line) {
+					return !self.sedCmd(line);
+				});
+			}
+
+			if (to in self.autoSeds) {
+				var channelExprs = self.autoSeds[to];
+
+				var changed = false;
+				var out = text;
+				for (expr in channelExprs) {
+					var sed = channelExprs[expr].sed;
+					var s = sed(out);
+
+					if (s !== true) {
+						out = s;
+						changed = true;
+					}
+				}
+
+				if (changed)
+					bot.say(to, "<" + nick + "> " + out);
+			}
 		},
 
 		"cmd#sed": function(nick, to, args) {

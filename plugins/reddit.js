@@ -114,7 +114,7 @@ function RedditPlugin(bot) {
 
 	self.formatPostLink = function(url, post, linked) {
 		var flags = "";
-		if (post.is_over18)
+		if (post.is_over18 || post.over_18)
 			flags += "\x034[NSFW]\x03 ";
 		if (post.spoiler)
 			flags += "[SPOILER] ";

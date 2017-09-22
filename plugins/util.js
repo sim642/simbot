@@ -69,7 +69,7 @@ function UtilPlugin(bot) {
 	};
 
 	self.filterRegexFlags = function(flags) {
-		return flags.replace(/[^gmsy]/g, "");
+		return flags.replace(/[^gimuy]/g, "");
 	};
 
 	// https://stackoverflow.com/questions/9907419/javascript-object-get-key-by-value

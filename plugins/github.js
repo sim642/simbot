@@ -1,6 +1,7 @@
 var request = require("request");
 var dom = require("xmldom").DOMParser;
 var xpath = require("xpath");
+var async = require("async");
 
 function GithubPlugin(bot) {
 	var self = this;
@@ -489,21 +490,26 @@ function GithubPlugin(bot) {
 					var branch = payload.ref.replace("refs/heads/", "");
 
 					if (branch == payload.repository.default_branch) {
-						payload.commits.reverse();
-						payload.commits.forEach(function(commit) {
-							if (commit.distinct) {
+						// payload.commits.reverse();
+						async.map(payload.commits.filter(function(commit) {
+							return commit.distinct;
+						}), function(commit, callback) {
+							bot.plugins.gitio.shorten(commit.url, function(shorturl) {
+								commit.shorturl = shorturl;
+								callback(null, commit);
+							});
+						}, function(err, commits) {
+							commits.forEach(function(commit) {
 								var prefix = payload.repository.full_name;
 								var bits = [];
 								bits.push([commit.author.username + " committed", commit.message.replace(/^([^\r\n]+)[\s\S]*/, "$1")]); // keep only first line
-								bot.plugins.gitio.shorten(commit.url, function(shorturl) {
-									bits.push([, shorturl, 2]);
-									var str = bot.plugins.bits.format(prefix, bits);
+								bits.push([, commit.shorturl, 2]);
+								var str = bot.plugins.bits.format(prefix, bits);
 
-									channels.forEach(function(channel) {
-										bot.say(channel, str);
-									});
+								channels.forEach(function(channel) {
+									bot.say(channel, str);
 								});
-							}
+							});
 						});
 					}
 					break;

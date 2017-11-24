@@ -428,6 +428,12 @@ function WeatherPlugin(bot) {
 	self.geocode = function(place, callback) {
 		bot.plugins.gmaps.client.geocode({
 			address: place,
+			bounds: {
+				south: 36.564588,
+				west: -25.447750,
+				north: 55.609773,
+				east: 52.242086
+			}
 		}, function(err, res) {
 			if (!err) {
 				var j = res.json;

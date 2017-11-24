@@ -57,7 +57,7 @@ function BridgePlugin(bot) {
 
 	self.events = {
 		"message#": function(nick, to, text, message) {
-			if (!nick.match(self.bridgeRe))
+			if (nick && !nick.match(self.bridgeRe))
 				return;
 
 			var m = text.match(self.relayRe);

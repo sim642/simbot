@@ -6,7 +6,7 @@ function GithubPlugin(bot) {
 	var self = this;
 	self.name = "github";
 	self.help = "Github stats plugin";
-	self.depend = ["cmd", "ignore", "bits", "util", "gitio"];
+	self.depend = ["cmd", "ignore", "bits", "util", "gitio", "nickserv"];
 
 	self.blocks = "▁▂▃▄▅▆▇█";
 

@@ -56,7 +56,9 @@ function WeatherPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var j = JSON.parse(body);
 				if (j.cod == 200) {
-					var prefix = j.name + ", " + j.sys.country;
+					var displayName = placeParams._display || (j.name + ", " + j.sys.country);
+
+					var prefix = displayName;
 					var bits = [];
 
 					bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
@@ -149,10 +151,11 @@ function WeatherPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var jj = JSON.parse(body);
 				if (jj.cod == 200) {
+					var displayName = placeParams._display || (jj.city.name + ", " + jj.city.country);
 					for (var i = 0; i < jj.cnt; i++) {
 						var j = jj.list[i];
 						if (t >= j.dt && t < (i + 1 < jj.cnt ? jj.list[i + 1].dt : j.dt + 3 * 60 * 60)) {
-							var prefix = jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time);
+							var prefix = displayName + " @ " + bot.plugins.date.printDateTime(time);
 							var bits = [];
 
 							bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
@@ -220,7 +223,7 @@ function WeatherPlugin(bot) {
 						}
 					}
 
-					callback("No forecast found for \x02" + jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time));
+					callback("No forecast found for \x02" + displayName + " @ " + bot.plugins.date.printDateTime(time));
 				}
 				else {
 					callback("No place called \x02" + place);
@@ -250,10 +253,12 @@ function WeatherPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var jj = JSON.parse(body);
 				if (jj.cod == 200) {
+					var displayName = placeParams._display || (jj.city.name + ", " + jj.city.country);
+
 					for (var i = 0; i < jj.cnt; i++) {
 						var j = jj.list[i];
 						if (t >= j.dt && t < (i + 1 < jj.cnt ? jj.list[i + 1].dt : j.dt + 24 * 60 * 60)) {
-							var prefix = jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time);
+							var prefix = displayName + " @ " + bot.plugins.date.printDateTime(time);
 							var bits = [];
 
 							bits.push(["temperature", (j.temp.day - 273.15).toFixed(1) + "°C"]); // TODO: time of day temperature
@@ -303,7 +308,7 @@ function WeatherPlugin(bot) {
 						}
 					}
 
-					callback("No forecast found for \x02" + jj.city.name + ", " + jj.city.country + " @ " + bot.plugins.date.printDateTime(time));
+					callback("No forecast found for \x02" + displayName + " @ " + bot.plugins.date.printDateTime(time));
 				}
 				else {
 					callback("No place called \x02" + place);
@@ -336,10 +341,12 @@ function WeatherPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var jj = JSON.parse(body);
 				if (jj.cod == 200) {
+					var displayName = placeParams._display || place;
+
 					if (jj.cnt > 0) {
 						var j = jj.list[0];
 
-						var prefix = place + " @ " + bot.plugins.date.printDateTime(time);
+						var prefix = displayName + " @ " + bot.plugins.date.printDateTime(time);
 						var bits = [];
 
 						bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
@@ -405,7 +412,7 @@ function WeatherPlugin(bot) {
 						callback(bot.plugins.bits.format(prefix, bits));
 					}
 					else {
-						callback("No history found for \x02" + place + " @ " + bot.plugins.date.printDateTime(time));
+						callback("No history found for \x02" + displayName + " @ " + bot.plugins.date.printDateTime(time));
 					}
 				}
 				else {
@@ -428,10 +435,12 @@ function WeatherPlugin(bot) {
 				switch (j.status) {
 					case "OK":
 						var result = j.results[0];
+						//bot.out.debug("weather", result.address_components);
 						var location = result.geometry.location;
 						callback({
 							lon: location.lng,
-							lat: location.lat
+							lat: location.lat,
+							_display: result.formatted_address
 						});
 						break;
 

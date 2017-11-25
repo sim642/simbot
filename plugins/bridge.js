@@ -5,7 +5,7 @@ function BridgePlugin(bot) {
 	self.depend = ["util"];
 
 	self.bridgeRe = /^bridge$/;
-	self.relayRe = /^\[([^\]]+)\] (.*)$/;
+	self.relayRe = /^[\[<]([^\]>]+)[\]>] (.*)$/;
 
 	self.targetChannels = {};
 	self._say = null;

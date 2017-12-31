@@ -40,6 +40,16 @@ function WeatherPlugin(bot) {
 		return chars[Math.floor((deg + 360 / chars.length / 2) / (360 / chars.length)) % chars.length];
 	};
 
+	self.windChill = function(j) {
+		// https://en.wikipedia.org/wiki/Wind_chill#Australian_Apparent_Temperature
+		var Ta = (j.main.temp - 273.15);
+		var RH = j.main.humidity;
+		var e = RH / 100 * 6.105 * Math.exp(17.27 * Ta / (237.7 + Ta));
+		var v = j.wind.speed;
+
+		return Ta + 0.33 * e - 0.70 * v - 4.00;
+	};
+
 	self.present = function(place, placeParams, time, callback) {
 		if (!placeParams) {
 			callback("No place called \x02" + place);
@@ -62,6 +72,8 @@ function WeatherPlugin(bot) {
 					var bits = [];
 
 					bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
+					bits.push(["feels like", self.windChill(j).toFixed(1) + "°C"]);
+
 					bits.push(["humidity", j.main.humidity.toString() + "%"]);
 					bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
 					if (j.wind) {
@@ -159,6 +171,8 @@ function WeatherPlugin(bot) {
 							var bits = [];
 
 							bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
+							bits.push(["feels like", self.windChill(j).toFixed(1) + "°C"]);
+
 							bits.push(["humidity", j.main.humidity.toString() + "%"]);
 							bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
 							if (j.wind) {
@@ -262,6 +276,8 @@ function WeatherPlugin(bot) {
 							var bits = [];
 
 							bits.push(["temperature", (j.temp.day - 273.15).toFixed(1) + "°C"]); // TODO: time of day temperature
+							// TODO: feels like
+
 							bits.push(["humidity", j.humidity.toString() + "%"]);
 							bits.push(["pressure", j.pressure.toString() + "hPa"]);
 							if (j.wind) {
@@ -350,6 +366,8 @@ function WeatherPlugin(bot) {
 						var bits = [];
 
 						bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
+						bits.push(["feels like", self.windChill(j).toFixed(1) + "°C"]);
+
 						bits.push(["humidity", j.main.humidity.toString() + "%"]);
 						bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
 						if (j.wind) {

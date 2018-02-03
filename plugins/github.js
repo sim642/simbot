@@ -71,7 +71,7 @@ function GithubPlugin(bot) {
 		var str = "";
 		for (var i = 0; i < arr.length; i++) {
 			var x = (arr[i] - min) / mult;
-			str += self.blocks[Math.ceil(x)];
+			str += self.blocks[Math.round(x)];
 		}
 		return str;
 	};

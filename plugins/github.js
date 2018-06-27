@@ -242,7 +242,7 @@ function GithubPlugin(bot) {
 					if (j.homepage)
 						bits.push([, j.homepage, 2]);
 					bits.push(["stars", j.stargazers_count]);
-					bits.push(["watch", j.watchers_count]);
+					bits.push(["watch", j.subscribers_count]); // watchers_count turns out to be the same as stargazers_count...
 					bits.push(["forks", j.forks_count]);
 
 					var finish = function() {

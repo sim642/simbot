@@ -221,18 +221,24 @@ function RedditPlugin(bot) {
 		short = short || false;
 		realtime = realtime || false;
 
-		var flags = "";
-		if (user.over18)
-			flags += " \x034[18+]\x03";
-		if (user.is_gold)
-			flags += " \x038[GOLD]\x03";
-		if (user.is_mod)
-			flags +=" \x033[MOD]\x03";
+		var str = self.formatLink("https://reddit.com/u/" + user.name, false, linked) + "\x02" + user.name + "\x02";
 
-		var str = self.formatLink("https://reddit.com/u/" + user.name, false, linked) + "\x02" + user.name + "\x02; " + bot.plugins.util.thSeps(user.link_karma) + " link karma; " + bot.plugins.util.thSeps(user.comment_karma) + " comment karma";
+		if (!user.is_suspended) {
+			var flags = "";
+			if (user.over18)
+				flags += " \x034[18+]\x03";
+			if (user.is_gold)
+				flags += " \x038[GOLD]\x03";
+			if (user.is_mod)
+				flags +=" \x033[MOD]\x03";
 
-		if (!short && !realtime)
-			str += "; redditor for " + bot.plugins.date.printDur(new Date(user.created_utc * 1000), null, 1) + (flags != "" ? ";" + flags : "");
+			str += "; " + bot.plugins.util.thSeps(user.link_karma) + " link karma; " + bot.plugins.util.thSeps(user.comment_karma) + " comment karma";
+
+			if (!short && !realtime)
+				str += "; redditor for " + bot.plugins.date.printDur(new Date(user.created_utc * 1000), null, 1) + (flags != "" ? ";" + flags : "");
+		}
+		else
+			str += "; \x034[SUSPENDED]\x03";
 
 		callback(str);
 	};

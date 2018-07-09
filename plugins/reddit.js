@@ -332,14 +332,16 @@ function RedditPlugin(bot) {
 		}
 	};
 
-	self.lookupSubUser = function(suurl, callback) {
+	self.lookupSubUser = function(suurl, callback, linked) {
+		linked = linked || self.linkedLookup;
+
 		var match = suurl.match(self.subUserRe);
 		var url = self.baseUrl + match[0] + "/about.json";
 		self.request(url, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
 
-				self.format(data, false, self.linkedLookup, function(str) {
+				self.format(data, false, linked, function(str) {
 					callback(str);
 				});
 			}
@@ -543,7 +545,7 @@ function RedditPlugin(bot) {
 							self.lookupSubUser(url, function(str) {
 								bot.out.log("reddit", nick + " in " + to + ": " + url);
 								bot.say(to, str);
-							});
+							}, true);
 						}
 					}
 				}
@@ -564,7 +566,7 @@ function RedditPlugin(bot) {
 					self.lookupSubUser(match[0], function(str) {
 						bot.out.log("reddit", nick + " in " + to + ": " + match[0]);
 						bot.say(to, str);
-					});
+					}, true);
 				}
 			}
 		},

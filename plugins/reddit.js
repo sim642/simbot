@@ -536,9 +536,9 @@ function RedditPlugin(bot) {
 					if (match) {
 						var url = match[0];
 
-						if (self.channels[to] === true ||
+						if ((self.channels[to] === true && match[1] != "user") || // /user only in URLs
 							(self.channels[to].subreddit && match[1] == "r") ||
-							(self.channels[to].user && (match[1] == "u" || match[1] == "user")))
+							(self.channels[to].user && match[1] == "u")) // /user only in URLs
 						{
 							self.lookupSubUser(url, function(str) {
 								bot.out.log("reddit", nick + " in " + to + ": " + url);
@@ -560,7 +560,7 @@ function RedditPlugin(bot) {
 			}
 			else {
 				var match = text.match(self.subUserRe);
-				if (match) {
+				if (match && match[1] != "user") { // /user only in URLs
 					self.lookupSubUser(match[0], function(str) {
 						bot.out.log("reddit", nick + " in " + to + ": " + match[0]);
 						bot.say(to, str);

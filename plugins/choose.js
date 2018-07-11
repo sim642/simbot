@@ -7,16 +7,23 @@ function ChoosePlugin(bot) {
 	self.depend = ["cmd"];
 
 	self.randomOrgApiKey = null;
+	self.aggregate = false;
+
+	self.aggregateChannels = {};
+	self.aggregateTimeout = 7.5 * 1000;
+	self.aggregateRe = /^(\S+):[\s\u200B]*(.*)[\s\u200B]*$/; // shoko has ZWSP for some reason...
 
 	self.load = function(data) {
 		if (data) {
 			self.randomOrgApiKey = data.randomOrgApiKey || null;
+			self.aggregate = data.aggregate || false;
 		}
 	};
 
 	self.save = function() {
 		return {
-			randomOrgApiKey: self.randomOrgApiKey
+			randomOrgApiKey: self.randomOrgApiKey,
+			aggregate: self.aggregate
 		};
 	};
 
@@ -87,17 +94,79 @@ function ChoosePlugin(bot) {
 	};
 
 	self.chooseCommon = function(nick, to, choices) {
+		if (self.aggregate)
+			self.aggregateStart(nick, to, choices);
+
 		if (choices.length == 1) {
-			for (var name in self.randoms)
+			for (var name in self.randoms) {
 				bot.say(to, nick + ": " + choices[0]);
+				self.aggregateCount(nick, to, choices[0]);
+			}
 		}
 		else {
 			for (var name in self.randoms) {
 				(function(name) {
 					self.randoms[name](choices.length, function(i) {
 						bot.say(to, nick + ": " + choices[i]);
+						self.aggregateCount(nick, to, choices[i]);
 					});
 				})(name);
+			}
+		}
+	};
+
+	self.sortCounts = function(counts) {
+		var scounts = [];
+		for (var choice in counts) {
+			scounts.push([choice, counts[choice]]);
+		}
+
+		scounts.sort(function(lhs, rhs) {
+			return rhs[1] - lhs[1];
+		});
+		return scounts;
+	};
+
+	self.aggregateStart = function(nick, to, choices) {
+		if (!(to in self.aggregateChannels))
+			self.aggregateChannels[to] = [];
+
+		var counts = {};
+		for (var i = 0; i < choices.length; i++)
+			counts[choices[i]] = 0;
+
+		self.aggregateChannels[to].push({
+			nick: nick,
+			choices: choices,
+			counts: counts
+		});
+
+		setTimeout(function() {
+			var data = self.aggregateChannels[to].shift(); // TODO: assumes it's first
+
+			if (self.aggregateChannels[to].length == 0)
+				delete self.aggregateChannels[to];
+
+			var scounts = self.sortCounts(data.counts);
+
+			var str = scounts.map(function(scount, i) {
+				var wrap = i == 0 ? "\x02" : "";
+				return wrap + scount[0] + " (" + scount[1] + ")" + wrap;
+			}).join(", ");
+			bot.say(to, data.nick + ": " + str);
+
+		}, self.aggregateTimeout);
+	};
+
+	self.aggregateCount = function(nick, to, choice) {
+		if (to in self.aggregateChannels) {
+			for (var i = 0; i < self.aggregateChannels[to].length; i++) {
+				var data = self.aggregateChannels[to][i];
+
+				if ((data.nick == nick) && (choice in data.counts)) {
+					data.counts[choice]++;
+					break;
+				}
 			}
 		}
 	};
@@ -110,6 +179,18 @@ function ChoosePlugin(bot) {
 
 			var choose = message.cmdChar != "." ? self.chooseSimbot : self.chooseCommon;
 			choose(nick, to, choices);
+		},
+
+		"message": function(nick, to, text, message) {
+			if (self.aggregate) {
+				var m = text.match(self.aggregateRe);
+				if (m) {
+					var nick = m[1];
+					var choice = m[2];
+
+					self.aggregateCount(nick, to, choice);
+				}
+			}
 		}
 	};
 }

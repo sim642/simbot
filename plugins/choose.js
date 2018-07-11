@@ -135,25 +135,25 @@ function ChoosePlugin(bot) {
 		for (var i = 0; i < choices.length; i++)
 			counts[choices[i]] = 0;
 
-		self.aggregateChannels[to].push({
+		var data = {
 			nick: nick,
 			choices: choices,
 			counts: counts
-		});
+		};
+		self.aggregateChannels[to].push(data);
 
 		setTimeout(function() {
-			var data = self.aggregateChannels[to].shift(); // TODO: assumes it's first
-
+			self.aggregateChannels[to].splice(self.aggregateChannels[to].indexOf(data), 1); // remove data
 			if (self.aggregateChannels[to].length == 0)
 				delete self.aggregateChannels[to];
 
-			var scounts = self.sortCounts(data.counts);
+			var scounts = self.sortCounts(counts);
 
 			var str = scounts.map(function(scount, i) {
 				var wrap = i == 0 ? "\x02" : "";
 				return wrap + scount[0] + " (" + scount[1] + ")" + wrap;
 			}).join(", ");
-			bot.say(to, data.nick + ": " + str);
+			bot.say(to, nick + ": " + str);
 
 		}, self.aggregateTimeout);
 	};

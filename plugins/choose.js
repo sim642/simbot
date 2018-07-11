@@ -8,16 +8,17 @@ function ChoosePlugin(bot) {
 
 	self.randomOrgApiKey = null;
 	self.aggregate = false;
+	self.aggregateTimeout = 2 * 1000;
 	self.tieBreak = false;
 
 	self.aggregateChannels = {};
-	self.aggregateTimeout = 7.5 * 1000;
 	self.aggregateRe = /^(\S+):[\s\u200B]*(.*)[\s\u200B]*$/; // shoko has ZWSP for some reason...
 
 	self.load = function(data) {
 		if (data) {
 			self.randomOrgApiKey = data.randomOrgApiKey || null;
 			self.aggregate = data.aggregate || false;
+			self.aggregateTimeout = data.aggregateTimeout || (2 * 1000);
 			self.tieBreak = data.tieBreak || false;
 		}
 	};
@@ -26,6 +27,7 @@ function ChoosePlugin(bot) {
 		return {
 			randomOrgApiKey: self.randomOrgApiKey,
 			aggregate: self.aggregate,
+			aggregateTimeout: self.aggregateTimeout,
 			tieBreak: self.tieBreak
 		};
 	};
@@ -142,11 +144,11 @@ function ChoosePlugin(bot) {
 			nick: nick,
 			choices: choices,
 			counts: counts,
-			bots: {}
+			bots: {},
+			timeout: null
 		};
-		self.aggregateChannels[to].push(data);
 
-		setTimeout(function() {
+		data.end = function() {
 			self.aggregateChannels[to].splice(self.aggregateChannels[to].indexOf(data), 1); // remove data
 			if (self.aggregateChannels[to].length == 0)
 				delete self.aggregateChannels[to];
@@ -177,7 +179,18 @@ function ChoosePlugin(bot) {
 			}).join(", ");
 			bot.say(to, nick + ": " + str);
 
-		}, self.aggregateTimeout);
+		};
+
+		data.count = function(botNick, choice) {
+			data.counts[choice]++;
+			data.bots[botNick] = choice;
+
+			clearTimeout(data.timeout);
+			data.timeout = setTimeout(data.end, self.aggregateTimeout);
+		};
+
+		self.aggregateChannels[to].push(data);
+		data.timeout = setTimeout(data.end, self.aggregateTimeout);
 	};
 
 	self.aggregateCount = function(botNick, nick, to, choice) {
@@ -186,8 +199,7 @@ function ChoosePlugin(bot) {
 				var data = self.aggregateChannels[to][i];
 
 				if ((data.nick == nick) && (choice in data.counts) && !(botNick in data.bots)) {
-					data.counts[choice]++;
-					data.bots[botNick] = choice;
+					data.count(botNick, choice);
 					break;
 				}
 			}

@@ -100,7 +100,7 @@ function ChoosePlugin(bot) {
 		if (choices.length == 1) {
 			for (var name in self.randoms) {
 				bot.say(to, nick + ": " + choices[0]);
-				self.aggregateCount(nick, to, choices[0]);
+				self.aggregateCount("simbot (" + name + ")", nick, to, choices[0]);
 			}
 		}
 		else {
@@ -108,7 +108,7 @@ function ChoosePlugin(bot) {
 				(function(name) {
 					self.randoms[name](choices.length, function(i) {
 						bot.say(to, nick + ": " + choices[i]);
-						self.aggregateCount(nick, to, choices[i]);
+						self.aggregateCount("simbot (" + name + ")", nick, to, choices[i]);
 					});
 				})(name);
 			}
@@ -138,7 +138,8 @@ function ChoosePlugin(bot) {
 		var data = {
 			nick: nick,
 			choices: choices,
-			counts: counts
+			counts: counts,
+			bots: {}
 		};
 		self.aggregateChannels[to].push(data);
 
@@ -158,13 +159,14 @@ function ChoosePlugin(bot) {
 		}, self.aggregateTimeout);
 	};
 
-	self.aggregateCount = function(nick, to, choice) {
+	self.aggregateCount = function(botNick, nick, to, choice) {
 		if (to in self.aggregateChannels) {
 			for (var i = 0; i < self.aggregateChannels[to].length; i++) {
 				var data = self.aggregateChannels[to][i];
 
-				if ((data.nick == nick) && (choice in data.counts)) {
+				if ((data.nick == nick) && (choice in data.counts) && !(botNick in data.bots)) {
 					data.counts[choice]++;
+					data.bots[botNick] = choice;
 					break;
 				}
 			}
@@ -181,14 +183,14 @@ function ChoosePlugin(bot) {
 			choose(nick, to, choices);
 		},
 
-		"message": function(nick, to, text, message) {
+		"message": function(botNick, to, text, message) {
 			if (self.aggregate) {
 				var m = text.match(self.aggregateRe);
 				if (m) {
 					var nick = m[1];
 					var choice = m[2];
 
-					self.aggregateCount(nick, to, choice);
+					self.aggregateCount(botNick, nick, to, choice);
 				}
 			}
 		}

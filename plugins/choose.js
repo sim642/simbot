@@ -8,6 +8,7 @@ function ChoosePlugin(bot) {
 
 	self.randomOrgApiKey = null;
 	self.aggregate = false;
+	self.tieBreak = false;
 
 	self.aggregateChannels = {};
 	self.aggregateTimeout = 7.5 * 1000;
@@ -17,13 +18,15 @@ function ChoosePlugin(bot) {
 		if (data) {
 			self.randomOrgApiKey = data.randomOrgApiKey || null;
 			self.aggregate = data.aggregate || false;
+			self.tieBreak = data.tieBreak || false;
 		}
 	};
 
 	self.save = function() {
 		return {
 			randomOrgApiKey: self.randomOrgApiKey,
-			aggregate: self.aggregate
+			aggregate: self.aggregate,
+			tieBreak: self.tieBreak
 		};
 	};
 
@@ -149,6 +152,24 @@ function ChoosePlugin(bot) {
 				delete self.aggregateChannels[to];
 
 			var scounts = self.sortCounts(counts);
+
+			if (self.tieBreak) {
+				var tieChoices = scounts.filter(function(scount, i) {
+					return scount[1] == scounts[0][1];
+				}).map(function(scount) {
+					return scount[0];
+				});
+				if (tieChoices.length > 1) {
+					var breakI = Math.floor(Math.random() * tieChoices.length);
+					var breakChoice = choices[breakI];
+
+					bot.say(to, nick + ": " + breakChoice);
+					data.counts[breakChoice]++;
+					data.bots["simbot (tiebreak)"] = breakChoice;
+
+					scounts = self.sortCounts(counts);
+				}
+			}
 
 			var str = scounts.map(function(scount, i) {
 				var wrap = i == 0 ? "\x02" : "";

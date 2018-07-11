@@ -68,18 +68,18 @@ function ChoosePlugin(bot) {
 	};
 
 	self.chooseSimbot = function(nick, to, choices) {
-		if (choices.length == 1 && choices[0].trim() == "") {
+		if (choices.length == 1 && choices[0] == "") {
 			bot.say(to, "Nothing to choose from");
 		}
 		else if (choices.length == 1) {
 			for (var name in self.randoms)
-				bot.say(to, name + " chose '\x02" + choices[0].trim() + "\x02'");
+				bot.say(to, name + " chose '\x02" + choices[0] + "\x02'");
 		}
 		else {
 			for (var name in self.randoms) {
 				(function(name) {
 					self.randoms[name](choices.length, function(i) {
-						bot.say(to, name + " chose '\x02" + choices[i].trim() + "\x02'");
+						bot.say(to, name + " chose '\x02" + choices[i] + "\x02'");
 					});
 				})(name);
 			}
@@ -89,13 +89,13 @@ function ChoosePlugin(bot) {
 	self.chooseCommon = function(nick, to, choices) {
 		if (choices.length == 1) {
 			for (var name in self.randoms)
-				bot.say(to, nick + ": " + choices[0].trim());
+				bot.say(to, nick + ": " + choices[0]);
 		}
 		else {
 			for (var name in self.randoms) {
 				(function(name) {
 					self.randoms[name](choices.length, function(i) {
-						bot.say(to, nick + ": " + choices[i].trim());
+						bot.say(to, nick + ": " + choices[i]);
 					});
 				})(name);
 			}
@@ -105,6 +105,8 @@ function ChoosePlugin(bot) {
 	self.events = {
 		"cmd#choose": function(nick, to, args, message) {
 			var choices = args[0].split(",");
+			for (var i = 0; i < choices.length; i++)
+				choices[i] = choices[i].trim();
 
 			var choose = message.cmdChar != "." ? self.chooseSimbot : self.chooseCommon;
 			choose(nick, to, choices);

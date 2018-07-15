@@ -1,6 +1,7 @@
 var request = require("request");
 var url = require("url");
 var WebSocket = require("ws");
+var ffmpeg = require('fluent-ffmpeg');
 
 function RedditPlugin(bot) {
 	var self = this;
@@ -651,6 +652,21 @@ function RedditPlugin(bot) {
 				});
 			}
 		}),
+
+		"webs#/vreddit": function(req, qs, body, res) {
+			res.writeHead(200, {
+				"Content-Type": "video/mp4"
+			});
+
+			ffmpeg()
+				.input("https://v.redd.it/0sjm5028e0a11/DASH_9_6_M")
+				.input("https://v.redd.it/0sjm5028e0a11/audio")
+				.format("mp4")
+				.outputOptions('-movflags frag_keyframe+empty_moov')
+				.videoCodec("copy")
+				.audioCodec("copy")
+				.pipe(res, {end: true});
+		}
 	};
 }
 

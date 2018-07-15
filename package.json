@@ -23,6 +23,7 @@
     "buffer-reader": "^0.1.0",
     "cli-color": "^0.2.3",
     "diff": "^1.0.8",
+    "fluent-ffmpeg": "^2.1.2",
     "ip": "^0.3.2",
     "irc": "^0.3.6",
     "marked": "^0.3.2",

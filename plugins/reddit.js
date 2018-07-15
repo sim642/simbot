@@ -11,6 +11,7 @@ function RedditPlugin(bot) {
 	self.urlRe = /\b(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]*\b/i;
 	self.urlRedditRe = /(?:reddit\.com\/(r\/[^\s\/]+\/)?comments|redd\.it)\/([0-9a-z]+)(?:\/\w*\/([0-9a-z]+)(\?context=\d+)?)?/i;
 	self.urlLiveRe = /reddit\.com\/live\/(\w+)(?:\/updates\/([0-9a-z\-]+))?/i;
+	self.urlVideoRe = /(?:reddit\.com\/video|v\.redd\.it)\/([0-9a-z]+)/i;
 	self.urlSort = "hot";
 	self.urlTime = "week";
 	self.listingLive = /^\/live\/(\w+)/i;
@@ -332,6 +333,21 @@ function RedditPlugin(bot) {
 		}
 	};
 
+	self.lookupVideo = function(vurl, callback) {
+		var match = vurl.match(self.urlVideoRe);
+		var vid = match[1];
+		self.request(self.baseUrl + "/video/" + vid + ".json", function(err, res, body) {
+			if (!err && res.statusCode == 200) {
+				var data = JSON.parse(body)[0].data;
+				var results = data.children;
+
+				self.format(results[0], false, self.linkedLookup, function(str) {
+					callback(str);
+				});
+			}
+		});
+	};
+
 	self.lookupSubUser = function(suurl, callback, linked) {
 		linked = linked || self.linkedLookup;
 
@@ -351,7 +367,9 @@ function RedditPlugin(bot) {
 	self.lookup = function(url, callback) {
 		var func = null;
 
-		if (self.urlRedditRe.test(url))
+		if (self.urlVideoRe.test(url))
+			func = self.lookupVideo;
+		else if (self.urlRedditRe.test(url))
 			func = self.lookupReddit;
 		else if (self.urlLiveRe.test(url))
 			func = self.lookupLive;
@@ -521,6 +539,8 @@ function RedditPlugin(bot) {
 					var func = function(){};
 					if (self.channels[to] === true)
 						func = self.lookup;
+					else if (self.channels[to].video && url.match(self.urlVideoRe))
+						func = self.lookupVideo;
 					else if (self.channels[to].reddit && url.match(self.urlRedditRe))
 						func = self.lookupReddit;
 					else if (self.channels[to].live && url.match(self.urlLiveRe))

@@ -26,10 +26,13 @@ function NickServPlugin(bot) {
 		}
 	};
 
+	self.identify = function() {
+		bot.say("NickServ", "IDENTIFY " + self.password);
+	};
 
 	self.events = {
 		"registered": function() {
-			bot.say("NickServ", "IDENTIFY " + self.password);
+			self.identify();
 		},
 
 		"notice": function(nick, to, text) {

@@ -7,7 +7,7 @@ function UrbanDictionaryPlugin(bot) {
 	self.depend = ["cmd", "util"];
 
 	self.strip = function(str) {
-		return str.replace(/\[([^\]]+)\]/g, "$1").replace(/\r?\n/g, " ");
+		return str.replace(/\[([^\]]+)\]/g, "\x1F$1\x1F").replace(/\r?\n/g, " ");
 	};
 
 	self.formatDefinition = function(str) {

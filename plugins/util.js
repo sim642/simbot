@@ -89,6 +89,15 @@ function UtilPlugin(bot) {
 		return Math.round(size / Math.pow(1024, i) * 100) / 100 + " " + units[i];
 	};
 
+	self.ellipsize = function(text, length) {
+		if (text.length > length) {
+			var whitePos = text.indexOf(" ", length);
+			return text.substr(0, whitePos !== -1 ? whitePos : length) + "...";
+		}
+		else
+			return text;
+	};
+
 	self.events = {
 
 	};

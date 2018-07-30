@@ -7,16 +7,7 @@ function WikiPlugin(bot) {
 	var self = this;
 	self.name = "wiki";
 	self.help = "MediaWiki plugin";
-	self.depend = ["cmd", "bitly"];
-
-	self.ellipsize = function(text, length) {
-		if (text.length > length) {
-			var whitePos = text.indexOf(" ", length);
-			return text.substr(0, whitePos !== -1 ? whitePos : length) + "...";
-		}
-		else
-			return text;
-	};
+	self.depend = ["cmd", "bitly", "util"];
 
 	self.methods = {
 		"extracts": function(root, text, callback) {
@@ -134,7 +125,7 @@ function WikiPlugin(bot) {
 							var text = xpath.select("./p//text()[not(ancestor::*[@class=\"reference\" or contains(@class,\"metadata\")])]", doc).map(function(node) {
 								return node.nodeValue;
 							}).join("").replace(/[\r\n]/g, " ");
-							text = self.ellipsize(text, 350);
+							text = bot.plugins.util.ellipsize(text, 350);
 
 							callback(null, page.title, text, page.fullurl);
 						});

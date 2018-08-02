@@ -53,7 +53,8 @@ function YoutubePlugin(bot) {
 
 		var dur = liveNow ? data.snippet.liveBroadcastContent.replace("none", "offline") : self.duration(data.contentDetails.duration);
 		var views = liveNow ? bot.plugins.util.thSeps(data.liveStreamingDetails.concurrentViewers.toString()) + " viewers" : bot.plugins.util.thSeps(data.statistics.viewCount.toString()) + " views";
-		var str = (linked ? "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : " : "") + "\x02" + data.snippet.title + "\x02 [" + dur + "] by " + data.snippet.channelTitle + "; " + views;
+		var title = data.localizations !== undefined && data.localizations.en !== undefined ? data.localizations.en.title : data.snippet.title;
+		var str = (linked ? "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : " : "") + "\x02" + title + "\x02 [" + dur + "] by " + data.snippet.channelTitle + "; " + views;
 		if (data.statistics !== undefined) {
 			var likes = parseFloat(data.statistics.likeCount);
 			var dislikes = parseFloat(data.statistics.dislikeCount);
@@ -69,7 +70,7 @@ function YoutubePlugin(bot) {
 		request({
 				uri: "https://www.googleapis.com/youtube/v3/videos",
 				qs: {
-					part: "id,snippet,contentDetails,statistics,status,liveStreamingDetails",
+					part: "id,snippet,contentDetails,statistics,status,liveStreamingDetails,localizations",
 					id: match[1],
 					key: self.apiKey
 				}

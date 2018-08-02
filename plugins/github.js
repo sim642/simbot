@@ -21,7 +21,7 @@ function GithubPlugin(bot) {
 
 	self.users = {};
 
-	self.urlRe = /(?:https?:\/\/|\s|^)(?:(www|gist)\.)?github\.com\/(\w[\w-]+(?:\/\w[\w-]+)?)(?=\s|$)/;
+	self.urlRe = /(?:https?:\/\/|\s|^)(?:(www|gist)\.)?github\.com\/(\w[\w-]+(?:\/\w[\w-]+)?)(?=\/?(?:\s|$))/;
 	self.channels = [];
 	self.ignores = [];
 

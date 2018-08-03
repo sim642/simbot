@@ -50,7 +50,7 @@ function WeatherPlugin(bot) {
 		return Ta + 0.33 * e - 0.70 * v - 4.00;
 	};
 
-	self.present = function(place, placeParams, time, callback) {
+	self.lookupPresent = function(place, placeParams, format, callback) {
 		if (!placeParams) {
 			callback("No place called \x02" + place);
 			return;
@@ -66,74 +66,7 @@ function WeatherPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var j = JSON.parse(body);
 				if (j.cod == 200) {
-					var displayName = placeParams._display || (j.name + ", " + j.sys.country);
-
-					var prefix = displayName;
-					var bits = [];
-
-					bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
-					bits.push(["feels like", self.windChill(j).toFixed(1) + "°C"]);
-
-					bits.push(["humidity", j.main.humidity.toString() + "%"]);
-					bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
-					if (j.wind) {
-						var str = j.wind.speed.toString() + "m/s";
-						if (j.wind.gust)
-							str += " (" + j.wind.gust.toString() + "m/s)";
-						if (j.wind.deg) {
-							str += " " + j.wind.deg.toFixed(0).toString() + "°";
-							str += " (" + self.windChars(j.wind.deg) + ")";
-						}
-
-						if (str)
-							bits.push(["wind", str]);
-						else
-							bot.out.warn("weather", j);
-					}
-					bits.push(["clouds", j.clouds.all.toString() + "%"]);
-					if (j.rain) {
-						var str;
-						if (j.rain["3h"] !== undefined)
-							str = j.rain["3h"].toString() + "mm/3h";
-						else if (j.rain["1h"] !== undefined)
-							str = j.rain["1h"].toString() + "mm/h";
-
-						if (str)
-							bits.push(["rain", str]);
-						else
-							bot.out.warn("weather", j);
-					}
-					if (j.snow) {
-						var str;
-						if (j.snow["3h"] !== undefined)
-							str = j.snow["3h"].toString() + "mm/3h";
-						else if (j.snow["1h"] !== undefined)
-							str = j.snow["1h"].toString() + "mm/h";
-
-						if (str)
-							bits.push(["snow", str]);
-						else
-							bot.out.warn("weather", j);
-					}
-					if (j.weather) {
-						var val = "";
-						for (var i = 0; i < j.weather.length; i++) {
-							val += j.weather[i].description;
-							if (i != j.weather.length - 1)
-								val += ", ";
-						}
-						bits.push(["conditions", val]);
-					}
-					/*if (j.sys.sunrise) {
-						var d = self.DateUTC(new Date(j.sys.sunrise * 1000));
-						bits.push(["sunrise", d.toTimeString().split(" ")[0]]);
-					}
-					if (j.sys.sunset) {
-						var d = self.DateUTC(new Date(j.sys.sunset * 1000));
-						bits.push(["sunset", d.toTimeString().split(" ")[0]]);
-					}*/
-
-					callback(bot.plugins.bits.format(prefix, bits));
+					callback(format(placeParams, j));
 				}
 				else {
 					callback("No place called \x02" + place);
@@ -143,6 +76,93 @@ function WeatherPlugin(bot) {
 				callback("No API permissions");
 			}
 		});
+	};
+
+	self.formatPresent = function(placeParams, j) {
+		var displayName = placeParams._display || (j.name + ", " + j.sys.country);
+
+		var prefix = displayName;
+		var bits = [];
+
+		bits.push(["temperature", (j.main.temp - 273.15).toFixed(1) + "°C"]);
+		bits.push(["feels like", self.windChill(j).toFixed(1) + "°C"]);
+
+		bits.push(["humidity", j.main.humidity.toString() + "%"]);
+		bits.push(["pressure", j.main.pressure.toString() + "hPa"]);
+		if (j.wind) {
+			var str = j.wind.speed.toString() + "m/s";
+			if (j.wind.gust)
+				str += " (" + j.wind.gust.toString() + "m/s)";
+			if (j.wind.deg) {
+				str += " " + j.wind.deg.toFixed(0).toString() + "°";
+				str += " (" + self.windChars(j.wind.deg) + ")";
+			}
+
+			if (str)
+				bits.push(["wind", str]);
+			else
+				bot.out.warn("weather", j);
+		}
+		bits.push(["clouds", j.clouds.all.toString() + "%"]);
+		if (j.rain) {
+			var str;
+			if (j.rain["3h"] !== undefined)
+				str = j.rain["3h"].toString() + "mm/3h";
+			else if (j.rain["1h"] !== undefined)
+				str = j.rain["1h"].toString() + "mm/h";
+
+			if (str)
+				bits.push(["rain", str]);
+			else
+				bot.out.warn("weather", j);
+		}
+		if (j.snow) {
+			var str;
+			if (j.snow["3h"] !== undefined)
+				str = j.snow["3h"].toString() + "mm/3h";
+			else if (j.snow["1h"] !== undefined)
+				str = j.snow["1h"].toString() + "mm/h";
+
+			if (str)
+				bits.push(["snow", str]);
+			else
+				bot.out.warn("weather", j);
+		}
+		if (j.weather) {
+			var val = "";
+			for (var i = 0; i < j.weather.length; i++) {
+				val += j.weather[i].description;
+				if (i != j.weather.length - 1)
+					val += ", ";
+			}
+			bits.push(["conditions", val]);
+		}
+		/*if (j.sys.sunrise) {
+			var d = self.DateUTC(new Date(j.sys.sunrise * 1000));
+			bits.push(["sunrise", d.toTimeString().split(" ")[0]]);
+		}
+		if (j.sys.sunset) {
+			var d = self.DateUTC(new Date(j.sys.sunset * 1000));
+			bits.push(["sunset", d.toTimeString().split(" ")[0]]);
+		}*/
+
+		return bot.plugins.bits.format(prefix, bits);
+	};
+
+	self.formatSweater = function(placeParams, j) {
+		var displayName = placeParams._display || (j.name + ", " + j.sys.country);
+
+		var prefix = displayName;
+		var bits = [];
+
+		var feelsLike = self.windChill(j);
+		bits.push(["sweater", feelsLike < 18 ? "yes" : "no"]);
+
+		return bot.plugins.bits.format(prefix, bits);
+	};
+
+	self.present = function(place, placeParams, time, callback) {
+		self.lookupPresent(place, placeParams, self.formatPresent, callback);
 	};
 
 	self.future = function(place, placeParams, time, callback) {
@@ -484,8 +504,21 @@ function WeatherPlugin(bot) {
 		});
 	};
 
+	self.presentProxy = function(format) {
+		return function(nick, to, args) {
+			var place = args[0] || nick;
+			place = self.parseUser(place);
+
+			self.geocode(place, function(placeParams) {
+				self.lookupPresent(place, placeParams, format, function(str) {
+					bot.say(to, str);
+				});
+			});
+		};
+	}
+
 	self.events = {
-		"cmd#weather": function(nick, to, args) {
+		/*"cmd#weather": function(nick, to, args) {
 			var place = args[0] || nick;
 			place = self.parseUser(place);
 
@@ -494,7 +527,11 @@ function WeatherPlugin(bot) {
 					bot.say(to, str);
 				});
 			});
-		},
+		},*/
+
+		"cmd#weather": self.presentProxy(self.formatPresent),
+
+		"cmd#sweater": self.presentProxy(self.formatSweater),
 
 		"cmd#weather2": function(nick, to, args) {
 			var place = args[1];

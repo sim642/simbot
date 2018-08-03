@@ -276,6 +276,8 @@ function TopicLogPlugin(bot) {
 			}
 		},
 
+		"cmd#topic": bot.forward("cmd#topicprepend"),
+
 		"cmd#topicappend": function(nick, to, args) {
 			var chan = to;
 			if (chan in self.topiclog && chan in self.separators) {

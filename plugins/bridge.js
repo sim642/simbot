@@ -57,7 +57,16 @@ function BridgePlugin(bot) {
 
 	self.events = {
 		"message#": function(nick, to, text, message) {
-			if (nick && !nick.match(self.bridgeRe))
+			if (!nick) // why this?
+				return;
+
+			if (nick in self.targetChannels && !message.host.match(/^bridge-/)) {
+				// remove nicks from targetChannels if they speak directly on IRC
+				bot.out.log("bridge", "evict " + nick);
+				delete self.targetChannels[nick];
+			}
+
+			if (!nick.match(self.bridgeRe))
 				return;
 
 			var m = text.match(self.relayRe);

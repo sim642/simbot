@@ -80,8 +80,10 @@ function CmdPlugin(bot) {
 				else {
 					bot.emit("cmd#", nick, to, cmd, args, message);
 
-					if (self.suggestDist !== null && cand.dist >= self.suggestDist)
+					if (self.suggestDist !== null && cand.dist >= self.suggestDist) {
+						bot.out.log("cmd", nick + " in " + to + " called " + message.cmdChar + cmd + " -> " + message.cmdChar + cand.cmd + "?");
 						bot.notice(nick, message.cmdChar + cmd + ": did you mean " + message.cmdChar + cand.cmd);
+					}
 				}
 			}
 		},

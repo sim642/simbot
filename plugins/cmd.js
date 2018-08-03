@@ -72,7 +72,7 @@ function CmdPlugin(bot) {
 				});
 				var cand = cands[0];
 
-				if (cand.dist >= self.correctDist) {
+				if (self.correctDist !== null && cand.dist >= self.correctDist) {
 					bot.out.log("cmd", nick + " in " + to + " called " + message.cmdChar + cmd + " -> " + message.cmdChar + cand.cmd + " with args: [" + args.join(", ") + "]");
 					bot.emit("cmd#" + cand.cmd, nick, to, args, message);
 					bot.notice(nick, message.cmdChar + cmd + ": autocorrected to " + message.cmdChar + cand.cmd);
@@ -80,7 +80,7 @@ function CmdPlugin(bot) {
 				else {
 					bot.emit("cmd#", nick, to, cmd, args, message);
 
-					if (cand.dist >= self.suggestDist)
+					if (self.suggestDist !== null && cand.dist >= self.suggestDist)
 						bot.notice(nick, message.cmdChar + cmd + ": did you mean " + message.cmdChar + cand.cmd);
 				}
 			}

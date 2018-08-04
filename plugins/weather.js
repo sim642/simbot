@@ -51,6 +51,19 @@ function WeatherPlugin(bot) {
 		return Ta + 0.33 * e - 0.70 * v - 4.00;
 	};
 
+	self.uviColor = function(uvi) {
+		if (uvi < 3)
+			return "03"; // green
+		else if (uvi < 6)
+			return "08"; // yellow
+		else if (uvi < 8)
+			return "07"; // orange
+		else if (uvi < 11)
+			return "04"; // red
+		else
+			return "06"; // violet
+	}
+
 	self.lookupPresent = function(place, placeParams, format, callback) {
 		if (!placeParams) {
 			callback("No place called \x02" + place);
@@ -160,7 +173,8 @@ function WeatherPlugin(bot) {
 				bot.out.warn("weather", j);
 		}
 		if (j.uvi) {
-			bits.push(["UV index", j.uvi.value.toString()]);
+			//bits.push(["UV index", j.uvi.value.toString()]);
+			bits.push(["UV index", "\x03" + self.uviColor(j.uvi.value) + j.uvi.value.toString() + "\x03"]);
 		}
 		if (j.weather) {
 			var val = "";

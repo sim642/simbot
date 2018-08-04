@@ -1,4 +1,5 @@
 var request = require("request");
+var async = require("async");
 
 function WeatherPlugin(bot) {
 	var self = this;
@@ -56,25 +57,55 @@ function WeatherPlugin(bot) {
 			return;
 		}
 
-		request({
-			url: "http://api.openweathermap.org/data/2.5/weather",
-			qs: Object.assign({
-				"APPID": self.apiKey,
-				"lang": "en"
-			}, placeParams)
-		}, function(err, res, body) {
-			if (!err && res.statusCode == 200) {
-				var j = JSON.parse(body);
-				if (j.cod == 200) {
-					callback(format(placeParams, j));
-				}
-				else {
-					callback("No place called \x02" + place);
-				}
+		async.parallel({
+			weather: function(callback) {
+				request({
+					url: "http://api.openweathermap.org/data/2.5/weather",
+					qs: Object.assign({
+						"APPID": self.apiKey,
+						"lang": "en"
+					}, placeParams)
+				}, function(err, res, body) {
+					if (!err && res.statusCode == 200) {
+						var j = JSON.parse(body);
+						if (j.cod == 200) {
+							callback(null, j);
+						}
+						else {
+							callback("No place called \x02" + place);
+						}
+					}
+					else if (!err && res.statusCode == 401) {
+						callback("No API permissions");
+					}
+				});
+			},
+
+			uvi: async.reflect(function(callback) {
+				request({
+					url: "http://api.openweathermap.org/data/2.5/uvi",
+					qs: Object.assign({
+						"APPID": self.apiKey,
+						"lang": "en"
+					}, placeParams)
+				}, function(err, res, body) {
+					if (!err && res.statusCode == 200) {
+						var j = JSON.parse(body);
+						callback(null, j);
+					}
+					else if (!err && res.statusCode == 401) {
+						callback("No API permissions");
+					}
+				});
+			})
+		}, function(err, results) {
+			if (!err) {
+				var j = results.weather;
+				j.uvi = results.uvi.value;
+				callback(format(placeParams, j));
 			}
-			else if (!err && res.statusCode == 401) {
-				callback("No API permissions");
-			}
+			else
+				callback(err);
 		});
 	};
 
@@ -127,6 +158,9 @@ function WeatherPlugin(bot) {
 				bits.push(["snow", str]);
 			else
 				bot.out.warn("weather", j);
+		}
+		if (j.uvi) {
+			bits.push(["UV index", j.uvi.value.toString()]);
 		}
 		if (j.weather) {
 			var val = "";

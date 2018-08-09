@@ -52,7 +52,7 @@ function YoutubePlugin(bot) {
 		var liveNow = live && data.liveStreamingDetails.actualEndTime === undefined;
 
 		var dur = liveNow ? data.snippet.liveBroadcastContent.replace("none", "offline") : self.duration(data.contentDetails.duration);
-		var views = liveNow ? bot.plugins.util.thSeps(data.liveStreamingDetails.concurrentViewers.toString()) + " viewers" : bot.plugins.util.thSeps(data.statistics.viewCount.toString()) + " views";
+		var views = liveNow ? bot.plugins.util.thSeps((data.liveStreamingDetails.concurrentViewers || 0).toString()) + " viewers" : bot.plugins.util.thSeps(data.statistics.viewCount.toString()) + " views";
 		var title = data.localizations !== undefined && data.localizations.en !== undefined ? data.localizations.en.title : data.snippet.title;
 		var str = (linked ? "\x1Fhttps://youtu.be/" + data.id + (time ? "?t=" + time : "") + "\x1F : " : "") + "\x02" + title + "\x02 [" + dur + "] by " + data.snippet.channelTitle + "; " + views;
 		if (data.statistics !== undefined) {

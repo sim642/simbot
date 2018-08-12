@@ -25,6 +25,8 @@ function GithubPlugin(bot) {
 	self.channels = [];
 	self.ignores = [];
 
+	self.pushCollapse = 3;
+
 	self.setToken = function(token) {
 		if (token) {
 			self.token = token;
@@ -43,6 +45,8 @@ function GithubPlugin(bot) {
 			self.channels = data.channels;
 		if (data && data.ignores)
 			self.ignores = data.ignores;
+		if (data && data.pushCollapse !== undefined)
+			self.pushCollapse = data.pushCollapse;
 
 		self.setToken(data.token);
 	};
@@ -53,6 +57,7 @@ function GithubPlugin(bot) {
 			"users": self.users,
 			"channels": self.channels,
 			"ignores": self.ignores,
+			"pushCollapse": self.pushCollapse
 		};
 	};
 
@@ -491,26 +496,44 @@ function GithubPlugin(bot) {
 
 					if (branch == payload.repository.default_branch) {
 						// payload.commits.reverse();
-						async.map(payload.commits.filter(function(commit) {
+						var commits = payload.commits.filter(function(commit) {
 							return commit.distinct;
-						}), function(commit, callback) {
-							bot.plugins.gitio.shorten(commit.url, function(shorturl) {
-								commit.shorturl = shorturl;
-								callback(null, commit);
-							});
-						}, function(err, commits) {
-							commits.forEach(function(commit) {
+						});
+
+						if (self.pushCollapse !== null && commits.length >= self.pushCollapse) {
+							bot.plugins.gitio.shorten(payload.compare, function(shorturl) {
 								var prefix = payload.repository.full_name;
 								var bits = [];
-								bits.push([commit.author.username + " committed", commit.message.replace(/^([^\r\n]+)[\s\S]*/, "$1")]); // keep only first line
-								bits.push([, commit.shorturl, 2]);
+								bits.push([payload.pusher.name + " pushed", commits[0].message.replace(/^([^\r\n]+)[\s\S]*/, "$1")]); // keep only first line
+								bits.push([, "and " + (commits.length - 1) + " other commits", 0]);
+								bits.push([, shorturl, 2]);
 								var str = bot.plugins.bits.format(prefix, bits);
 
 								channels.forEach(function(channel) {
 									bot.say(channel, str);
 								});
 							});
-						});
+						}
+						else {
+							async.map(commits, function(commit, callback) {
+								bot.plugins.gitio.shorten(commit.url, function(shorturl) {
+									commit.shorturl = shorturl;
+									callback(null, commit);
+								});
+							}, function(err, commits) {
+								commits.forEach(function(commit) {
+									var prefix = payload.repository.full_name;
+									var bits = [];
+									bits.push([commit.author.username + " committed", commit.message.replace(/^([^\r\n]+)[\s\S]*/, "$1")]); // keep only first line
+									bits.push([, commit.shorturl, 2]);
+									var str = bot.plugins.bits.format(prefix, bits);
+
+									channels.forEach(function(channel) {
+										bot.say(channel, str);
+									});
+								});
+							});
+						}
 					}
 					break;
 

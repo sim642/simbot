@@ -225,7 +225,7 @@ function GithubPlugin(bot) {
 		});
 	};
 
-	self.github = function(arg, noError, callback) {
+	self.github = function(arg, noError, linked, callback) {
 		var realarg = bot.plugins.util.getKeyByValue(self.users, arg) || arg;
 
 		var prefix = "";
@@ -251,7 +251,8 @@ function GithubPlugin(bot) {
 					bits.push(["forks", j.forks_count]);
 
 					var finish = function() {
-						bits.push([, j.html_url, 2]);
+						if (linked)
+							bits.push([, j.html_url, 2]);
 						output();
 					};
 
@@ -301,7 +302,8 @@ function GithubPlugin(bot) {
 					bits.push(["following", j.following]);
 
 					var finish = function() {
-						bits.push([, j.html_url, 2]);
+						if (linked)
+							bits.push([, j.html_url, 2]);
 						output();
 					};
 
@@ -352,7 +354,7 @@ function GithubPlugin(bot) {
 		}
 	};
 
-	self.gist = function(arg, noError, callback) {
+	self.gist = function(arg, noError, linked, callback) {
 		var m = arg.match(self.gistRe);
 
 		var prefix = "";
@@ -380,7 +382,8 @@ function GithubPlugin(bot) {
 					bits.push(["comments", j.comments]);
 					bits.push(["forks", j.forks.length]);
 
-					bits.push([, j.html_url, 2]);
+					if (linked)
+						bits.push([, j.html_url, 2]);
 
 					output();
 				}
@@ -404,8 +407,8 @@ function GithubPlugin(bot) {
 		}
 	};
 
-	self.lookup = function(m, noError, callback) {
-		(m[1] == "gist" ? self.gist : self.github)(m[2], noError, callback);
+	self.lookup = function(m, noError, linked, callback) {
+		(m[1] == "gist" ? self.gist : self.github)(m[2], noError, linked, callback);
 	};
 
 	self.events = {
@@ -413,7 +416,7 @@ function GithubPlugin(bot) {
 			var realarg = args[1] || nick;
 			var arg = self.parseuser(realarg.toLowerCase());
 
-			self.github(arg, false, function(str) {
+			self.github(arg, false, true, function(str) {
 				bot.say(to, str);
 			});
 		},
@@ -421,7 +424,7 @@ function GithubPlugin(bot) {
 		"cmd#gist": function(nick, to, args) {
 			var arg = args[1];
 
-			self.gist(arg, false, function(str) {
+			self.gist(arg, false, true, function(str) {
 				bot.say(to, str);
 			});
 		},
@@ -448,7 +451,7 @@ function GithubPlugin(bot) {
 				var m = text.match(self.urlRe);
 				if (m) {
 					bot.out.log("github", nick + " in " + to + ": " + m[0]);
-					self.lookup(m, true, function(str) {
+					self.lookup(m, true, false, function(str) {
 						bot.say(to, str);
 					});
 				}
@@ -459,7 +462,7 @@ function GithubPlugin(bot) {
 			var m = text.match(self.urlRe);
 			if (m) {
 				bot.out.log("github", nick + " in PM: " + m[0]);
-				self.lookup(m, true, function(str) {
+				self.lookup(m, true, false, function(str) {
 					bot.say(nick, str);
 				});
 			}

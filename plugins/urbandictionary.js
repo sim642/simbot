@@ -16,7 +16,7 @@ function UrbanDictionaryPlugin(bot) {
 
 	self.events = {
 		"cmd#ud": function(nick, to, args) {
-			if (args[1] == "random") {
+			if (!args[0]) {
 				request("https://api.urbandictionary.com/v0/random", function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var j = JSON.parse(body);

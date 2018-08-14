@@ -13,7 +13,7 @@ function GithubPlugin(bot) {
 
 	self.userRe = /^\w[\w-]*$/;
 	self.repoRe = /^(\w[\w-]*)\/(\w[\w-]*)$/;
-	self.gistRe = /^(?:(\w[\w-]+)\/)?([0-9a-f]{20})$/;
+	self.gistRe = /^(?:(\w[\w-]+)\/)?([0-9a-f]{20,32})$/;
 
 	self.arequest = request.defaults({headers: {"User-Agent": "simbot GitHub"}});
 	self.token = null;

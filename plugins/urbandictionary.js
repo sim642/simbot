@@ -34,33 +34,77 @@ function UrbanDictionaryPlugin(bot) {
 				var i;
 				if (match) {
 					str = match[1];
-					i = parseInt(match[2]);
+					i = parseInt(match[2]) - 1;
 				}
 				else {
 					str = args[0];
-					i = 1;
+					i = 0;
 				}
 				str = str.trim();
+
+				var pageSize = 10;
+				var page = Math.floor(i / pageSize);
+				var offset = i % pageSize;
 
 				request({
 						uri: "https://api.urbandictionary.com/v0/define",
 						qs: {
-							term: str
+							term: str,
+							page: page + 1
 						}
 					}, function(err, res, body) {
 					if (!err && res.statusCode == 200) {
 						var j = JSON.parse(body);
 
 						if (j.list !== undefined && j.list.length !== 0) {
-							if (i - 1 >= 0 && i - 1 < j.list.length) {
-								var item = j.list[i - 1];
-								bot.say(to, "\x02" + item.word + "\x02 [" + i + "/" + j.list.length + "]: " + self.formatDefinition(item.definition));
+							if (offset >= 0 && offset < j.list.length) {
+								var item = j.list[offset];
+
+								request({
+										uri: "https://api.urbandictionary.com/v0/define",
+										qs: {
+											term: str,
+											page: page + 1 + 1
+										}
+									}, function(err, res, body) {
+									if (!err && res.statusCode == 200) {
+										var j2 = JSON.parse(body);
+										var hasMore = j2.list !== undefined && j2.list.length !== 0;
+
+										bot.say(to, "\x02" + item.word + "\x02 [" + (i + 1) + "/" + (pageSize * page + j.list.length) + (hasMore ? "+" : "") + "]: " + self.formatDefinition(item.definition));
+									}
+								});
 							}
 							else
-								bot.say(to, nick + ": \x02" + str + "\x02 [" + i + "/" + j.list.length + "] invalid result index");
+								bot.say(to, nick + ": \x02" + str + "\x02 [" + (i + 1) + "/" + (pageSize * page + j.list.length) + "] invalid result index");
 						}
-						else
-							bot.say(to, nick + ": couldn't find \x02" + str + "\x02");
+						else {
+							if (i >= pageSize) {
+								request({
+										uri: "https://api.urbandictionary.com/v0/define",
+										qs: {
+											term: str
+											// page 0 + 1
+										}
+									}, function(err, res, body) {
+									if (!err && res.statusCode == 200) {
+										var j2 = JSON.parse(body);
+										var hasAny = j2.list !== undefined && j2.list.length !== 0;
+
+										if (hasAny)
+											bot.say(to, nick + ": \x02" + str + "\x02 [" + (i + 1) + "/?] invalid result index");
+										else
+											bot.say(to, nick + ": couldn't find \x02" + str + "\x02");
+									}
+								});
+							}
+							else
+								bot.say(to, nick + ": couldn't find \x02" + str + "\x02");
+						}
+					}
+					else if (!err && res.statusCode == 500) {
+						var j = JSON.parse(body);
+						bot.say(to, nick + ": \x02" + str + "\x02 [" + (i + 1) + "/?] " + j.error);
 					}
 				});
 			}

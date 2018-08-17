@@ -117,15 +117,19 @@ function GithubPlugin(bot) {
 					callback(langs);
 				};
 
-				j.forEach(function(repo) {
-					self.getRepoLangs(repo, function(langs) {
-						if (langs)
-							rets.push(langs);
+				if (j.length > 0) {
+					j.forEach(function(repo) {
+						self.getRepoLangs(repo, function(langs) {
+							if (langs)
+								rets.push(langs);
 
-						if (rets.length == j.length)
-							done();
+							if (rets.length == j.length)
+								done();
+						});
 					});
-				});
+				}
+				else
+					done();
 			}
 			else {
 				bot.out.error("github", err, body);

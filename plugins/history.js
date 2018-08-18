@@ -5,7 +5,7 @@ function HistoryPlugin(bot) {
 	var self = this;
 	self.name = "history";
 	self.help = "History plugin";
-	self.depend = ["cmd", "auth", "gist", "util"];
+	self.depend = ["cmd", "auth", "gist", "gitio", "util"];
 	
 	self.basedir = null;
 
@@ -199,7 +199,9 @@ function HistoryPlugin(bot) {
 						bot.plugins.gist.create({
 							"history.txt": outlines.map(bot.plugins.util.stripColors).join("\n")
 						}, false, "History for " + channel + (argStr ? " (" + argStr + ")" : ""), function(data) {
-							bot.say(to, nick + ": " + data.html_url);
+							bot.plugins.gitio.shorten(data.html_url, function(shorturl) {
+								bot.say(to, nick + ": " + shorturl);
+							});
 						});
 					}
 					else {

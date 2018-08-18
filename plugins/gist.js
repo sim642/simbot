@@ -19,7 +19,7 @@ function GistPlugin(bot) {
 			"files": files
 		};
 
-		bot.plugins.github.arequest.post({
+		bot.plugins.github.request.post({
 			url: "https://api.github.com/gists",
 			body: JSON.stringify(postBody)
 		}, function(err, res, body) {

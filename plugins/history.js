@@ -125,11 +125,11 @@ function HistoryPlugin(bot) {
 
 			var whoRe = (who !== null ? self.makeWhoRe(who) : null);
 			var modeRe = (mode !== null ? self.makeModeRe(mode) : null);
-			preSurround = Math.min(preSurround !== undefined ? preSurround : (gist ? 5 : 3), gist ? 20 : 10);
-			postSurround = Math.min(postSurround !== undefined ? postSurround : (gist ? 2 : 1), gist ? 20 : 10);
+			preSurround = Math.min(preSurround !== undefined ? preSurround : (gist ? 3 : 0), gist ? 20 : 5);
+			postSurround = Math.min(postSurround !== undefined ? postSurround : (gist ? 3 : 0), gist ? 20 : 5);
 
 			var extra = channel == to;
-			linecnt = Math.min(linecnt || (gist ? 50 : 15), re === null ? (gist ? 1000 : 50) : Math.ceil((gist ? 1000 : 50) / (preSurround + 1 + postSurround)));
+			linecnt = Math.min(linecnt || (gist ? 50 : 10), re === null ? (gist ? 1000 : 50) : Math.ceil((gist ? 1000 : 50) / (preSurround + 1 + postSurround)));
 
 			var argStr = "";
 			if (who !== null) {

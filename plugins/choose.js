@@ -12,7 +12,7 @@ function ChoosePlugin(bot) {
 	self.tieBreak = false;
 
 	self.aggregateChannels = {};
-	self.aggregateRe = /^(\S+):[\s\u200B]*(.*)[\s\u200B]*$/; // shoko has ZWSP for some reason...
+	self.aggregateRe = /^(\S+):[\s\u200B]*([^\s\u200B]*)[\s\u200B]*$/; // shoko has ZWSP for some reason...
 
 	self.load = function(data) {
 		if (data) {

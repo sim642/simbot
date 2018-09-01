@@ -163,7 +163,7 @@ function ChoosePlugin(bot) {
 				});
 				if (tieChoices.length > 1) {
 					var breakI = Math.floor(Math.random() * tieChoices.length);
-					var breakChoice = choices[breakI];
+					var breakChoice = tieChoices[breakI];
 
 					bot.say(to, nick + ": " + breakChoice);
 					data.counts[breakChoice]++;

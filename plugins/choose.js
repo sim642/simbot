@@ -12,7 +12,7 @@ function ChoosePlugin(bot) {
 	self.tieBreak = false;
 
 	self.aggregateChannels = {};
-	self.aggregateRe = /^(\S+):[\s\u200B]*([^\s\u200B]*)[\s\u200B]*$/; // shoko has ZWSP for some reason...
+	self.aggregateRe = /^(\S+):(.*)$/;
 
 	self.load = function(data) {
 		if (data) {
@@ -221,7 +221,7 @@ function ChoosePlugin(bot) {
 				var m = text.match(self.aggregateRe);
 				if (m) {
 					var nick = m[1];
-					var choice = m[2];
+					var choice = m[2].replace(/\u200B/g,"").trim(); // shoko has ZWSP for some reason...
 
 					self.aggregateCount(botNick, nick, to, choice);
 				}

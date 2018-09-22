@@ -11,6 +11,10 @@ function TopicLogPlugin(bot) {
 
 	self.separators = {};
 
+	self.length = function(str) {
+		return Buffer.byteLength(str, "utf8");
+	}
+
 	self.load = function(data) {
 		if (data) {
 			if (!("topiclog" in data)) {
@@ -104,6 +108,7 @@ function TopicLogPlugin(bot) {
 
 		"raw": function(message) {
 			if (message.command == "err_chanoprivsneeded") {
+				bot.out.warn("topiclog", message);
 				var channel = message.args[1];
 
 				if (channel in self.tochange) {
@@ -266,7 +271,7 @@ function TopicLogPlugin(bot) {
 				var newTopic = "";
 				for (var i = 0; i < pieces.length; i++) {
 					var piece = (i > 0 ? separator : "") + pieces[i];
-					if (newTopic.length + piece.length <= bot.supported.topiclength)
+					if (self.length(newTopic) + self.length(piece) <= bot.supported.topiclength)
 						newTopic += piece;
 					else
 						break;
@@ -293,7 +298,7 @@ function TopicLogPlugin(bot) {
 				var newTopic = "";
 				for (var i = pieces.length - 1; i >= 0; i--) {
 					var piece = pieces[i] + (i < pieces.length - 1 ? separator : "");
-					if (newTopic.length + piece.length <= bot.supported.topiclength)
+					if (self.length(newTopic) + self.length(piece) <= bot.supported.topiclength)
 						newTopic = piece + newTopic;
 					else
 						break;

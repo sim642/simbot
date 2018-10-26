@@ -208,12 +208,31 @@ function RedditPlugin(bot) {
 		short = short || false;
 		realtime = realtime || false;
 
-		var warning = subreddit.over18 ? " \x034[NSFW]\x03" : "";
-		var private = subreddit.subreddit_type != "public" ? " [" + subreddit.subreddit_type + "]" : "";
-		var str = self.formatLink("https://reddit.com" + subreddit.url, subreddit.over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(subreddit.title.trim()) + "\x02" + private;
+		var str;
+		if (subreddit.error && subreddit.error == 403) {
+			// quarantined
+			var warning = "\x034[" + subreddit.reason + "]\x03 ";
+			var url = "https://reddit.com" + "/r/" + extra + "/";
+			if (linked)
+				str = "\x1F" + url + "\x1F " + warning + ": ";
+			else
+				str = warning;
+			str += "\x02" + extra + "\x02";
 
-		if (!short && !realtime)
-			str += "; " + bot.plugins.util.thSeps(subreddit.subscribers) + " subscribers; " + bot.plugins.util.thSeps(subreddit.accounts_active) + " active; " + bot.plugins.util.ellipsize(subreddit.public_description, 250);
+			if (!short && !realtime) {
+				str += "; " + subreddit.message;
+				if (subreddit.quarantine_message)
+					str += "; " + bot.plugins.util.ellipsize(subreddit.quarantine_message, 250);
+			}
+		}
+		else {
+			var warning = subreddit.over18 ? " \x034[NSFW]\x03" : "";
+			var private = subreddit.subreddit_type != "public" ? " [" + subreddit.subreddit_type + "]" : "";
+			str = self.formatLink("https://reddit.com" + subreddit.url, subreddit.over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(subreddit.title.trim()) + "\x02" + private;
+
+			if (!short && !realtime)
+				str += "; " + bot.plugins.util.thSeps(subreddit.subscribers) + " subscribers; " + bot.plugins.util.thSeps(subreddit.accounts_active) + " active; " + bot.plugins.util.ellipsize(subreddit.public_description, 250);
+		}
 
 		callback(str);
 	};
@@ -360,6 +379,12 @@ function RedditPlugin(bot) {
 				self.format(data, false, linked, function(str) {
 					callback(str);
 				});
+			} else if (!err && res.statusCode == 403 && match[1] == "r") {
+				var data = JSON.parse(body);
+
+				self.formatSubreddit(data, false, linked, function(str) {
+					callback(str);
+				}, match[2]);
 			}
 		});
 	};

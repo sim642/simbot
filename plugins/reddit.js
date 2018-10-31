@@ -231,7 +231,7 @@ function RedditPlugin(bot) {
 			str = self.formatLink("https://reddit.com" + subreddit.url, subreddit.over18, linked) + "\x02" + bot.plugins.util.unescapeHtml(subreddit.title.trim()) + "\x02" + private;
 
 			if (!short && !realtime)
-				str += "; " + bot.plugins.util.thSeps(subreddit.subscribers) + " subscribers; " + bot.plugins.util.thSeps(subreddit.accounts_active) + " active; " + bot.plugins.util.ellipsize(subreddit.public_description, 250);
+				str += "; " + bot.plugins.util.thSeps(subreddit.subscribers) + " subscribers; " + bot.plugins.util.thSeps(subreddit.accounts_active) + " active; " + bot.plugins.util.ellipsize(subreddit.public_description.trim(), 250).replace(/[\r\n]/g, " \\ ");
 		}
 
 		callback(str);

@@ -76,7 +76,13 @@ function ChoosePlugin(bot) {
 				else
 					bot.out.error("choose", err, body);
 			});
-		}
+		},
+
+		/*"slow": function(n, callback) {
+			setTimeout(function() {
+				callback(0);
+			}, 10 * 1000);
+		}*/
 	};
 
 	self.chooseSimbot = function(nick, to, choices) {
@@ -102,18 +108,23 @@ function ChoosePlugin(bot) {
 		if (self.aggregate)
 			self.aggregateStart(nick, to, choices);
 
+		var doCount = function(name, i) {
+			if (self.aggregateCount("simbot (" + name + ")", nick, to, choices[i]))
+				bot.say(to, nick + ": " + choices[i]);
+			else
+				bot.out.warn("choose", name + " too slow: " + choices[i]);
+		};
+
 		if (choices.length == 1) {
 			for (var name in self.randoms) {
-				bot.say(to, nick + ": " + choices[0]);
-				self.aggregateCount("simbot (" + name + ")", nick, to, choices[0]);
+				doCount(name, 0);
 			}
 		}
 		else {
 			for (var name in self.randoms) {
 				(function(name) {
 					self.randoms[name](choices.length, function(i) {
-						bot.say(to, nick + ": " + choices[i]);
-						self.aggregateCount("simbot (" + name + ")", nick, to, choices[i]);
+						doCount(name, i);
 					});
 				})(name);
 			}
@@ -200,10 +211,11 @@ function ChoosePlugin(bot) {
 
 				if ((data.nick == nick) && (choice in data.counts) && !(botNick in data.bots)) {
 					data.count(botNick, choice);
-					break;
+					return true;
 				}
 			}
 		}
+		return false;
 	};
 
 	self.events = {

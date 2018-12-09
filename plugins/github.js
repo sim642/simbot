@@ -247,7 +247,7 @@ function GithubPlugin(bot) {
 					if (j.fork)
 						bits.push(["fork", j.source.full_name]);
 					if (j.description)
-						bits.push([, j.description, 0]);
+						bits.push([, bot.plugins.util.ellipsize(j.description, 250), 0]);
 					if (j.homepage)
 						bits.push([, j.homepage, 2]);
 					bits.push(["stars", j.stargazers_count]);

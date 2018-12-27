@@ -8,7 +8,7 @@ function CatsPlugin(bot) {
 
 	self.json = null;
 	self.update = function() {
-		request({uri: "http://www.reddit.com/user/sim642/m/cats.json?limit=100", headers: {"User-Agent": "simbot cats 0.1"}}, function(err, res, body) {
+		request({uri: "http://www.reddit.com/r/cat+catgifs+catpictures+cats.json?limit=100", headers: {"User-Agent": "simbot cats 0.1"}}, function(err, res, body) {
 			if (!err && res.statusCode == 200) {
 				self.json = JSON.parse(body);
 			}

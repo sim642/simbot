@@ -209,7 +209,17 @@ function RedditPlugin(bot) {
 		realtime = realtime || false;
 
 		var str;
-		if (subreddit.error && subreddit.error == 403) {
+		if (subreddit.error && subreddit.error == 404) {
+			// not found
+			var warning = "\x034[not found]\x03 ";
+			var url = "https://reddit.com" + "/r/" + extra + "/";
+			if (linked)
+				str = "\x1F" + url + "\x1F " + warning + ": ";
+			else
+				str = warning;
+			str += "\x02" + extra + "\x02";
+		}
+		else if (subreddit.error && subreddit.error == 403) {
 			// quarantined
 			var warning = "\x034[" + subreddit.reason + "]\x03 ";
 			var url = "https://reddit.com" + "/r/" + extra + "/";
@@ -241,9 +251,12 @@ function RedditPlugin(bot) {
 		short = short || false;
 		realtime = realtime || false;
 
-		var str = self.formatLink("https://reddit.com/u/" + user.name, false, linked) + "\x02" + user.name + "\x02";
+		var name = user.name !== undefined ? user.name : extra;
+		var str = self.formatLink("https://reddit.com/u/" + name, false, linked) + "\x02" + name + "\x02";
 
-		if (!user.is_suspended) {
+		if (user.error && user.error == 404)
+			str += "; \x034[not found]\x03";
+		else if (!user.is_suspended) {
 			var flags = "";
 			if (user.over18)
 				flags += " \x034[18+]\x03";
@@ -376,13 +389,29 @@ function RedditPlugin(bot) {
 			if (!err && res.statusCode == 200) {
 				var data = JSON.parse(body);
 
-				self.format(data, false, linked, function(str) {
-					callback(str);
-				});
+				if (match[1] == "r" && data.kind == "Listing") {
+					// subreddit not found, redirected to search
+					self.formatSubreddit({
+						error: 404
+					}, false, linked, function(str) {
+						callback(str);
+					}, match[2]);
+				}
+				else {
+					self.format(data, false, linked, function(str) {
+						callback(str);
+					});
+				}
 			} else if (!err && res.statusCode == 403 && match[1] == "r") {
 				var data = JSON.parse(body);
 
 				self.formatSubreddit(data, false, linked, function(str) {
+					callback(str);
+				}, match[2]);
+			} else if (!err && res.statusCode == 404 && match[1] == "u") {
+				var data = JSON.parse(body);
+
+				self.formatUser(data, false, linked, function(str) {
 					callback(str);
 				}, match[2]);
 			}

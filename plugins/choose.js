@@ -35,7 +35,7 @@ function ChoosePlugin(bot) {
 	self.randoms = {
 		"random.org": function(n, callback) {
 			request.post({
-				url: "https://api.random.org/json-rpc/1/invoke",
+				url: "https://api.random.org/json-rpc/2/invoke",
 				json: true,
 				body: {
 				    "jsonrpc": "2.0",
